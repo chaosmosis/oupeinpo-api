@@ -47,3 +47,7 @@ Les images envoyees passent vers l'API Oupeinpo, sont traitees sur le Mac, puis 
 La page publique de resultat ne contient que les images generees de cluster.
 
 Le rapport ACP avec miniatures est envoye par e-mail au participant.
+
+## Licence
+
+AGPL-3.0-or-later.
