@@ -23,7 +23,18 @@ Cette URL est privee Tailscale : elle fonctionne seulement pour les appareils co
 
 ## Publication GitHub Pages
 
+Option recommandee maintenant : publier avec GitHub Actions.
+
 Dans les reglages GitHub du depot :
+
+```text
+Settings -> Pages -> Build and deployment
+Source: GitHub Actions
+```
+
+Le workflow `.github/workflows/pages.yml` publie le contenu du dossier `docs`.
+
+Ancienne option possible, sans workflow :
 
 ```text
 Settings -> Pages -> Build and deployment
