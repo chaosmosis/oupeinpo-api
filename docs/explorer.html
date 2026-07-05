@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oupeinpo - explorer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #24211d;
+      --muted: #666058;
+      --line: #d8d2c8;
+      --paper: #f7f4ef;
+      --panel: #ffffff;
+      --accent: #176b63;
+      --accent-dark: #104f49;
+      --soft: #ece6dc;
+      --warning: #7a5d19;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    main {
+      width: min(1160px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4.2rem);
+      font-weight: 500;
+      line-height: 1;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+
+    p {
+      line-height: 1.45;
+    }
+
+    a {
+      color: var(--accent-dark);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    .tagline {
+      margin: 10px 0 0;
+      color: var(--muted);
+      max-width: 720px;
+    }
+
+    nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    nav a {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 8px 10px;
+      border-radius: 4px;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    nav a[aria-current="page"] {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 18px;
+      min-width: 0;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 14px;
+      min-height: 92px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 9px;
+      font-size: clamp(1.2rem, 3vw, 1.9rem);
+      font-weight: 500;
+      overflow-wrap: anywhere;
+    }
+
+    .search {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 11px 12px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      margin-bottom: 18px;
+    }
+
+    .thread {
+      position: relative;
+      margin: 4px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .thread::before {
+      content: "";
+      position: absolute;
+      left: 22px;
+      top: 12px;
+      bottom: 12px;
+      width: 2px;
+      background: var(--line);
+    }
+
+    .thread-item {
+      position: relative;
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr);
+      gap: 12px;
+      padding: 0 0 18px;
+    }
+
+    .thread-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .point {
+      position: relative;
+      z-index: 1;
+      width: 46px;
+      height: 46px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      background: var(--paper);
+      color: var(--accent-dark);
+      display: grid;
+      place-items: center;
+      font-size: .82rem;
+      font-weight: 600;
+    }
+
+    .generation {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 14px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .generation:hover {
+      border-color: var(--accent);
+    }
+
+    .generation img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border: 1px solid #e5ded3;
+      background: var(--soft);
+    }
+
+    .generation h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 10px 0;
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    .hash {
+      color: var(--muted);
+      font-size: .8rem;
+      overflow-wrap: anywhere;
+      line-height: 1.35;
+    }
+
+    .status {
+      display: inline-block;
+      margin-top: 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 8px;
+      color: var(--warning);
+      font-size: .78rem;
+    }
+
+    .image-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .image-strip a {
+      display: block;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .image-strip img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      background: var(--soft);
+      display: block;
+    }
+
+    .side-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .side-list li {
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+      overflow-wrap: anywhere;
+    }
+
+    .side-list li:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .empty {
+      border: 1px dashed var(--line);
+      padding: 24px 14px;
+      color: var(--muted);
+      background: #fbfaf7;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      main { width: min(100% - 20px, 720px); padding-top: 18px; }
+      header { grid-template-columns: 1fr; }
+      nav { justify-content: flex-start; }
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 560px) {
+      .summary { grid-template-columns: 1fr; }
+      .generation { grid-template-columns: 88px minmax(0, 1fr); }
+      .thread::before { left: 18px; }
+      .thread-item { grid-template-columns: 42px minmax(0, 1fr); }
+      .point { width: 38px; height: 38px; }
+      .image-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Oupeinpo Chain Explorer</h1>
+        <p class="tagline">Fil public des blocs Oupeinpo. Chaque point relie une generation d’images synthetiques, une liste de paiements attendus et un payload OUP2 compact pour NMNC.</p>
+      </div>
+      <nav aria-label="Navigation">
+        <a href="index.html">Contribuer</a>
+        <a href="explorer.html" aria-current="page">Explorer</a>
+        <a href="data/ledger.json">Ledger JSON</a>
+      </nav>
+    </header>
+
+    <section class="summary" aria-label="Synthese du registre">
+      <div class="metric"><span>Images generees</span><strong id="metric-images">-</strong></div>
+      <div class="metric"><span>Blocs Oupeinpo</span><strong id="metric-generations">-</strong></div>
+      <div class="metric"><span>Images sources traitees</span><strong id="metric-sources">-</strong></div>
+      <div class="metric"><span>NMNC a payer</span><strong id="metric-rewards">-</strong></div>
+      <div class="metric"><span>Ancrage NMNC</span><strong id="metric-anchor">-</strong></div>
+    </section>
+
+    <div class="layout">
+      <section class="panel">
+        <h2>Fil des blocs Oupeinpo</h2>
+        <input class="search" id="search" type="search" placeholder="Rechercher par hauteur, generation_hash, rewards_hash, OUP2, commit, txid NMNC">
+        <ol class="thread" id="thread"></ol>
+      </section>
+
+      <aside>
+        <section class="panel">
+          <h2>Dernieres images</h2>
+          <div class="image-strip" id="latest-images"></div>
+        </section>
+
+        <section class="panel" style="margin-top: 18px;">
+          <h2>Dernier bloc Oupeinpo</h2>
+          <ul class="side-list" id="head"></ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const thread = document.getElementById("thread");
+    const latestImages = document.getElementById("latest-images");
+    const head = document.getElementById("head");
+    const search = document.getElementById("search");
+    let entries = [];
+
+    function shortHash(value) {
+      if (!value) return "pending";
+      return value.length > 14 ? `${value.slice(0, 10)}...${value.slice(-6)}` : value;
+    }
+
+    function formatDate(value) {
+      if (!value) return "-";
+      return new Intl.DateTimeFormat("fr-BE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(new Date(value));
+    }
+
+    function entryMatches(entry, query) {
+      if (!query) return true;
+      const haystack = [
+        entry.id,
+        entry.sequence,
+        entry.oupeinpo_height,
+        entry.title,
+        entry.generation_hash,
+        entry.previous_generation_hash,
+        entry.rewards_hash,
+        entry.image_hash_head,
+        entry.github_commit,
+        entry.oup2_payload && entry.oup2_payload.payload_hex,
+        entry.nmnc_anchor && entry.nmnc_anchor.txid
+      ].filter(Boolean).join(" ").toLowerCase();
+      return haystack.includes(query.toLowerCase());
+    }
+
+    function renderThread(query = "") {
+      const visible = entries.filter((entry) => entryMatches(entry, query));
+      thread.innerHTML = "";
+
+      if (!visible.length) {
+        thread.innerHTML = '<li class="empty">Aucun bloc Oupeinpo ne correspond a la recherche.</li>';
+        return;
+      }
+
+      visible.forEach((entry) => {
+        const item = document.createElement("li");
+        item.className = "thread-item";
+        const height = entry.oupeinpo_height || entry.sequence;
+        const generationHash = entry.generation_hash;
+        const rewardsHash = entry.rewards_hash;
+        const payload = entry.oup2_payload && entry.oup2_payload.payload_hex;
+        item.innerHTML = `
+          <div class="point">#${String(height).padStart(3, "0")}</div>
+          <a class="generation" href="generation.html?id=${encodeURIComponent(entry.id)}">
+            <img src="${entry.preview_image}" alt="Image generee ${entry.id}">
+            <div>
+              <h3>Bloc Oupeinpo #${String(height).padStart(6, "0")}</h3>
+              <div class="meta">
+                <span>${formatDate(entry.created_at)}</span>
+                <span>${entry.source_count} sources</span>
+                <span>${entry.cluster_count} clusters</span>
+                <span>${entry.output_count} sortie(s)</span>
+                <span>${entry.reward_total_nmnc || "0.00000000"} NMNC</span>
+              </div>
+              <div class="hash">Generation hash : ${shortHash(generationHash)}</div>
+              <div class="hash">Rewards hash : ${shortHash(rewardsHash)}</div>
+              <div class="hash">Paiements : ${entry.reward_user_count || 0} adresse(s), ${entry.reward_total_no || 0} no</div>
+              <div class="hash">Image head : ${shortHash(entry.image_hash_head)}</div>
+              <div class="hash">OUP2 : ${shortHash(payload)}</div>
+              <span class="status">NMNC ${entry.nmnc_anchor && entry.nmnc_anchor.status ? entry.nmnc_anchor.status : "pending"}</span>
+            </div>
+          </a>
+        `;
+        thread.appendChild(item);
+      });
+    }
+
+    function renderLatestImages() {
+      const latest = [...entries].slice(-3).reverse();
+      latestImages.innerHTML = latest.map((entry) => `
+        <a href="generation.html?id=${encodeURIComponent(entry.id)}" title="${entry.id}">
+          <img src="${entry.preview_image}" alt="Image generee ${entry.id}">
+        </a>
+      `).join("");
+    }
+
+    function renderHead(ledger) {
+      const current = entries.find((entry) => entry.id === ledger.head.id) || entries[entries.length - 1];
+      if (!current) {
+        head.innerHTML = '<li>Aucun bloc.</li>';
+        return;
+      }
+      const generationHash = current.generation_hash;
+      const previousHash = current.previous_generation_hash;
+      const rewardsHash = current.rewards_hash;
+      const payload = current.oup2_payload && current.oup2_payload.payload_hex;
+      head.innerHTML = `
+        <li><strong>Bloc #${String(current.oupeinpo_height || current.sequence).padStart(6, "0")}</strong><br>${formatDate(current.created_at)}</li>
+        <li>Generation hash<br>${generationHash}</li>
+        <li>Hash precedent<br>${previousHash || "genesis"}</li>
+        <li>Rewards hash<br>${rewardsHash || "pending"}</li>
+        <li>Payload OUP2<br>${payload || "pending"}</li>
+        <li>Paiements attendus<br>${current.reward_total_no || 0} no vers ${current.reward_user_count || 0} adresse(s)</li>
+        <li>Commit GitHub<br>${current.github_commit || "pending"}</li>
+        <li>Ancrage NMNC<br>${current.nmnc_anchor && current.nmnc_anchor.txid ? current.nmnc_anchor.txid : "pending"}</li>
+      `;
+    }
+
+    async function loadExplorer() {
+      try {
+        const [ledgerResponse, statsResponse] = await Promise.all([
+          fetch("data/ledger.json", { cache: "no-store" }),
+          fetch("data/stats.json", { cache: "no-store" })
+        ]);
+        const ledger = await ledgerResponse.json();
+        const stats = await statsResponse.json();
+        entries = [...ledger.entries].sort((a, b) => (a.oupeinpo_height || a.sequence) - (b.oupeinpo_height || b.sequence));
+
+        document.getElementById("metric-images").textContent = stats.generated_images;
+        document.getElementById("metric-generations").textContent = stats.generations;
+        document.getElementById("metric-sources").textContent = stats.source_images_processed;
+        document.getElementById("metric-rewards").textContent = `${stats.reward_total_nmnc || "0.00000000"}`;
+        document.getElementById("metric-anchor").textContent = stats.latest_nmnc_anchor_status || "pending";
+
+        renderThread();
+        renderLatestImages();
+        renderHead(ledger);
+      } catch (error) {
+        thread.innerHTML = '<li class="empty">Impossible de charger le registre public.</li>';
+      }
+    }
+
+    search.addEventListener("input", () => renderThread(search.value.trim()));
+    loadExplorer();
+  </script>
+</body>
+</html>

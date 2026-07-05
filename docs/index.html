@@ -55,6 +55,22 @@
       line-height: 1.45;
     }
 
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .nav-links a {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 8px 10px;
+      border-radius: 4px;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
     .api-state {
       min-width: 220px;
       padding: 10px 12px;
@@ -241,6 +257,9 @@
       <div>
         <h1>Oupeinpo</h1>
         <p class="tagline">Déposer un corpus d’images, annoter quelques motifs, puis recevoir le rapport privé par e-mail. La page publique ne montre que les images générées.</p>
+        <nav class="nav-links" aria-label="Navigation">
+          <a href="explorer.html">Explorer le registre public</a>
+        </nav>
       </div>
       <div class="api-state" id="api-state">API : vérification…</div>
     </header>
@@ -254,6 +273,10 @@
 
         <label for="email">E-mail pour le rapport privé</label>
         <input id="email" name="email" type="email" autocomplete="email" required>
+
+        <label for="public-alias">Blase public (facultatif)</label>
+        <input id="public-alias" name="public_alias" type="text" autocomplete="off" maxlength="80" placeholder="Nom, blase ou pseudonyme">
+        <div class="note">Ce nom pourra identifier publiquement les images générées et la future adresse NMNC. L’e-mail reste privé.</div>
 
         <label for="access-code">Code d’accès</label>
         <input id="access-code" name="access_code" type="text" autocomplete="off" required>
@@ -481,6 +504,7 @@
       const formData = new FormData();
       formData.append("title", document.getElementById("title").value || "Oupeinpo");
       formData.append("email", document.getElementById("email").value);
+      formData.append("public_alias", document.getElementById("public-alias").value.trim());
       formData.append("access_code", document.getElementById("access-code").value);
       formData.append("clusters", document.getElementById("clusters").value);
       formData.append("annotations", JSON.stringify(collectAnnotations()));

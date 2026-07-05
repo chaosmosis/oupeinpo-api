@@ -1,0 +1,99 @@
+{
+  "schema_version": "oupeinpo-public-protocol-v2-draft",
+  "purpose": "Public off-chain Oupeinpo registry for synthetic image generations, expected NMNC user rewards, and future OUP2 anchoring.",
+  "privacy_rule": "Only synthetic outputs, public hashes, counts, public aliases and anchoring data are published. Source images, email addresses and private reports stay off-chain and non-public.",
+  "public_identity": {
+    "public_alias": "Optional user-provided public name, pseudonym or blase used to identify generated images and future NMNC reward entries.",
+    "private_email": "The email address is used only for the private report and must not be published in the public ledger.",
+    "future_wallet_rule": "When NMNC is operational, the API should request, create or validate one NMNC address per user contribution, then associate public_alias, user_ref and nmnc_address in the public Oupeinpo block.",
+    "address_validation": "A nmnc1-looking string is not enough. The API must call nmncoin-cli validateaddress or use a library with NMNC network parameters before publishing a real reward address.",
+    "current_demo_status": "Until the NMNC wallet/API is public and stable, demo blocks may reuse a validated sample address or explicitly mark addresses as fictive. Such entries are not spendable reward promises."
+  },
+  "implementation_order": {
+    "genesis_rule": "OUP2 consensus parameters must be implemented and frozen before generating the final NMNC genesis block.",
+    "parameters_to_freeze": [
+      "oup2_activation_height",
+      "oup2_payload_format",
+      "canonical_rewards_hash_rule",
+      "official_oupeinpo_public_key",
+      "miner_bonus_amount",
+      "bonus_cap",
+      "max_user_outputs_per_anchor",
+      "coinbase_signature_format"
+    ],
+    "minimal_code_path": [
+      "src/consensus/params.h",
+      "src/chainparams.cpp",
+      "src/validation.cpp",
+      "src/consensus/oupeinpo.h",
+      "src/consensus/oupeinpo.cpp",
+      "src/test/oupeinpo_tests.cpp"
+    ]
+  },
+  "canonical_generation_commitment": {
+    "hash_name": "generation_hash",
+    "definition": "SHA256 of canonical_generation_commitment serialized with UTF-8, lexicographic key sorting and no insignificant whitespace.",
+    "excludes": [
+      "generation_hash",
+      "rewards_hash",
+      "oup2_payload",
+      "nmnc_anchor",
+      "github_commit",
+      "oupeinpo_signature",
+      "mutable status fields"
+    ],
+    "contains": [
+      "schema_version",
+      "oupeinpo_height",
+      "created_at",
+      "previous_generation_hash",
+      "source_count",
+      "cluster_count",
+      "outputs",
+      "rewards_hash"
+    ]
+  },
+  "canonical_rewards_commitment": {
+    "hash_name": "rewards_hash",
+    "definition": "SHA256 of canonical_rewards_commitment serialized with the same canonical JSON rule.",
+    "policy": "1 NMNC per generated synthetic image, aggregated per user address.",
+    "amount_unit": "no",
+    "one_nmnc_in_no": 100000000,
+    "max_user_outputs_per_anchor": 11,
+    "fields": [
+      "user_ref",
+      "public_alias",
+      "nmnc_address",
+      "address_validation",
+      "generated_image_count",
+      "amount_no"
+    ]
+  },
+  "oup2_anchor_payload": {
+    "carrier": "NMNC transaction OP_RETURN output",
+    "magic": "OUP2",
+    "payload_size_bytes": 72,
+    "layout": [
+      "4 bytes ASCII magic OUP2",
+      "4 bytes oupeinpo_height uint32 little-endian",
+      "32 bytes generation_hash",
+      "32 bytes rewards_hash"
+    ]
+  },
+  "coinbase_signature": {
+    "purpose": "Prevent miners from inventing fake Oupeinpo registries while claiming the bonus.",
+    "placement": "coinbase scriptSig after the mandatory BIP34 block height",
+    "covers": [
+      "magic OUP2",
+      "oupeinpo_height",
+      "generation_hash",
+      "rewards_hash"
+    ],
+    "verification": "NMNC consensus can verify the signature with the official Oupeinpo public key embedded in network parameters."
+  },
+  "bonus_status": {
+    "status": "draft-v2",
+    "current_policy": "If a block claims the Oupeinpo bonus, coinbase user outputs must match the rewards commitment and the Oupeinpo signature must be valid.",
+    "consensus_warning": "NMNC still cannot verify that the off-chain images are artistically true without recomputing the public registry externally; consensus can verify the signed commitment and the coinbase reward consistency."
+  }
+}

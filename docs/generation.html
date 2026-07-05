@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oupeinpo - bloc</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #24211d;
+      --muted: #666058;
+      --line: #d8d2c8;
+      --paper: #f7f4ef;
+      --panel: #ffffff;
+      --accent: #176b63;
+      --accent-dark: #104f49;
+      --soft: #ece6dc;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    main {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4rem);
+      font-weight: 500;
+      line-height: 1;
+      overflow-wrap: anywhere;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+
+    a {
+      color: var(--accent-dark);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    nav a {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 8px 10px;
+      border-radius: 4px;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .tagline {
+      margin: 10px 0 0;
+      color: var(--muted);
+      max-width: 720px;
+      line-height: 1.45;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 18px;
+      min-width: 0;
+    }
+
+    .outputs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .output {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 10px;
+      min-width: 0;
+    }
+
+    .output img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+      border: 1px solid #e5ded3;
+      background: var(--soft);
+    }
+
+    .caption {
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: .82rem;
+      overflow-wrap: anywhere;
+      line-height: 1.35;
+    }
+
+    dl {
+      display: grid;
+      grid-template-columns: minmax(120px, .6fr) minmax(0, 1fr);
+      gap: 10px 12px;
+      margin: 0;
+    }
+
+    dt {
+      color: var(--muted);
+    }
+
+    dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .raw {
+      margin-top: 16px;
+      display: inline-block;
+    }
+
+    .rewards {
+      margin-top: 18px;
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+    }
+
+    .reward-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .reward-list li {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 10px;
+      overflow-wrap: anywhere;
+    }
+
+    .reward-list strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .empty {
+      border: 1px dashed var(--line);
+      padding: 24px 14px;
+      color: var(--muted);
+      background: #fbfaf7;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      main { width: min(100% - 20px, 720px); padding-top: 18px; }
+      header { grid-template-columns: 1fr; }
+      nav { justify-content: flex-start; }
+      .layout { grid-template-columns: 1fr; }
+      dl { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1 id="title">Bloc Oupeinpo</h1>
+        <p class="tagline" id="subtitle">Chargement du point de registre.</p>
+      </div>
+      <nav aria-label="Navigation">
+        <a href="index.html">Contribuer</a>
+        <a href="explorer.html">Explorer</a>
+      </nav>
+    </header>
+
+    <div class="layout">
+      <section class="panel">
+        <h2>Images generees</h2>
+        <div class="outputs" id="outputs"></div>
+        <div class="rewards">
+          <h2>Paiements attendus</h2>
+          <ul class="reward-list" id="rewards"></ul>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <h2>Informations du registre</h2>
+        <dl id="metadata"></dl>
+        <a class="raw" id="raw-json" href="#">Voir le JSON brut</a>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const requestedId = params.get("id");
+    const title = document.getElementById("title");
+    const subtitle = document.getElementById("subtitle");
+    const outputs = document.getElementById("outputs");
+    const metadata = document.getElementById("metadata");
+    const rewards = document.getElementById("rewards");
+    const rawJson = document.getElementById("raw-json");
+
+    function formatDate(value) {
+      if (!value) return "-";
+      return new Intl.DateTimeFormat("fr-BE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(new Date(value));
+    }
+
+    function field(label, value) {
+      return `<dt>${label}</dt><dd>${value || "-"}</dd>`;
+    }
+
+    async function loadGeneration() {
+      try {
+        const ledgerResponse = await fetch("data/ledger.json", { cache: "no-store" });
+        const ledger = await ledgerResponse.json();
+        const entry = ledger.entries.find((item) => item.id === requestedId) || ledger.entries[ledger.entries.length - 1];
+        if (!entry) throw new Error("empty ledger");
+
+        const txResponse = await fetch(entry.tx_path, { cache: "no-store" });
+        const tx = await txResponse.json();
+
+        const height = tx.oupeinpo_height || tx.sequence;
+        const generationHash = tx.generation_hash;
+        const previousHash = tx.previous_generation_hash;
+        const rewardsHash = tx.rewards_hash || (tx.expected_coinbase_rewards && tx.expected_coinbase_rewards.rewards_hash);
+        const oup2 = tx.oup2_payload || {};
+        const signature = tx.oupeinpo_signature || {};
+        const expectedRewards = tx.expected_coinbase_rewards || { users: [] };
+
+        title.textContent = `Bloc Oupeinpo #${String(height).padStart(6, "0")}`;
+        subtitle.textContent = `${formatDate(tx.created_at)} - ${tx.source_count} images sources privees, ${tx.cluster_count} clusters, ${tx.outputs.length} sortie(s) publique(s), ${expectedRewards.total_amount_no || 0} no attendu(s).`;
+        rawJson.href = entry.tx_path;
+
+        outputs.innerHTML = tx.outputs.map((output) => `
+          <article class="output">
+            <img src="${output.path}" alt="Image generee ${tx.id} sortie ${output.index}">
+            <div class="caption">SHA256 ${output.sha256}</div>
+          </article>
+        `).join("");
+
+        rewards.innerHTML = expectedRewards.users && expectedRewards.users.length
+          ? expectedRewards.users.map((user) => `
+            <li>
+              <strong>${user.amount_nmnc || ((user.amount_no || 0) / 100000000).toFixed(8)} NMNC</strong>
+              Adresse : ${user.nmnc_address}<br>
+              Images generees : ${user.generated_image_count}<br>
+              Montant strict : ${user.amount_no || 0} no<br>
+              Alias public : ${user.public_alias || "-"}<br>
+              Reference publique : ${user.user_ref}
+            </li>
+          `).join("")
+          : '<li>Aucun paiement attendu pour ce bloc.</li>';
+
+        metadata.innerHTML = [
+          field("Identifiant", tx.id),
+          field("Hauteur Oupeinpo", height),
+          field("Generation hash", generationHash),
+          field("Hash precedent", previousHash || "genesis"),
+          field("Rewards hash", rewardsHash),
+          field("OUP2 magic", oup2.magic || "OUP2"),
+          field("OUP2 height LE", oup2.height_uint32_le_hex),
+          field("OUP2 payload OP_RETURN", oup2.payload_hex),
+          field("Taille payload", oup2.payload_size_bytes ? `${oup2.payload_size_bytes} octets` : "-"),
+          field("Total no attendu", expectedRewards.total_amount_no),
+          field("Total NMNC attendu", expectedRewards.total_amount_nmnc),
+          field("Signature Oupeinpo", signature.status || "pending"),
+          field("Signature placée", signature.placement || "coinbase scriptSig"),
+          field("Images sources", tx.source_count),
+          field("Clusters", tx.cluster_count),
+          field("Commit GitHub", tx.github_commit),
+          field("Ancrage NMNC", tx.nmnc_anchor && tx.nmnc_anchor.txid ? tx.nmnc_anchor.txid : "pending"),
+          field("Statut NMNC", tx.nmnc_anchor && tx.nmnc_anchor.status ? tx.nmnc_anchor.status : "pending")
+        ].join("");
+      } catch (error) {
+        title.textContent = "Bloc introuvable";
+        subtitle.textContent = "Le point demande n’existe pas dans le registre public.";
+        outputs.innerHTML = '<div class="empty">Aucune image a afficher.</div>';
+        rewards.innerHTML = "";
+        metadata.innerHTML = "";
+        rawJson.removeAttribute("href");
+      }
+    }
+
+    loadGeneration();
+  </script>
+</body>
+</html>

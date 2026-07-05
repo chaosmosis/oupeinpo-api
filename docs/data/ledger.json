@@ -1,0 +1,540 @@
+{
+  "schema_version": "oupeinpo-ledger-v2-draft-demo",
+  "updated_at": "2026-07-05T12:41:00+02:00",
+  "head": {
+    "id": "gen_000012",
+    "oupeinpo_height": 12,
+    "generation_hash": "cc0466ad22a0719efc8d053d4424cf3ca7a2cf1aaa17c930d5f0ab48d4bab4b3",
+    "rewards_hash": "eaaae7e03e60a10dcd544762956b274b9605859e00442228d07e115303df47d3"
+  },
+  "entries": [
+    {
+      "id": "gen_000001",
+      "sequence": 1,
+      "oupeinpo_height": 1,
+      "title": "Bloc Oupeinpo fictif #000001",
+      "created_at": "2026-07-05T09:12:00+02:00",
+      "source_count": 6,
+      "cluster_count": 3,
+      "output_count": 1,
+      "generation_hash": "13ebb7656db822712f031410a8e676697ee183a872cecb6ecda3cfa54769bb93",
+      "previous_generation_hash": null,
+      "rewards_hash": "f1ac26abfdd657d22439e936afd69ac740f016d430ba009316c1773f70cefdd7",
+      "image_hash_head": "46fd215e4e74e69789dc2506c3f498a6fff49accaad63dd30f10a204eb56dc1f",
+      "github_commit": "demo-000001",
+      "reward_user_count": 1,
+      "reward_total_no": 100000000,
+      "reward_total_nmnc": "1.00000000",
+      "oup2_payload": {
+        "magic": "OUP2",
+        "height_uint32_le_hex": "01000000",
+        "generation_hash": "13ebb7656db822712f031410a8e676697ee183a872cecb6ecda3cfa54769bb93",
+        "rewards_hash": "f1ac26abfdd657d22439e936afd69ac740f016d430ba009316c1773f70cefdd7",
+        "payload_hex": "4f5550320100000013ebb7656db822712f031410a8e676697ee183a872cecb6ecda3cfa54769bb93f1ac26abfdd657d22439e936afd69ac740f016d430ba009316c1773f70cefdd7",
+        "payload_size_bytes": 72
+      },
+      "oupeinpo_signature": {
+        "status": "pending",
+        "placement": "coinbase_scriptSig_after_bip34_height",
+        "covers": [
+          "OUP2",
+          "oupeinpo_height",
+          "generation_hash",
+          "rewards_hash"
+        ],
+        "signature_hex": null,
+        "public_key_id": "oupeinpo-official-key-v1-pending"
+      },
+      "nmnc_anchor": {
+        "status": "pending",
+        "txid": null
+      },
+      "preview_image": "assets/generated/2026/07/05/gen_000001_output_01.png",
+      "tx_path": "data/tx/gen_000001.json"
+    },
+    {
+      "id": "gen_000002",
+      "sequence": 2,
+      "oupeinpo_height": 2,
+      "title": "Bloc Oupeinpo fictif #000002",
+      "created_at": "2026-07-05T09:31:00+02:00",
+      "source_count": 8,
+      "cluster_count": 4,
+      "output_count": 2,
+      "generation_hash": "0d11b5df7227b09d9bc6f1401246b00923c640fc3447e98403e12b9f27ae6da1",
+      "previous_generation_hash": "13ebb7656db822712f031410a8e676697ee183a872cecb6ecda3cfa54769bb93",
+      "rewards_hash": "ace4e7fab486091181c5bbf365075ce431aafc80a73da5df8451377ed5e2d1cd",
+      "image_hash_head": "df7c3f77d3ae370f22da4346e7d8843f080aad859fbf866e684bb52de7dfcf1d",
+      "github_commit": "demo-000002",
+      "reward_user_count": 1,
+      "reward_total_no": 200000000,
+      "reward_total_nmnc": "2.00000000",
+      "oup2_payload": {
+        "magic": "OUP2",
+        "height_uint32_le_hex": "02000000",
+        "generation_hash": "0d11b5df7227b09d9bc6f1401246b00923c640fc3447e98403e12b9f27ae6da1",
+        "rewards_hash": "ace4e7fab486091181c5bbf365075ce431aafc80a73da5df8451377ed5e2d1cd",
+        "payload_hex": "4f555032020000000d11b5df7227b09d9bc6f1401246b00923c640fc3447e98403e12b9f27ae6da1ace4e7fab486091181c5bbf365075ce431aafc80a73da5df8451377ed5e2d1cd",
+        "payload_size_bytes": 72
+      },
+      "oupeinpo_signature": {
+        "status": "pending",
+        "placement": "coinbase_scriptSig_after_bip34_height",
+        "covers": [
+          "OUP2",
+          "oupeinpo_height",
+          "generation_hash",
+          "rewards_hash"
+        ],
+        "signature_hex": null,
+        "public_key_id": "oupeinpo-official-key-v1-pending"
+      },
+      "nmnc_anchor": {
+        "status": "pending",
+        "txid": null
+      },
+      "preview_image": "assets/generated/2026/07/05/gen_000002_output_01.png",
+      "tx_path": "data/tx/gen_000002.json"
+    },
+    {
+      "id": "gen_000003",
+      "sequence": 3,
+      "oupeinpo_height": 3,
+      "title": "Bloc Oupeinpo fictif #000003",
+      "created_at": "2026-07-05T09:50:00+02:00",
+      "source_count": 8,
+      "cluster_count": 4,
+      "output_count": 3,
+      "generation_hash": "c3292b841c8e2110a332ee3d4ddfd3f156416d83c4eab004619836262c448f22",
+      "previous_generation_hash": "0d11b5df7227b09d9bc6f1401246b00923c640fc3447e98403e12b9f27ae6da1",
+      "rewards_hash": "bde9d264626f766344917aa1b5ad7cece63cb215e773bdbfd5a6f3d2bc8b3059",
+      "image_hash_head": "126b4d88909d130b76f6e5f11adfd41b291d857a40a5849db4e31349476c2265",
+      "github_commit": "demo-000003",
+      "reward_user_count": 1,
+      "reward_total_no": 300000000,
+      "reward_total_nmnc": "3.00000000",
+      "oup2_payload": {
+        "magic": "OUP2",
+        "height_uint32_le_hex": "03000000",
+        "generation_hash": "c3292b841c8e2110a332ee3d4ddfd3f156416d83c4eab004619836262c448f22",
+        "rewards_hash": "bde9d264626f766344917aa1b5ad7cece63cb215e773bdbfd5a6f3d2bc8b3059",
+        "payload_hex": "4f55503203000000c3292b841c8e2110a332ee3d4ddfd3f156416d83c4eab004619836262c448f22bde9d264626f766344917aa1b5ad7cece63cb215e773bdbfd5a6f3d2bc8b3059",
+        "payload_size_bytes": 72
+      },
+      "oupeinpo_signature": {
+        "status": "pending",
+        "placement": "coinbase_scriptSig_after_bip34_height",
+        "covers": [
+          "OUP2",
+          "oupeinpo_height",
+          "generation_hash",
+          "rewards_hash"
+        ],
+        "signature_hex": null,
+        "public_key_id": "oupeinpo-official-key-v1-pending"
+      },
+      "nmnc_anchor": {
+        "status": "pending",
+        "txid": null
+      },
+      "preview_image": "assets/generated/2026/07/05/gen_000003_output_01.png",
+      "tx_path": "data/tx/gen_000003.json"
+    },
+    {
+      "id": "gen_000004",
+      "sequence": 4,
+      "oupeinpo_height": 4,
+      "title": "Bloc Oupeinpo fictif #000004",
+      "created_at": "2026-07-05T10:09:00+02:00",
+      "source_count": 5,
+      "cluster_count": 2,
+      "output_count": 1,
+      "generation_hash": "30e5fd73d20cc1de0ab0cc08716ff959ef193eb0d8879639b4801ec9adae3c58",
+      "previous_generation_hash": "c3292b841c8e2110a332ee3d4ddfd3f156416d83c4eab004619836262c448f22",
+      "rewards_hash": "ef64db2bd9270094699933be30075c28408a0d693efb016b143471575535c9c6",
+      "image_hash_head": "05b26ecc47cb4a150a112d2ee3ebfbdf28ab8bef580658b62bcd7d5d62f7c0f6",
+      "github_commit": "demo-000004",
+      "reward_user_count": 1,
+      "reward_total_no": 100000000,
+      "reward_total_nmnc": "1.00000000",
+      "oup2_payload": {
+        "magic": "OUP2",
+        "height_uint32_le_hex": "04000000",
+        "generation_hash": "30e5fd73d20cc1de0ab0cc08716ff959ef193eb0d8879639b4801ec9adae3c58",
+        "rewards_hash": "ef64db2bd9270094699933be30075c28408a0d693efb016b143471575535c9c6",
+        "payload_hex": "4f5550320400000030e5fd73d20cc1de0ab0cc08716ff959ef193eb0d8879639b4801ec9adae3c58ef64db2bd9270094699933be30075c28408a0d693efb016b143471575535c9c6",
+        "payload_size_bytes": 72
+      },
+      "oupeinpo_signature": {
+        "status": "pending",
+        "placement": "coinbase_scriptSig_after_bip34_height",
+        "covers": [
+          "OUP2",
+          "oupeinpo_height",
+          "generation_hash",
+          "rewards_hash"
+        ],
+        "signature_hex": null,
+        "public_key_id": "oupeinpo-official-key-v1-pending"
+      },
+      "nmnc_anchor": {
+        "status": "confirmed",
+        "txid": "cc937f4fb1fc96334738abd5f03a30095b4eb5c039cd356ac65b7ca6c7c0ef28"
+      },
+      "preview_image": "assets/generated/2026/07/05/gen_000004_output_01.jpg",
+      "tx_path": "data/tx/gen_000004.json"
+    },
+    {
+      "id": "gen_000005",
+      "sequence": 5,
+      "oupeinpo_height": 5,
+      "title": "Bloc Oupeinpo fictif #000005",
+      "created_at": "2026-07-05T10:28:00+02:00",
+      "source_count": 11,
+      "cluster_count": 5,
+      "output_count": 4,
+      "generation_hash": "8577d54d535c90883cd534183c2149dd8d268cdaa9903df037e5f00e5cba35b9",
+      "previous_generation_hash": "30e5fd73d20cc1de0ab0cc08716ff959ef193eb0d8879639b4801ec9adae3c58",
+      "rewards_hash": "af1e27b4dd396b3e365d7a46fc3b883015fa9899fc56be449edfede3e3af37a5",
+      "image_hash_head": "be209e83c27c6e0d3d7e477535875cec7d28177a439011ed1a93b3518c1a3651",
+      "github_commit": "demo-000005",
+      "reward_user_count": 1,
+      "reward_total_no": 400000000,
+      "reward_total_nmnc": "4.00000000",
+      "oup2_payload": {
+        "magic": "OUP2",
+        "height_uint32_le_hex": "05000000",
+        "generation_hash": "8577d54d535c90883cd534183c2149dd8d268cdaa9903df037e5f00e5cba35b9",
+        "rewards_hash": "af1e27b4dd396b3e365d7a46fc3b883015fa9899fc56be449edfede3e3af37a5",
+        "payload_hex": "4f555032050000008577d54d535c90883cd534183c2149dd8d268cdaa9903df037e5f00e5cba35b9af1e27b4dd396b3e365d7a46fc3b883015fa9899fc56be449edfede3e3af37a5",
+        "payload_size_bytes": 72
+      },
+      "oupeinpo_signature": {
+        "status": "pending",
+        "placement": "coinbase_scriptSig_after_bip34_height",
+        "covers": [
+          "OUP2",
+          "oupeinpo_height",
+          "generation_hash",
+          "rewards_hash"
+        ],
+        "signature_hex": null,
+        "public_key_id": "oupeinpo-official-key-v1-pending"
+      },
+      "nmnc_anchor": {
+        "status": "pending",
+        "txid": null
+      },
+      "preview_image": "assets/generated/2026/07/05/gen_000005_output_01.jpg",
+      "tx_path": "data/tx/gen_000005.json"
+    },
+    {
+      "id": "gen_000006",
+      "sequence": 6,
+      "oupeinpo_height": 6,
+      "title": "Bloc Oupeinpo fictif #000006",
+      "created_at": "2026-07-05T10:47:00+02:00",
+      "source_count": 7,
+      "cluster_count": 3,
+      "output_count": 2,
+      "generation_hash": "cc1a5bc4ee92bd98562c72ead08054b1bc0e5de06edbf5c28ca74e905cb235f6",
+      "previous_generation_hash": "8577d54d535c90883cd534183c2149dd8d268cdaa9903df037e5f00e5cba35b9",
+      "rewards_hash": "2def41c3afdeaaf70a77c8cb98c649486b1620ddedd1549e3c2f5b630491366d",
+      "image_hash_head": "abe388fcf2605dd74fc354d78d237c4fd4fcd7402a7283cc1becc1c4c372098c",
+      "github_commit": "demo-000006",
+      "reward_user_count": 1,
+      "reward_total_no": 200000000,
+      "reward_total_nmnc": "2.00000000",
+      "oup2_payload": {
+        "magic": "OUP2",
+        "height_uint32_le_hex": "06000000",
+        "generation_hash": "cc1a5bc4ee92bd98562c72ead08054b1bc0e5de06edbf5c28ca74e905cb235f6",
+        "rewards_hash": "2def41c3afdeaaf70a77c8cb98c649486b1620ddedd1549e3c2f5b630491366d",
+        "payload_hex": "4f55503206000000cc1a5bc4ee92bd98562c72ead08054b1bc0e5de06edbf5c28ca74e905cb235f62def41c3afdeaaf70a77c8cb98c649486b1620ddedd1549e3c2f5b630491366d",
+        "payload_size_bytes": 72
+      },
+      "oupeinpo_signature": {
+        "status": "pending",
+        "placement": "coinbase_scriptSig_after_bip34_height",
+        "covers": [
+          "OUP2",
+          "oupeinpo_height",
+          "generation_hash",
+          "rewards_hash"
+        ],
+        "signature_hex": null,
+        "public_key_id": "oupeinpo-official-key-v1-pending"
+      },
+      "nmnc_anchor": {
+        "status": "pending",
+        "txid": null
+      },
+      "preview_image": "assets/generated/2026/07/05/gen_000006_output_01.jpg",
+      "tx_path": "data/tx/gen_000006.json"
+    },
+    {
+      "id": "gen_000007",
+      "sequence": 7,
+      "oupeinpo_height": 7,
+      "title": "Bloc Oupeinpo fictif #000007",
+      "created_at": "2026-07-05T11:06:00+02:00",
+      "source_count": 9,
+      "cluster_count": 4,
+      "output_count": 3,
+      "generation_hash": "ee2bfe793ef87d596950f7b0b7982a4455abb665d3b7581707ca3a8de8c97815",
+      "previous_generation_hash": "cc1a5bc4ee92bd98562c72ead08054b1bc0e5de06edbf5c28ca74e905cb235f6",
+      "rewards_hash": "bf9150ede8c7e800274d9ba598f838c23ae070d8a5b67f39ef5a8e6854a343b3",
+      "image_hash_head": "5826cd2848a77c8af38fa2d3f9fa67b4ddcdf11dc7a9617f88d56e591cd0c02e",
+      "github_commit": "demo-000007",
+      "reward_user_count": 1,
+      "reward_total_no": 300000000,
+      "reward_total_nmnc": "3.00000000",
+      "oup2_payload": {
+        "magic": "OUP2",
+        "height_uint32_le_hex": "07000000",
+        "generation_hash": "ee2bfe793ef87d596950f7b0b7982a4455abb665d3b7581707ca3a8de8c97815",
+        "rewards_hash": "bf9150ede8c7e800274d9ba598f838c23ae070d8a5b67f39ef5a8e6854a343b3",
+        "payload_hex": "4f55503207000000ee2bfe793ef87d596950f7b0b7982a4455abb665d3b7581707ca3a8de8c97815bf9150ede8c7e800274d9ba598f838c23ae070d8a5b67f39ef5a8e6854a343b3",
+        "payload_size_bytes": 72
+      },
+      "oupeinpo_signature": {
+        "status": "pending",
+        "placement": "coinbase_scriptSig_after_bip34_height",
+        "covers": [
+          "OUP2",
+          "oupeinpo_height",
+          "generation_hash",
+          "rewards_hash"
+        ],
+        "signature_hex": null,
+        "public_key_id": "oupeinpo-official-key-v1-pending"
+      },
+      "nmnc_anchor": {
+        "status": "pending",
+        "txid": null
+      },
+      "preview_image": "assets/generated/2026/07/05/gen_000007_output_01.jpg",
+      "tx_path": "data/tx/gen_000007.json"
+    },
+    {
+      "id": "gen_000008",
+      "sequence": 8,
+      "oupeinpo_height": 8,
+      "title": "Bloc Oupeinpo fictif #000008",
+      "created_at": "2026-07-05T11:25:00+02:00",
+      "source_count": 4,
+      "cluster_count": 2,
+      "output_count": 1,
+      "generation_hash": "4fbb6086777f4bd27c099c8c411b102d82af96834a2a4145dfa3e2bbf2eec400",
+      "previous_generation_hash": "ee2bfe793ef87d596950f7b0b7982a4455abb665d3b7581707ca3a8de8c97815",
+      "rewards_hash": "5fe8ecdd896bd7e6c26d809961953d44b3b2d43c155faf7b3b13e83c74538958",
+      "image_hash_head": "be209e83c27c6e0d3d7e477535875cec7d28177a439011ed1a93b3518c1a3651",
+      "github_commit": "demo-000008",
+      "reward_user_count": 1,
+      "reward_total_no": 100000000,
+      "reward_total_nmnc": "1.00000000",
+      "oup2_payload": {
+        "magic": "OUP2",
+        "height_uint32_le_hex": "08000000",
+        "generation_hash": "4fbb6086777f4bd27c099c8c411b102d82af96834a2a4145dfa3e2bbf2eec400",
+        "rewards_hash": "5fe8ecdd896bd7e6c26d809961953d44b3b2d43c155faf7b3b13e83c74538958",
+        "payload_hex": "4f555032080000004fbb6086777f4bd27c099c8c411b102d82af96834a2a4145dfa3e2bbf2eec4005fe8ecdd896bd7e6c26d809961953d44b3b2d43c155faf7b3b13e83c74538958",
+        "payload_size_bytes": 72
+      },
+      "oupeinpo_signature": {
+        "status": "pending",
+        "placement": "coinbase_scriptSig_after_bip34_height",
+        "covers": [
+          "OUP2",
+          "oupeinpo_height",
+          "generation_hash",
+          "rewards_hash"
+        ],
+        "signature_hex": null,
+        "public_key_id": "oupeinpo-official-key-v1-pending"
+      },
+      "nmnc_anchor": {
+        "status": "confirmed",
+        "txid": "cf794c7d9d530769f7da97ee97296cbc2f221f306c95f92e23a455013e40f450"
+      },
+      "preview_image": "assets/generated/2026/07/05/gen_000008_output_01.jpg",
+      "tx_path": "data/tx/gen_000008.json"
+    },
+    {
+      "id": "gen_000009",
+      "sequence": 9,
+      "oupeinpo_height": 9,
+      "title": "Bloc Oupeinpo fictif #000009",
+      "created_at": "2026-07-05T11:44:00+02:00",
+      "source_count": 6,
+      "cluster_count": 3,
+      "output_count": 2,
+      "generation_hash": "be6807e9faafbda4c24964bb99d616e58b097f32e26dc8470802e00925b14b4e",
+      "previous_generation_hash": "4fbb6086777f4bd27c099c8c411b102d82af96834a2a4145dfa3e2bbf2eec400",
+      "rewards_hash": "27315dd4b0bfd3017bed5ee40f96ff17dc2200768d558b10798790c306c797d7",
+      "image_hash_head": "4ba02b6ab62ec72273566a0ce9f830c17cc8e9890542ef16a75c4eda57a6940f",
+      "github_commit": "demo-000009",
+      "reward_user_count": 1,
+      "reward_total_no": 200000000,
+      "reward_total_nmnc": "2.00000000",
+      "oup2_payload": {
+        "magic": "OUP2",
+        "height_uint32_le_hex": "09000000",
+        "generation_hash": "be6807e9faafbda4c24964bb99d616e58b097f32e26dc8470802e00925b14b4e",
+        "rewards_hash": "27315dd4b0bfd3017bed5ee40f96ff17dc2200768d558b10798790c306c797d7",
+        "payload_hex": "4f55503209000000be6807e9faafbda4c24964bb99d616e58b097f32e26dc8470802e00925b14b4e27315dd4b0bfd3017bed5ee40f96ff17dc2200768d558b10798790c306c797d7",
+        "payload_size_bytes": 72
+      },
+      "oupeinpo_signature": {
+        "status": "pending",
+        "placement": "coinbase_scriptSig_after_bip34_height",
+        "covers": [
+          "OUP2",
+          "oupeinpo_height",
+          "generation_hash",
+          "rewards_hash"
+        ],
+        "signature_hex": null,
+        "public_key_id": "oupeinpo-official-key-v1-pending"
+      },
+      "nmnc_anchor": {
+        "status": "pending",
+        "txid": null
+      },
+      "preview_image": "assets/generated/2026/07/05/gen_000009_output_01.jpg",
+      "tx_path": "data/tx/gen_000009.json"
+    },
+    {
+      "id": "gen_000010",
+      "sequence": 10,
+      "oupeinpo_height": 10,
+      "title": "Bloc Oupeinpo fictif #000010",
+      "created_at": "2026-07-05T12:03:00+02:00",
+      "source_count": 10,
+      "cluster_count": 5,
+      "output_count": 4,
+      "generation_hash": "17066c1abd19705e3ec39c5099ce0b4d9947c58fb7c2fb6450c594fb4fcb61cd",
+      "previous_generation_hash": "be6807e9faafbda4c24964bb99d616e58b097f32e26dc8470802e00925b14b4e",
+      "rewards_hash": "8fd97ee369d606fb2c252d92dfea5f9cf55154aadd606d8817cb0730b3f7779a",
+      "image_hash_head": "df7c3f77d3ae370f22da4346e7d8843f080aad859fbf866e684bb52de7dfcf1d",
+      "github_commit": "demo-000010",
+      "reward_user_count": 1,
+      "reward_total_no": 400000000,
+      "reward_total_nmnc": "4.00000000",
+      "oup2_payload": {
+        "magic": "OUP2",
+        "height_uint32_le_hex": "0a000000",
+        "generation_hash": "17066c1abd19705e3ec39c5099ce0b4d9947c58fb7c2fb6450c594fb4fcb61cd",
+        "rewards_hash": "8fd97ee369d606fb2c252d92dfea5f9cf55154aadd606d8817cb0730b3f7779a",
+        "payload_hex": "4f5550320a00000017066c1abd19705e3ec39c5099ce0b4d9947c58fb7c2fb6450c594fb4fcb61cd8fd97ee369d606fb2c252d92dfea5f9cf55154aadd606d8817cb0730b3f7779a",
+        "payload_size_bytes": 72
+      },
+      "oupeinpo_signature": {
+        "status": "pending",
+        "placement": "coinbase_scriptSig_after_bip34_height",
+        "covers": [
+          "OUP2",
+          "oupeinpo_height",
+          "generation_hash",
+          "rewards_hash"
+        ],
+        "signature_hex": null,
+        "public_key_id": "oupeinpo-official-key-v1-pending"
+      },
+      "nmnc_anchor": {
+        "status": "pending",
+        "txid": null
+      },
+      "preview_image": "assets/generated/2026/07/05/gen_000010_output_01.jpg",
+      "tx_path": "data/tx/gen_000010.json"
+    },
+    {
+      "id": "gen_000011",
+      "sequence": 11,
+      "oupeinpo_height": 11,
+      "title": "Bloc Oupeinpo fictif #000011",
+      "created_at": "2026-07-05T12:22:00+02:00",
+      "source_count": 8,
+      "cluster_count": 4,
+      "output_count": 3,
+      "generation_hash": "f61c68104582ca829d65861ad79716ccf443322362fd86e5c6caac7634480928",
+      "previous_generation_hash": "17066c1abd19705e3ec39c5099ce0b4d9947c58fb7c2fb6450c594fb4fcb61cd",
+      "rewards_hash": "22a434fc353c21ec07c3ae47c3db0dda5ed6b8d1636f7ae05cb3b4137b35a2c9",
+      "image_hash_head": "df7c3f77d3ae370f22da4346e7d8843f080aad859fbf866e684bb52de7dfcf1d",
+      "github_commit": "demo-000011",
+      "reward_user_count": 1,
+      "reward_total_no": 300000000,
+      "reward_total_nmnc": "3.00000000",
+      "oup2_payload": {
+        "magic": "OUP2",
+        "height_uint32_le_hex": "0b000000",
+        "generation_hash": "f61c68104582ca829d65861ad79716ccf443322362fd86e5c6caac7634480928",
+        "rewards_hash": "22a434fc353c21ec07c3ae47c3db0dda5ed6b8d1636f7ae05cb3b4137b35a2c9",
+        "payload_hex": "4f5550320b000000f61c68104582ca829d65861ad79716ccf443322362fd86e5c6caac763448092822a434fc353c21ec07c3ae47c3db0dda5ed6b8d1636f7ae05cb3b4137b35a2c9",
+        "payload_size_bytes": 72
+      },
+      "oupeinpo_signature": {
+        "status": "pending",
+        "placement": "coinbase_scriptSig_after_bip34_height",
+        "covers": [
+          "OUP2",
+          "oupeinpo_height",
+          "generation_hash",
+          "rewards_hash"
+        ],
+        "signature_hex": null,
+        "public_key_id": "oupeinpo-official-key-v1-pending"
+      },
+      "nmnc_anchor": {
+        "status": "pending",
+        "txid": null
+      },
+      "preview_image": "assets/generated/2026/07/05/gen_000011_output_01.png",
+      "tx_path": "data/tx/gen_000011.json"
+    },
+    {
+      "id": "gen_000012",
+      "sequence": 12,
+      "oupeinpo_height": 12,
+      "title": "Bloc Oupeinpo fictif #000012",
+      "created_at": "2026-07-05T12:41:00+02:00",
+      "source_count": 7,
+      "cluster_count": 3,
+      "output_count": 2,
+      "generation_hash": "cc0466ad22a0719efc8d053d4424cf3ca7a2cf1aaa17c930d5f0ab48d4bab4b3",
+      "previous_generation_hash": "f61c68104582ca829d65861ad79716ccf443322362fd86e5c6caac7634480928",
+      "rewards_hash": "eaaae7e03e60a10dcd544762956b274b9605859e00442228d07e115303df47d3",
+      "image_hash_head": "df7c3f77d3ae370f22da4346e7d8843f080aad859fbf866e684bb52de7dfcf1d",
+      "github_commit": "demo-000012",
+      "reward_user_count": 1,
+      "reward_total_no": 200000000,
+      "reward_total_nmnc": "2.00000000",
+      "oup2_payload": {
+        "magic": "OUP2",
+        "height_uint32_le_hex": "0c000000",
+        "generation_hash": "cc0466ad22a0719efc8d053d4424cf3ca7a2cf1aaa17c930d5f0ab48d4bab4b3",
+        "rewards_hash": "eaaae7e03e60a10dcd544762956b274b9605859e00442228d07e115303df47d3",
+        "payload_hex": "4f5550320c000000cc0466ad22a0719efc8d053d4424cf3ca7a2cf1aaa17c930d5f0ab48d4bab4b3eaaae7e03e60a10dcd544762956b274b9605859e00442228d07e115303df47d3",
+        "payload_size_bytes": 72
+      },
+      "oupeinpo_signature": {
+        "status": "pending",
+        "placement": "coinbase_scriptSig_after_bip34_height",
+        "covers": [
+          "OUP2",
+          "oupeinpo_height",
+          "generation_hash",
+          "rewards_hash"
+        ],
+        "signature_hex": null,
+        "public_key_id": "oupeinpo-official-key-v1-pending"
+      },
+      "nmnc_anchor": {
+        "status": "pending",
+        "txid": null
+      },
+      "preview_image": "assets/generated/2026/07/05/gen_000012_output_01.png",
+      "tx_path": "data/tx/gen_000012.json"
+    }
+  ]
+}

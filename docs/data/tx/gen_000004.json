@@ -1,0 +1,102 @@
+{
+  "schema_version": "oupeinpo-block-v2-draft-demo",
+  "id": "gen_000004",
+  "sequence": 4,
+  "oupeinpo_height": 4,
+  "title": "Bloc Oupeinpo fictif #000004",
+  "canonical_generation_commitment": {
+    "schema_version": "oupeinpo-generation-v2",
+    "oupeinpo_height": 4,
+    "created_at": "2026-07-05T10:09:00+02:00",
+    "previous_generation_hash": "c3292b841c8e2110a332ee3d4ddfd3f156416d83c4eab004619836262c448f22",
+    "source_count": 5,
+    "cluster_count": 2,
+    "outputs": [
+      {
+        "index": 1,
+        "path": "assets/generated/2026/07/05/gen_000004_output_01.jpg",
+        "sha256": "05b26ecc47cb4a150a112d2ee3ebfbdf28ab8bef580658b62bcd7d5d62f7c0f6",
+        "mime_type": "image/jpeg"
+      }
+    ],
+    "rewards_hash": "ef64db2bd9270094699933be30075c28408a0d693efb016b143471575535c9c6"
+  },
+  "canonical_rewards_commitment": {
+    "schema_version": "oupeinpo-rewards-v2",
+    "oupeinpo_height": 4,
+    "total_generated_images": 1,
+    "total_amount_no": 100000000,
+    "users": [
+      {
+        "user_ref": "public_user_000004",
+        "public_alias": "Blase fictif 04",
+        "nmnc_address": "nmnc1qjwedljns6jrgqdx6px9y6dq07peejsfe92ejtv",
+        "address_validation": "demo_validated_sample_reused",
+        "generated_image_count": 1,
+        "amount_no": 100000000
+      }
+    ]
+  },
+  "generation_hash": "30e5fd73d20cc1de0ab0cc08716ff959ef193eb0d8879639b4801ec9adae3c58",
+  "previous_generation_hash": "c3292b841c8e2110a332ee3d4ddfd3f156416d83c4eab004619836262c448f22",
+  "rewards_hash": "ef64db2bd9270094699933be30075c28408a0d693efb016b143471575535c9c6",
+  "github_commit": "demo-000004",
+  "reward_policy": {
+    "unit": "no",
+    "display_unit": "NMNC",
+    "amount_per_generated_image_no": 100000000,
+    "max_user_outputs_per_anchor": 11
+  },
+  "oup2_payload": {
+    "magic": "OUP2",
+    "height_uint32_le_hex": "04000000",
+    "generation_hash": "30e5fd73d20cc1de0ab0cc08716ff959ef193eb0d8879639b4801ec9adae3c58",
+    "rewards_hash": "ef64db2bd9270094699933be30075c28408a0d693efb016b143471575535c9c6",
+    "payload_hex": "4f5550320400000030e5fd73d20cc1de0ab0cc08716ff959ef193eb0d8879639b4801ec9adae3c58ef64db2bd9270094699933be30075c28408a0d693efb016b143471575535c9c6",
+    "payload_size_bytes": 72
+  },
+  "oupeinpo_signature": {
+    "status": "pending",
+    "placement": "coinbase_scriptSig_after_bip34_height",
+    "covers": [
+      "OUP2",
+      "oupeinpo_height",
+      "generation_hash",
+      "rewards_hash"
+    ],
+    "signature_hex": null,
+    "public_key_id": "oupeinpo-official-key-v1-pending"
+  },
+  "nmnc_anchor": {
+    "status": "confirmed",
+    "txid": "cc937f4fb1fc96334738abd5f03a30095b4eb5c039cd356ac65b7ca6c7c0ef28",
+    "op_return_hash": null
+  },
+  "outputs": [
+    {
+      "index": 1,
+      "path": "assets/generated/2026/07/05/gen_000004_output_01.jpg",
+      "sha256": "05b26ecc47cb4a150a112d2ee3ebfbdf28ab8bef580658b62bcd7d5d62f7c0f6",
+      "mime_type": "image/jpeg"
+    }
+  ],
+  "source_count": 5,
+  "cluster_count": 2,
+  "expected_coinbase_rewards": {
+    "status": "draft_demo",
+    "rewards_hash": "ef64db2bd9270094699933be30075c28408a0d693efb016b143471575535c9c6",
+    "total_generated_images": 1,
+    "total_amount_no": 100000000,
+    "total_amount_nmnc": "1.00000000",
+    "users": [
+      {
+        "user_ref": "public_user_000004",
+        "public_alias": "Blase fictif 04",
+        "nmnc_address": "nmnc1qjwedljns6jrgqdx6px9y6dq07peejsfe92ejtv",
+        "address_validation": "demo_validated_sample_reused",
+        "generated_image_count": 1,
+        "amount_no": 100000000
+      }
+    ]
+  }
+}

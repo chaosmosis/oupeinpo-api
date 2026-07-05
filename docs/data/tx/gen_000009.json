@@ -1,0 +1,114 @@
+{
+  "schema_version": "oupeinpo-block-v2-draft-demo",
+  "id": "gen_000009",
+  "sequence": 9,
+  "oupeinpo_height": 9,
+  "title": "Bloc Oupeinpo fictif #000009",
+  "canonical_generation_commitment": {
+    "schema_version": "oupeinpo-generation-v2",
+    "oupeinpo_height": 9,
+    "created_at": "2026-07-05T11:44:00+02:00",
+    "previous_generation_hash": "4fbb6086777f4bd27c099c8c411b102d82af96834a2a4145dfa3e2bbf2eec400",
+    "source_count": 6,
+    "cluster_count": 3,
+    "outputs": [
+      {
+        "index": 1,
+        "path": "assets/generated/2026/07/05/gen_000009_output_01.jpg",
+        "sha256": "5826cd2848a77c8af38fa2d3f9fa67b4ddcdf11dc7a9617f88d56e591cd0c02e",
+        "mime_type": "image/jpeg"
+      },
+      {
+        "index": 2,
+        "path": "assets/generated/2026/07/05/gen_000009_output_02.jpg",
+        "sha256": "4ba02b6ab62ec72273566a0ce9f830c17cc8e9890542ef16a75c4eda57a6940f",
+        "mime_type": "image/jpeg"
+      }
+    ],
+    "rewards_hash": "27315dd4b0bfd3017bed5ee40f96ff17dc2200768d558b10798790c306c797d7"
+  },
+  "canonical_rewards_commitment": {
+    "schema_version": "oupeinpo-rewards-v2",
+    "oupeinpo_height": 9,
+    "total_generated_images": 2,
+    "total_amount_no": 200000000,
+    "users": [
+      {
+        "user_ref": "public_user_000009",
+        "public_alias": "Blase fictif 09",
+        "nmnc_address": "nmnc1qjwedljns6jrgqdx6px9y6dq07peejsfe92ejtv",
+        "address_validation": "demo_validated_sample_reused",
+        "generated_image_count": 2,
+        "amount_no": 200000000
+      }
+    ]
+  },
+  "generation_hash": "be6807e9faafbda4c24964bb99d616e58b097f32e26dc8470802e00925b14b4e",
+  "previous_generation_hash": "4fbb6086777f4bd27c099c8c411b102d82af96834a2a4145dfa3e2bbf2eec400",
+  "rewards_hash": "27315dd4b0bfd3017bed5ee40f96ff17dc2200768d558b10798790c306c797d7",
+  "github_commit": "demo-000009",
+  "reward_policy": {
+    "unit": "no",
+    "display_unit": "NMNC",
+    "amount_per_generated_image_no": 100000000,
+    "max_user_outputs_per_anchor": 11
+  },
+  "oup2_payload": {
+    "magic": "OUP2",
+    "height_uint32_le_hex": "09000000",
+    "generation_hash": "be6807e9faafbda4c24964bb99d616e58b097f32e26dc8470802e00925b14b4e",
+    "rewards_hash": "27315dd4b0bfd3017bed5ee40f96ff17dc2200768d558b10798790c306c797d7",
+    "payload_hex": "4f55503209000000be6807e9faafbda4c24964bb99d616e58b097f32e26dc8470802e00925b14b4e27315dd4b0bfd3017bed5ee40f96ff17dc2200768d558b10798790c306c797d7",
+    "payload_size_bytes": 72
+  },
+  "oupeinpo_signature": {
+    "status": "pending",
+    "placement": "coinbase_scriptSig_after_bip34_height",
+    "covers": [
+      "OUP2",
+      "oupeinpo_height",
+      "generation_hash",
+      "rewards_hash"
+    ],
+    "signature_hex": null,
+    "public_key_id": "oupeinpo-official-key-v1-pending"
+  },
+  "nmnc_anchor": {
+    "status": "pending",
+    "txid": null,
+    "op_return_hash": null
+  },
+  "outputs": [
+    {
+      "index": 1,
+      "path": "assets/generated/2026/07/05/gen_000009_output_01.jpg",
+      "sha256": "5826cd2848a77c8af38fa2d3f9fa67b4ddcdf11dc7a9617f88d56e591cd0c02e",
+      "mime_type": "image/jpeg"
+    },
+    {
+      "index": 2,
+      "path": "assets/generated/2026/07/05/gen_000009_output_02.jpg",
+      "sha256": "4ba02b6ab62ec72273566a0ce9f830c17cc8e9890542ef16a75c4eda57a6940f",
+      "mime_type": "image/jpeg"
+    }
+  ],
+  "source_count": 6,
+  "cluster_count": 3,
+  "expected_coinbase_rewards": {
+    "status": "draft_demo",
+    "rewards_hash": "27315dd4b0bfd3017bed5ee40f96ff17dc2200768d558b10798790c306c797d7",
+    "total_generated_images": 2,
+    "total_amount_no": 200000000,
+    "total_amount_nmnc": "2.00000000",
+    "users": [
+      {
+        "user_ref": "public_user_000009",
+        "public_alias": "Blase fictif 09",
+        "nmnc_address": "nmnc1qjwedljns6jrgqdx6px9y6dq07peejsfe92ejtv",
+        "address_validation": "demo_validated_sample_reused",
+        "generated_image_count": 2,
+        "amount_no": 200000000
+      }
+    ]
+  }
+}
