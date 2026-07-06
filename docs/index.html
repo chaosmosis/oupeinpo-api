@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ouvroir de peinture potentielle - contribution</title>
+  <title>No Image No Migration</title>
   <style>
     :root {
       color-scheme: light;
@@ -191,6 +191,17 @@
       margin-top: 8px;
     }
 
+    .annotation-group {
+      margin-top: 12px;
+    }
+
+    .annotation-title {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: .9rem;
+      font-weight: 600;
+    }
+
     .chip {
       display: flex;
       align-items: center;
@@ -239,8 +250,8 @@
   <main>
     <header>
       <div>
-        <h1>Oupeinpo</h1>
-        <p class="tagline">Ouvroir de peinture potentielle. Déposer un corpus d’images, annoter quelques motifs, puis recevoir le rapport privé par e-mail. La page publique ne montre que les images générées.</p>
+        <h1>No Image No Migration</h1>
+        <p class="tagline">No Migration No Coin. Ouvroir de peinture potentielle : déposer un corpus d’images, annoter quelques motifs, puis recevoir le rapport privé par e-mail. La page publique ne montre que les images générées.</p>
         <p class="tagline"><a href="https://survie.tailc688f6.ts.net/global-blockchain.json" target="_blank" rel="noopener">Explorer le registre global</a></p>
       </div>
       <div class="api-state" id="api-state">API : vérification…</div>
@@ -251,19 +262,19 @@
         <h2>Contribution</h2>
 
         <label for="title">Titre</label>
-        <input id="title" name="title" type="text" value="Ouvroir de peinture potentielle">
+        <input id="title" name="title" type="text" value="No Image No Migration">
 
         <label for="email">E-mail pour le rapport privé</label>
         <input id="email" name="email" type="email" autocomplete="email" required>
 
         <label for="nmnc-address">Adresse NMNC publique</label>
         <input id="nmnc-address" name="nmnc_address" type="text" autocomplete="off" placeholder="nmnc1...">
-        <div class="note">Si vous avez déjà une adresse NMNC publique, indiquez-la ici. Sinon, laissez ce champ vide : une adresse devra être générée avant tout paiement OUP2. Ne jamais envoyer de clé privée.</div>
+        <div class="note">Si vous avez déjà une adresse NMNC publique, indiquez-la ici. Sinon, laissez ce champ vide : l’Ouvroir générera directement une adresse pour ce test. Ne jamais envoyer de clé privée.</div>
 
         <label for="access-code">Code d’accès</label>
         <input id="access-code" name="access_code" type="text" autocomplete="off" required>
 
-        <label for="clusters">Clusters</label>
+        <label for="clusters">Choix du nombre de peinture informatique</label>
         <select id="clusters" name="clusters">
           <option value="auto">Automatique</option>
           <option value="1">1</option>
@@ -301,30 +312,46 @@
     const MAX_FILE_BYTES = 10 * 1024 * 1024;
     const MAX_TOTAL_BYTES = 80 * 1024 * 1024;
 
-    const annotationFields = [
-      ["gabriel", "Gabriel"],
-      ["marie", "Marie"],
-      ["colombe", "Colombe"],
-      ["rayon_lumineux", "Rayon"],
-      ["livre", "Livre"],
-      ["lys", "Lys"],
-      ["fenetre", "Fenêtre"],
-      ["porte_seuil", "Seuil"],
-      ["colonne_architecture", "Architecture"],
-      ["jardin", "Jardin"],
-      ["aureole", "Auréole"],
-      ["main_geste", "Geste"],
-      ["perspective_marquee", "Perspective"],
-      ["affect_joie", "Joie"],
-      ["affect_admiration", "Admiration"],
-      ["affect_crainte", "Crainte"],
-      ["forme_ligne", "Ligne"],
-      ["forme_angle", "Angle"],
-      ["forme_triangle", "Triangle"],
-      ["forme_cercle", "Cercle"],
-      ["forme_grille", "Grille"],
-      ["forme_volume", "Volume"]
+    const annotationGroups = [
+      {
+        title: "Motifs de l’Annonciation",
+        fields: [
+          ["gabriel", "Gabriel"],
+          ["marie", "Marie"],
+          ["colombe", "Colombe"],
+          ["rayon_lumineux", "Rayon"],
+          ["livre", "Livre"],
+          ["lys", "Lys"],
+          ["fenetre", "Fenêtre"],
+          ["porte_seuil", "Seuil"],
+          ["colonne_architecture", "Architecture"],
+          ["jardin", "Jardin"],
+          ["aureole", "Auréole"],
+          ["main_geste", "Geste"],
+          ["perspective_marquee", "Perspective"]
+        ]
+      },
+      {
+        title: "Affects",
+        fields: [
+          ["affect_joie", "Joie"],
+          ["affect_admiration", "Admiration"],
+          ["affect_crainte", "Crainte"]
+        ]
+      },
+      {
+        title: "Formes",
+        fields: [
+          ["forme_ligne", "Ligne"],
+          ["forme_angle", "Angle"],
+          ["forme_triangle", "Triangle"],
+          ["forme_cercle", "Cercle"],
+          ["forme_grille", "Grille"],
+          ["forme_volume", "Volume"]
+        ]
+      }
     ];
+    const annotationFields = annotationGroups.flatMap((group) => group.fields);
 
     const form = document.getElementById("oupeinpo-form");
     const imageInput = document.getElementById("images");
@@ -377,23 +404,33 @@
         name.className = "image-name";
         name.textContent = file.name;
 
-        const chips = document.createElement("div");
-        chips.className = "chips";
-
-        annotationFields.forEach(([field, label]) => {
-          const chip = document.createElement("label");
-          chip.className = "chip";
-          chip.innerHTML = `<input type="checkbox" data-field="${field}"><span>${label}</span>`;
-          chips.appendChild(chip);
-        });
-
         const freeLabel = document.createElement("label");
         freeLabel.textContent = "Mot libre";
         const freeText = document.createElement("textarea");
         freeText.dataset.field = "mot_libre";
         freeText.placeholder = "souffle, seuil, tension…";
 
-        card.append(image, name, chips, freeLabel, freeText);
+        card.append(image, name, freeLabel, freeText);
+        annotationGroups.forEach((group) => {
+          const groupElement = document.createElement("div");
+          groupElement.className = "annotation-group";
+
+          const groupTitle = document.createElement("p");
+          groupTitle.className = "annotation-title";
+          groupTitle.textContent = group.title;
+
+          const chips = document.createElement("div");
+          chips.className = "chips";
+          group.fields.forEach(([field, label]) => {
+            const chip = document.createElement("label");
+            chip.className = "chip";
+            chip.innerHTML = `<input type="checkbox" data-field="${field}"><span>${label}</span>`;
+            chips.appendChild(chip);
+          });
+
+          groupElement.append(groupTitle, chips);
+          card.appendChild(groupElement);
+        });
         imageGrid.appendChild(card);
       });
 
@@ -486,7 +523,7 @@
       setStatus("Envoi des images vers l’API Oupeinpo…");
 
       const formData = new FormData();
-      formData.append("title", document.getElementById("title").value || "Ouvroir de peinture potentielle");
+      formData.append("title", document.getElementById("title").value || "No Image No Migration");
       formData.append("email", document.getElementById("email").value);
       formData.append("nmnc_address", document.getElementById("nmnc-address").value.trim());
       formData.append("access_code", document.getElementById("access-code").value);
