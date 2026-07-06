@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Oupeinpo - contribution</title>
+  <title>Ouvroir de peinture potentielle - contribution</title>
   <style>
     :root {
       color-scheme: light;
@@ -240,7 +240,8 @@
     <header>
       <div>
         <h1>Oupeinpo</h1>
-        <p class="tagline">Déposer un corpus d’images, annoter quelques motifs, puis recevoir le rapport privé par e-mail. La page publique ne montre que les images générées.</p>
+        <p class="tagline">Ouvroir de peinture potentielle. Déposer un corpus d’images, annoter quelques motifs, puis recevoir le rapport privé par e-mail. La page publique ne montre que les images générées.</p>
+        <p class="tagline"><a href="https://survie.tailc688f6.ts.net/global-blockchain.json" target="_blank" rel="noopener">Explorer le registre global</a></p>
       </div>
       <div class="api-state" id="api-state">API : vérification…</div>
     </header>
@@ -250,14 +251,14 @@
         <h2>Contribution</h2>
 
         <label for="title">Titre</label>
-        <input id="title" name="title" type="text" value="Oupeinpo">
+        <input id="title" name="title" type="text" value="Ouvroir de peinture potentielle">
 
         <label for="email">E-mail pour le rapport privé</label>
         <input id="email" name="email" type="email" autocomplete="email" required>
 
         <label for="nmnc-address">Adresse NMNC publique</label>
         <input id="nmnc-address" name="nmnc_address" type="text" autocomplete="off" placeholder="nmnc1...">
-        <div class="note">Optionnelle pour le traitement, requise pour l’export OUP2 payable. Ne jamais envoyer de clé privée.</div>
+        <div class="note">Si vous avez déjà une adresse NMNC publique, indiquez-la ici. Sinon, laissez ce champ vide : une adresse devra être générée avant tout paiement OUP2. Ne jamais envoyer de clé privée.</div>
 
         <label for="access-code">Code d’accès</label>
         <input id="access-code" name="access_code" type="text" autocomplete="off" required>
@@ -485,7 +486,7 @@
       setStatus("Envoi des images vers l’API Oupeinpo…");
 
       const formData = new FormData();
-      formData.append("title", document.getElementById("title").value || "Oupeinpo");
+      formData.append("title", document.getElementById("title").value || "Ouvroir de peinture potentielle");
       formData.append("email", document.getElementById("email").value);
       formData.append("nmnc_address", document.getElementById("nmnc-address").value.trim());
       formData.append("access_code", document.getElementById("access-code").value);
