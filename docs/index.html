@@ -438,7 +438,9 @@
             clearInterval(pollTimer);
             pollTimer = null;
             const link = data.result_url || `${API_BASE_URL}/result/${jobId}`;
-            statusBox.innerHTML = `Traitement terminé. <a href="${link}" target="_blank" rel="noopener">Voir les images générées</a>. Le rapport privé est envoyé par e-mail.`;
+            const blockchainLink = `${API_BASE_URL}/blockchain/${jobId}`;
+            const oup2Link = `${API_BASE_URL}/oup2/${jobId}`;
+            statusBox.innerHTML = `Traitement terminé. <a href="${link}" target="_blank" rel="noopener">Voir les images générées</a>. <a href="${blockchainLink}" target="_blank" rel="noopener">Explorer le registre</a>. <a href="${oup2Link}" target="_blank" rel="noopener">Exporter OUP2</a>. Le rapport privé est envoyé par e-mail.`;
             submitButton.disabled = false;
           }
 
