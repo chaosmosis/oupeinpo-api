@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>No Image No Migration</title>
+  <title>OUPEINPO</title>
   <style>
     :root {
       color-scheme: light;
@@ -250,8 +250,8 @@
   <main>
     <header>
       <div>
-        <h1>No Image No Migration</h1>
-        <p class="tagline">No Migration No Coin. Ouvroir de peinture potentielle : déposer un corpus d’images, annoter quelques motifs, puis recevoir le rapport privé par e-mail. La page publique ne montre que les images générées.</p>
+        <h1>Ouvroir de peinture informatique potentielle</h1>
+        <p class="tagline">Cet ouvroir de peinture informatique potentielle vise à amplifier la maxime "All refugees are welcome". Pour ce faire, nous vous proposons de déposer des images importantes pour vous et de les annoter à votre guise avec notre petit formulaire. Ces contraintes, imposées pour vous, migrantes et migrants, ont été conçues afin de nourrir nos imaginaires de peintures informatiques. Nous vous invitons également à nous confier une adresse e-mail afin de vous embrigader plus amoureusement. NB : xyzetc@riseup.net pour toute information complémentaire.</p>
         <p class="tagline"><a href="explorer.html">Explorer l’ouvroir des peintures informatiques réalisées</a></p>
       </div>
       <div class="api-state" id="api-state">API : vérification…</div>
@@ -272,7 +272,7 @@
         <label for="access-code">Code d’accès</label>
         <input id="access-code" name="access_code" type="text" autocomplete="off" required>
 
-        <label for="clusters">Choix du nombre de peinture informatique</label>
+        <label for="clusters">Décidez ici combien de peinture vous souhaitez créer. </label>
         <select id="clusters" name="clusters">
           <option value="auto">Automatique</option>
           <option value="1">1</option>
@@ -473,8 +473,8 @@
           if (data.status === "done") {
             clearInterval(pollTimer);
             pollTimer = null;
-            const link = data.result_url || `${API_BASE_URL}/result/${jobId}`;
-            statusBox.innerHTML = `Traitement terminé. <a href="${link}" target="_blank" rel="noopener">Voir les images générées</a>. <a href="explorer.html">Explorer l’ouvroir des peintures informatiques réalisées</a>. Le rapport privé est envoyé par e-mail.`;
+            const blockLink = `generation.html?id=${encodeURIComponent(jobId)}`;
+            statusBox.innerHTML = `Traitement terminé. <a href="${blockLink}">Voir la page du bloc Oupeinpo</a>. <a href="explorer.html">Explorer l’ouvroir des peintures informatiques réalisées</a>. Le rapport privé est envoyé par e-mail.`;
             submitButton.disabled = false;
           }
 

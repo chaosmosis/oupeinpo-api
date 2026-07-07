@@ -197,7 +197,7 @@
     <header>
       <div>
         <h1 id="title">Bloc Oupeinpo</h1>
-        <p class="tagline" id="subtitle">Chargement du point de registre.</p>
+        <p class="tagline" id="subtitle">Chargement du point de registre depuis l’API.</p>
       </div>
       <nav aria-label="Navigation">
         <a href="index.html">Contribuer</a>
@@ -210,7 +210,7 @@
         <h2>Images generees</h2>
         <div class="outputs" id="outputs"></div>
         <div class="rewards">
-          <h2>Paiements attendus</h2>
+          <h2>Droits d’usage</h2>
           <ul class="reward-list" id="rewards"></ul>
         </div>
       </section>
@@ -232,6 +232,7 @@
     const metadata = document.getElementById("metadata");
     const rewards = document.getElementById("rewards");
     const rawJson = document.getElementById("raw-json");
+    const API_BASE_URL = "https://survie.tailc688f6.ts.net";
 
     function formatDate(value) {
       if (!value) return "-";
@@ -248,67 +249,106 @@
       return `<dt>${label}</dt><dd>${value || "-"}</dd>`;
     }
 
+    function asAbsoluteUrl(jobId, path) {
+      if (!path) return "";
+      if (path.startsWith("http")) return path;
+      if (path.startsWith("/")) return `${API_BASE_URL}${path}`;
+      if (path.startsWith("local-results/")) return `${API_BASE_URL}/${path}`;
+      return `${API_BASE_URL}/local-results/${jobId}/${path}`;
+    }
+
+    function normalizeOutputs(tx) {
+      if (Array.isArray(tx.outputs) && tx.outputs.length) {
+        return tx.outputs.map((output, index) => ({
+          index: output.index || index + 1,
+          path: output.path || output.url || output.image_path,
+          sha256: output.sha256 || output.image_sha256 || tx.image_sha256_seed
+        })).filter((output) => output.path);
+      }
+
+      const candidates = [
+        tx.preview_image,
+        tx.image_path,
+        tx.output_image,
+        tx.generated_image,
+        tx.result_image
+      ].filter(Boolean);
+
+      return candidates.map((path, index) => ({
+        index: index + 1,
+        path,
+        sha256: tx.image_sha256_seed || tx.image_hash
+      }));
+    }
+
+    function normalizeEntry(tx) {
+      const jobId = tx.job_id || tx.id;
+      const height = tx.oupeinpo_height || tx.job_index || tx.sequence || tx.index;
+      return {
+        id: jobId,
+        height,
+        created_at: tx.created_at || tx.timestamp,
+        source_count: tx.source_count || "-",
+        cluster_count: tx.cluster_count || "-",
+        generation_hash: tx.generation_hash || tx.block_hash,
+        previous_generation_hash: tx.previous_generation_hash || tx.previous_block_hash,
+        rewards_hash: tx.rewards_hash || (tx.expected_coinbase_rewards && tx.expected_coinbase_rewards.rewards_hash),
+        nmnc_address: tx.nmnc_address,
+        reward_total_no: tx.reward_total_no || (tx.expected_coinbase_rewards && tx.expected_coinbase_rewards.total_amount_no) || 0,
+        reward_total_nmnc: tx.reward_total_nmnc || (tx.expected_coinbase_rewards && tx.expected_coinbase_rewards.total_amount_nmnc) || "0.00000000",
+        reward_user_count: tx.reward_user_count || (tx.nmnc_address ? 1 : 0),
+        nmnc_anchor: tx.nmnc_anchor || { status: "pending" },
+        outputs: normalizeOutputs(tx),
+        raw: tx
+      };
+    }
+
     async function loadGeneration() {
       try {
-        const ledgerResponse = await fetch("data/ledger.json", { cache: "no-store" });
-        const ledger = await ledgerResponse.json();
-        const entry = ledger.entries.find((item) => item.id === requestedId) || ledger.entries[ledger.entries.length - 1];
-        if (!entry) throw new Error("empty ledger");
+        const response = await fetch(`${API_BASE_URL}/global-blockchain.json`, { cache: "no-store" });
+        const chain = await response.json();
+        const transactions = chain.transactions || [];
+        const tx = transactions.find((item) => (item.job_id || item.id) === requestedId) || transactions[transactions.length - 1];
+        if (!tx) throw new Error("empty ledger");
 
-        const txResponse = await fetch(entry.tx_path, { cache: "no-store" });
-        const tx = await txResponse.json();
+        const entry = normalizeEntry(tx);
+        const resultIndexUrl = `${API_BASE_URL}/local-results/${entry.id}/index.html`;
 
-        const height = tx.oupeinpo_height || tx.sequence;
-        const generationHash = tx.generation_hash;
-        const previousHash = tx.previous_generation_hash;
-        const rewardsHash = tx.rewards_hash || (tx.expected_coinbase_rewards && tx.expected_coinbase_rewards.rewards_hash);
-        const oup2 = tx.oup2_payload || {};
-        const signature = tx.oupeinpo_signature || {};
-        const expectedRewards = tx.expected_coinbase_rewards || { users: [] };
+        title.textContent = `Bloc Oupeinpo #${String(entry.height).padStart(6, "0")}`;
+        subtitle.textContent = `${formatDate(entry.created_at)} - ${entry.source_count} images sources privees, ${entry.cluster_count} clusters, ${entry.outputs.length || 1} peinture(s) informatique(s), ${entry.reward_total_no || 0} no en droits d’usage.`;
+        rawJson.href = `${API_BASE_URL}/global-blockchain.json`;
 
-        title.textContent = `Bloc Oupeinpo #${String(height).padStart(6, "0")}`;
-        subtitle.textContent = `${formatDate(tx.created_at)} - ${tx.source_count} images sources privees, ${tx.cluster_count} clusters, ${tx.outputs.length} sortie(s) publique(s), ${expectedRewards.total_amount_no || 0} no attendu(s).`;
-        rawJson.href = entry.tx_path;
-
-        outputs.innerHTML = tx.outputs.map((output) => `
+        outputs.innerHTML = entry.outputs.length ? entry.outputs.map((output) => `
           <article class="output">
-            <img src="${output.path}" alt="Image generee ${tx.id} sortie ${output.index}">
-            <div class="caption">SHA256 ${output.sha256}</div>
+            <img src="${asAbsoluteUrl(entry.id, output.path)}" alt="Image generee ${entry.id} sortie ${output.index}">
+            <div class="caption">SHA256 ${output.sha256 || "-"}</div>
           </article>
-        `).join("");
+        `).join("") : `<div class="empty"><a href="${resultIndexUrl}">Voir les images generees sur le serveur</a>.</div>`;
 
-        rewards.innerHTML = expectedRewards.users && expectedRewards.users.length
-          ? expectedRewards.users.map((user) => `
+        rewards.innerHTML = entry.nmnc_address
+          ? `
             <li>
-              <strong>${user.amount_nmnc || ((user.amount_no || 0) / 100000000).toFixed(8)} NMNC</strong>
-              Adresse : ${user.nmnc_address}<br>
-              Images generees : ${user.generated_image_count}<br>
-              Montant strict : ${user.amount_no || 0} no<br>
-              Alias public : ${user.public_alias || "-"}<br>
-              Reference publique : ${user.user_ref}
+              <strong>${entry.reward_total_nmnc} NMNC</strong>
+              Adresse associee : ${entry.nmnc_address}<br>
+              Droits d’usage : ${entry.reward_total_no || 0} no<br>
+              Peintures informatiques : ${entry.outputs.length || 1}
             </li>
-          `).join("")
-          : '<li>Aucun paiement attendu pour ce bloc.</li>';
+          `
+          : '<li>Aucune adresse NMNC publique associee a ce bloc.</li>';
 
         metadata.innerHTML = [
-          field("Identifiant", tx.id),
-          field("Hauteur Oupeinpo", height),
-          field("Generation hash", generationHash),
-          field("Hash precedent", previousHash || "genesis"),
-          field("Rewards hash", rewardsHash),
-          field("OUP2 magic", oup2.magic || "OUP2"),
-          field("OUP2 height LE", oup2.height_uint32_le_hex),
-          field("OUP2 payload OP_RETURN", oup2.payload_hex),
-          field("Taille payload", oup2.payload_size_bytes ? `${oup2.payload_size_bytes} octets` : "-"),
-          field("Total no attendu", expectedRewards.total_amount_no),
-          field("Total NMNC attendu", expectedRewards.total_amount_nmnc),
-          field("Signature Oupeinpo", signature.status || "pending"),
-          field("Signature placée", signature.placement || "coinbase scriptSig"),
-          field("Images sources", tx.source_count),
-          field("Clusters", tx.cluster_count),
-          field("Commit GitHub", tx.github_commit),
-          field("Ancrage NMNC", tx.nmnc_anchor && tx.nmnc_anchor.txid ? tx.nmnc_anchor.txid : "pending"),
-          field("Statut NMNC", tx.nmnc_anchor && tx.nmnc_anchor.status ? tx.nmnc_anchor.status : "pending")
+          field("Identifiant", entry.id),
+          field("Hauteur Oupeinpo", entry.height),
+          field("Generation hash", entry.generation_hash),
+          field("Hash precedent", entry.previous_generation_hash || "genesis"),
+          field("Rewards hash", entry.rewards_hash),
+          field("Droits no", entry.reward_total_no),
+          field("Droits NMNC", entry.reward_total_nmnc),
+          field("Images sources", entry.source_count),
+          field("Clusters", entry.cluster_count),
+          field("Adresse NMNC", entry.nmnc_address),
+          field("Ancrage NMNC", entry.nmnc_anchor && entry.nmnc_anchor.txid ? entry.nmnc_anchor.txid : "pending"),
+          field("Statut NMNC", entry.nmnc_anchor && entry.nmnc_anchor.status ? entry.nmnc_anchor.status : "pending")
         ].join("");
       } catch (error) {
         title.textContent = "Bloc introuvable";

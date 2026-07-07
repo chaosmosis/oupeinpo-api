@@ -316,12 +316,12 @@
     <header>
       <div>
         <h1>Oupeinpo Chain Explorer</h1>
-        <p class="tagline">Fil public des blocs Oupeinpo. Chaque point relie une generation d’images synthetiques, une liste de paiements attendus et un payload OUP2 compact pour NMNC.</p>
+        <p class="tagline">Fil public de l’ouvroir. Chaque point relie des peintures informatiques a un horizon commun ou les potentialites de nos vies-en-fichiers ouvrent des droits d’usage contre la privatisation des imaginaires, des circulations et des personnes migrantes.</p>
       </div>
       <nav aria-label="Navigation">
         <a href="index.html">Contribuer</a>
         <a href="explorer.html" aria-current="page">Explorer</a>
-        <a href="data/ledger.json">Ledger JSON</a>
+        <a href="https://survie.tailc688f6.ts.net/global-blockchain.json">Registre JSON</a>
       </nav>
     </header>
 
@@ -329,7 +329,7 @@
       <div class="metric"><span>Images generees</span><strong id="metric-images">-</strong></div>
       <div class="metric"><span>Blocs Oupeinpo</span><strong id="metric-generations">-</strong></div>
       <div class="metric"><span>Images sources traitees</span><strong id="metric-sources">-</strong></div>
-      <div class="metric"><span>NMNC a payer</span><strong id="metric-rewards">-</strong></div>
+      <div class="metric"><span>Droits NMNC</span><strong id="metric-rewards">-</strong></div>
       <div class="metric"><span>Ancrage NMNC</span><strong id="metric-anchor">-</strong></div>
     </section>
 
@@ -359,6 +359,7 @@
     const latestImages = document.getElementById("latest-images");
     const head = document.getElementById("head");
     const search = document.getElementById("search");
+    const API_BASE_URL = "https://survie.tailc688f6.ts.net";
     let entries = [];
 
     function shortHash(value) {
@@ -426,7 +427,7 @@
               </div>
               <div class="hash">Generation hash : ${shortHash(generationHash)}</div>
               <div class="hash">Rewards hash : ${shortHash(rewardsHash)}</div>
-              <div class="hash">Paiements : ${entry.reward_user_count || 0} adresse(s), ${entry.reward_total_no || 0} no</div>
+              <div class="hash">Droits d’usage : ${entry.reward_user_count || 0} adresse(s), ${entry.reward_total_no || 0} no</div>
               <div class="hash">Image head : ${shortHash(entry.image_hash_head)}</div>
               <div class="hash">OUP2 : ${shortHash(payload)}</div>
               <span class="status">NMNC ${entry.nmnc_anchor && entry.nmnc_anchor.status ? entry.nmnc_anchor.status : "pending"}</span>
@@ -446,8 +447,8 @@
       `).join("");
     }
 
-    function renderHead(ledger) {
-      const current = entries.find((entry) => entry.id === ledger.head.id) || entries[entries.length - 1];
+    function renderHead() {
+      const current = entries[entries.length - 1];
       if (!current) {
         head.innerHTML = '<li>Aucun bloc.</li>';
         return;
@@ -462,7 +463,7 @@
         <li>Hash precedent<br>${previousHash || "genesis"}</li>
         <li>Rewards hash<br>${rewardsHash || "pending"}</li>
         <li>Payload OUP2<br>${payload || "pending"}</li>
-        <li>Paiements attendus<br>${current.reward_total_no || 0} no vers ${current.reward_user_count || 0} adresse(s)</li>
+        <li>Droits d’usage<br>${current.reward_total_no || 0} no vers ${current.reward_user_count || 0} adresse(s)</li>
         <li>Commit GitHub<br>${current.github_commit || "pending"}</li>
         <li>Ancrage NMNC<br>${current.nmnc_anchor && current.nmnc_anchor.txid ? current.nmnc_anchor.txid : "pending"}</li>
       `;
@@ -470,23 +471,45 @@
 
     async function loadExplorer() {
       try {
-        const [ledgerResponse, statsResponse] = await Promise.all([
-          fetch("data/ledger.json", { cache: "no-store" }),
-          fetch("data/stats.json", { cache: "no-store" })
-        ]);
-        const ledger = await ledgerResponse.json();
-        const stats = await statsResponse.json();
-        entries = [...ledger.entries].sort((a, b) => (a.oupeinpo_height || a.sequence) - (b.oupeinpo_height || b.sequence));
+        const response = await fetch(`${API_BASE_URL}/global-blockchain.json`, { cache: "no-store" });
+        const chain = await response.json();
+        entries = (chain.transactions || []).map((tx) => {
+          const jobId = tx.job_id || tx.id;
+          const firstOutput = Array.isArray(tx.outputs) && tx.outputs.length ? tx.outputs[0] : {};
+          const imagePath = tx.preview_image || tx.image_path || tx.output_image || tx.generated_image || tx.result_image || firstOutput.path || firstOutput.url || firstOutput.image_path || "";
+          return {
+            id: jobId,
+            sequence: tx.sequence || tx.index,
+            oupeinpo_height: tx.oupeinpo_height || tx.job_index || tx.sequence || tx.index,
+            title: tx.title,
+            created_at: tx.created_at || tx.timestamp,
+            source_count: tx.source_count || "-",
+            cluster_count: tx.cluster_count || "-",
+            output_count: tx.output_count || (Array.isArray(tx.outputs) ? tx.outputs.length : 1),
+            reward_total_nmnc: tx.reward_total_nmnc || "1.00000000",
+            reward_total_no: tx.reward_total_no || 100000000,
+            reward_user_count: tx.reward_user_count || (tx.nmnc_address ? 1 : 0),
+            generation_hash: tx.generation_hash || tx.block_hash,
+            previous_generation_hash: tx.previous_generation_hash || tx.previous_block_hash,
+            rewards_hash: tx.rewards_hash,
+            image_hash_head: tx.image_hash_head || tx.image_sha256_seed || tx.image_hash,
+            github_commit: tx.github_commit,
+            preview_image: imagePath ? (imagePath.startsWith("http") ? imagePath : `${API_BASE_URL}/local-results/${jobId}/${imagePath}`) : "",
+            oup2_payload: tx.oup2_payload || null,
+            nmnc_anchor: tx.nmnc_anchor || { status: "pending" }
+          };
+        }).sort((a, b) => (a.oupeinpo_height || a.sequence || 0) - (b.oupeinpo_height || b.sequence || 0));
 
-        document.getElementById("metric-images").textContent = stats.generated_images;
-        document.getElementById("metric-generations").textContent = stats.generations;
-        document.getElementById("metric-sources").textContent = stats.source_images_processed;
-        document.getElementById("metric-rewards").textContent = `${stats.reward_total_nmnc || "0.00000000"}`;
-        document.getElementById("metric-anchor").textContent = stats.latest_nmnc_anchor_status || "pending";
+        const totalNo = entries.reduce((sum, entry) => sum + Number(entry.reward_total_no || 0), 0);
+        document.getElementById("metric-images").textContent = entries.reduce((sum, entry) => sum + Number(entry.output_count || 0), 0);
+        document.getElementById("metric-generations").textContent = entries.length;
+        document.getElementById("metric-sources").textContent = "-";
+        document.getElementById("metric-rewards").textContent = (totalNo / 100000000).toFixed(8);
+        document.getElementById("metric-anchor").textContent = entries.at(-1)?.nmnc_anchor?.status || "pending";
 
         renderThread();
         renderLatestImages();
-        renderHead(ledger);
+        renderHead();
       } catch (error) {
         thread.innerHTML = '<li class="empty">Impossible de charger le registre public.</li>';
       }

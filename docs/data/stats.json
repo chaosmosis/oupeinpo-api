@@ -1,17 +1,5 @@
 {
-  "schema_version": "oupeinpo-stats-v2-draft-demo",
-  "updated_at": "2026-07-05T12:41:00+02:00",
-  "generated_images": 28,
-  "generations": 12,
-  "source_images_processed": 89,
-  "reward_users": 12,
-  "reward_total_no": 2800000000,
-  "reward_total_nmnc": "28.00000000",
-  "latest_generation": "gen_000012",
-  "latest_oupeinpo_height": 12,
-  "latest_generation_hash": "cc0466ad22a0719efc8d053d4424cf3ca7a2cf1aaa17c930d5f0ab48d4bab4b3",
-  "latest_rewards_hash": "eaaae7e03e60a10dcd544762956b274b9605859e00442228d07e115303df47d3",
-  "latest_generation_at": "2026-07-05T12:41:00+02:00",
-  "latest_public_commit": "demo-000012",
-  "latest_nmnc_anchor_status": "pending"
-}
+    "generated_images": 0,
+    "generations": 0,
+    "users": 0
+  }
