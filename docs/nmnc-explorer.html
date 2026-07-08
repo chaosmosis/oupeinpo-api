@@ -647,7 +647,9 @@
         const rows = await fetchJson(`/nmnc/richest?limit=${encodeURIComponent(limit)}`);
         const values = extractRichestRows(rows);
         if (!Array.isArray(values) || values.length === 0) {
-          throw new Error("Le endpoint /nmnc/richest n'a retourné aucune entrée.");
+          richestList.innerHTML = '<tr><td colspan="3">Aucune adresse à afficher.</td></tr>';
+          richestStatus.textContent = "Aucune adresse trouvée.";
+          return;
         }
         renderRichestWallets(values);
         richestStatus.textContent = `${values.length} adresse(s) affichée(s).`;
@@ -715,10 +717,10 @@
       try {
         await loadStatus();
         await loadBlocks(null);
-        await loadRichestWallets();
       } catch (error) {
         statusBox.innerHTML = `<span class="error">${error.message}</span>`;
       }
+      await loadRichestWallets();
     })();
   </script>
 </body>
