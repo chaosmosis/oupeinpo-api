@@ -309,7 +309,60 @@
   </main>
 
   <script>
-    const API_BASE_URL = "https://survie.tailc688f6.ts.net";
+    const DEFAULT_API_BASE_URL = "https://survie.tailc688f6.ts.net";
+
+    function resolveApiBaseUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const configured = params.get("api");
+      if (configured) {
+        return configured.replace(/\/+$/, "");
+      }
+
+      if (window.location.protocol === "file:") {
+        return DEFAULT_API_BASE_URL;
+      }
+
+      if (["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)) {
+        return `${window.location.origin}`.replace(/\/+$/, "");
+      }
+
+      if (window.location.hostname.includes("github.io")) {
+        return DEFAULT_API_BASE_URL;
+      }
+
+      return window.location.origin.replace(/\/+$/, "") || DEFAULT_API_BASE_URL;
+    }
+
+    function pageUrl(page, params = {}) {
+      const url = new URL(page, window.location.href);
+      const currentApi = new URLSearchParams(window.location.search).get("api");
+      if (currentApi) {
+        url.searchParams.set("api", currentApi);
+      }
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          url.searchParams.set(key, value);
+        }
+      });
+      return `${url.pathname.split("/").pop()}${url.search}`;
+    }
+
+    function preserveApiOnStaticLinks() {
+      const currentApi = new URLSearchParams(window.location.search).get("api");
+      if (!currentApi) return;
+
+      document.querySelectorAll("a[href]").forEach((link) => {
+        const href = link.getAttribute("href") || "";
+        if (!/^[^:/#?]+\.html(\?.*)?$/.test(href)) return;
+        const [page, query = ""] = href.split("?");
+        const url = new URL(page, window.location.href);
+        new URLSearchParams(query).forEach((value, key) => url.searchParams.set(key, value));
+        url.searchParams.set("api", currentApi);
+        link.href = `${url.pathname.split("/").pop()}${url.search}`;
+      });
+    }
+
+    const API_BASE_URL = resolveApiBaseUrl();
     const MAX_FILES = 12;
     const MAX_FILE_BYTES = 10 * 1024 * 1024;
     const MAX_TOTAL_BYTES = 80 * 1024 * 1024;
@@ -477,8 +530,9 @@
           if (data.status === "done") {
             clearInterval(pollTimer);
             pollTimer = null;
-            const blockLink = `generation.html?id=${encodeURIComponent(jobId)}`;
-            statusBox.innerHTML = `Traitement terminé. <a href="${blockLink}">Voir la page du bloc Oupeinpo</a>. <a href="explorer.html">Explorer l’ouvroir des peintures informatiques réalisées</a>. Le rapport privé est envoyé par e-mail.`;
+            const blockLink = pageUrl("generation.html", { id: jobId });
+            const explorerLink = pageUrl("explorer.html");
+            statusBox.innerHTML = `Traitement terminé. <a href="${blockLink}">Voir la page du bloc Oupeinpo</a>. <a href="${explorerLink}">Explorer l’ouvroir des peintures informatiques réalisées</a>. Le rapport privé est envoyé par e-mail.`;
             submitButton.disabled = false;
           }
 
@@ -557,6 +611,7 @@
     });
 
     imageInput.addEventListener("change", renderFiles);
+    preserveApiOnStaticLinks();
     checkApi();
   </script>
 </body>

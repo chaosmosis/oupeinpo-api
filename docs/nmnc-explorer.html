@@ -458,6 +458,21 @@
       return window.location.origin.replace(/\/+$/, "") || DEFAULT_API_BASE_URL;
     }
 
+    function preserveApiOnStaticLinks() {
+      const currentApi = new URLSearchParams(window.location.search).get("api");
+      if (!currentApi) return;
+
+      document.querySelectorAll("a[href]").forEach((link) => {
+        const href = link.getAttribute("href") || "";
+        if (!/^[^:/#?]+\.html(\?.*)?$/.test(href)) return;
+        const [page, query = ""] = href.split("?");
+        const url = new URL(page, window.location.href);
+        new URLSearchParams(query).forEach((value, key) => url.searchParams.set(key, value));
+        url.searchParams.set("api", currentApi);
+        link.href = `${url.pathname.split("/").pop()}${url.search}`;
+      });
+    }
+
     const API_BASE_URL = resolveApiBaseUrl();
     const pageSize = 24;
     let currentStartHeight = null;
@@ -716,6 +731,7 @@
     });
 
     richestRefresh.addEventListener("click", loadRichestWallets);
+    preserveApiOnStaticLinks();
 
     (async function init() {
       try {
