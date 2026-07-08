@@ -614,7 +614,11 @@
 
     function normalizeRichestRow(row, fallbackIndex = 0) {
       const address = row.address || row.addr || row.nmnc_address || row.destination || "-";
-      const balanceNmnc = row.balance_nmnc ?? row.balance || row.amount || row.nmnc || 0;
+      let balanceNmnc = 0;
+      if (row.balance_nmnc !== undefined && row.balance_nmnc !== null) balanceNmnc = row.balance_nmnc;
+      else if (row.balance !== undefined && row.balance !== null) balanceNmnc = row.balance;
+      else if (row.amount !== undefined && row.amount !== null) balanceNmnc = row.amount;
+      else if (row.nmnc !== undefined && row.nmnc !== null) balanceNmnc = row.nmnc;
       return {
         rank: row.rank || (fallbackIndex + 1),
         address,
