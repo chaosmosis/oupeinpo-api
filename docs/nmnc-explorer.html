@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NMNC - explorateur de blocs</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202326;
+      --muted: #62696f;
+      --line: #cfd7dd;
+      --paper: #f5f7f8;
+      --panel: #ffffff;
+      --accent: #176b63;
+      --accent-2: #8a4b2a;
+      --soft: #e8eef1;
+      --danger: #8b2f25;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    main {
+      width: min(1240px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: end;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: 2.35rem;
+      line-height: 1.05;
+      font-weight: 650;
+    }
+
+    h2 {
+      margin-bottom: 12px;
+      font-size: 1.05rem;
+      font-weight: 650;
+    }
+
+    h3 {
+      margin-bottom: 8px;
+      font-size: .98rem;
+      font-weight: 650;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    nav a {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 8px 10px;
+      border-radius: 4px;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: .92rem;
+    }
+
+    nav a[aria-current="page"] {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .tagline {
+      margin: 0;
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.45;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin: 22px 0;
+    }
+
+    .metric, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+
+    .metric {
+      min-height: 88px;
+      padding: 14px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 1.3rem;
+      font-weight: 650;
+      overflow-wrap: anywhere;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(380px, 440px);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      padding: 16px;
+      min-width: 0;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 92px;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    input, button {
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px 10px;
+    }
+
+    button {
+      cursor: pointer;
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 650;
+    }
+
+    button.secondary {
+      background: #fff;
+      color: var(--ink);
+      border-color: var(--line);
+    }
+
+    .block-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .block-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 84px minmax(0, 1fr) 88px;
+      gap: 12px;
+      align-items: center;
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .block-row:hover,
+    .block-row[aria-current="true"] {
+      border-color: var(--accent);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .height {
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hash, code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .82rem;
+      overflow-wrap: anywhere;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 24px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 8px;
+      color: var(--accent-2);
+      background: #fff;
+      font-size: .78rem;
+      font-weight: 650;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 130px minmax(0, 1fr);
+      gap: 8px 12px;
+      margin: 0;
+    }
+
+    .detail-grid dt {
+      color: var(--muted);
+      font-size: .83rem;
+    }
+
+    .detail-grid dd {
+      margin: 0;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .tx-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .tx {
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }
+
+    .outputs {
+      display: grid;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .output {
+      display: grid;
+      grid-template-columns: 72px minmax(0, 1fr);
+      gap: 8px;
+      padding: 7px 8px;
+      border: 1px solid var(--soft);
+      background: #fbfcfc;
+      font-size: .88rem;
+    }
+
+    .status {
+      min-height: 36px;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .error {
+      color: var(--danger);
+    }
+
+    .pager {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 920px) {
+      main { width: min(100% - 20px, 760px); padding-top: 18px; }
+      header { grid-template-columns: 1fr; }
+      nav { justify-content: flex-start; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 560px) {
+      .metrics { grid-template-columns: 1fr; }
+      .toolbar { grid-template-columns: 1fr; }
+      .block-row { grid-template-columns: 64px minmax(0, 1fr); }
+      .block-row .pill { grid-column: 2; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .output { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>NMNC Block Explorer</h1>
+        <p class="tagline">Chaîne locale NMNC observée par l’API Oupeinpo.</p>
+      </div>
+      <nav aria-label="Navigation">
+        <a href="index.html">Contribuer</a>
+        <a href="nmnc-explorer.html" aria-current="page">NMNC</a>
+      </nav>
+    </header>
+
+    <section class="metrics" aria-label="Etat de la chaine NMNC">
+      <div class="metric"><span>Chaîne</span><strong id="metric-chain">-</strong></div>
+      <div class="metric"><span>Hauteur</span><strong id="metric-height">-</strong></div>
+      <div class="metric"><span>Blocs</span><strong id="metric-blocks">-</strong></div>
+      <div class="metric"><span>Pairs</span><strong id="metric-peers">-</strong></div>
+      <div class="metric"><span>Difficulté</span><strong id="metric-difficulty">-</strong></div>
+    </section>
+
+    <div class="layout">
+      <section class="panel">
+        <h2>Blocs récents</h2>
+        <div class="toolbar">
+          <input id="search" type="search" placeholder="Hauteur ou hash de bloc">
+          <button id="search-button">Ouvrir</button>
+        </div>
+        <div class="status" id="list-status">Chargement.</div>
+        <div class="block-list" id="block-list"></div>
+    <div class="pager">
+      <button class="secondary" id="prev-page">Plus anciens</button>
+      <button class="secondary" id="latest-page">Derniers blocs</button>
+    </div>
+  </section>
+
+      <aside class="panel">
+        <h2>Détail du bloc</h2>
+        <div class="status" id="detail-status">Sélectionnez un bloc.</div>
+        <dl class="detail-grid" id="block-detail"></dl>
+        <div class="tx-list" id="tx-list"></div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const DEFAULT_API_BASE_URL = "https://survie.tailc688f6.ts.net";
+
+    function resolveApiBaseUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const explicitApi = params.get("api");
+      if (explicitApi) {
+        return explicitApi.replace(/\/+$/, "");
+      }
+
+      if (window.location.protocol === "file:") {
+        return DEFAULT_API_BASE_URL;
+      }
+
+      if (["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)) {
+        return `${window.location.origin}`.replace(/\/+$/, "");
+      }
+
+      if (window.location.hostname.includes("github.io")) {
+        return DEFAULT_API_BASE_URL;
+      }
+
+      return window.location.origin.replace(/\/+$/, "") || DEFAULT_API_BASE_URL;
+    }
+
+    const API_BASE_URL = resolveApiBaseUrl();
+    const pageSize = 24;
+    let currentStartHeight = null;
+    let currentTopHeight = null;
+    let currentTipHeight = null;
+    let currentBlocks = [];
+    let selectedHash = "";
+
+    const statusBox = document.getElementById("list-status");
+    const detailStatus = document.getElementById("detail-status");
+    const blockList = document.getElementById("block-list");
+    const detail = document.getElementById("block-detail");
+    const txList = document.getElementById("tx-list");
+    const search = document.getElementById("search");
+
+    function shortHash(value) {
+      if (!value) return "-";
+      return value.length > 18 ? `${value.slice(0, 10)}...${value.slice(-8)}` : value;
+    }
+
+    function formatTime(seconds) {
+      if (!seconds) return "-";
+      return new Intl.DateTimeFormat("fr-BE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      }).format(new Date(seconds * 1000));
+    }
+
+    function setMetric(id, value) {
+      document.getElementById(id).textContent = value ?? "-";
+    }
+
+    function field(label, value, mono = false) {
+      return `<dt>${label}</dt><dd${mono ? ' class="hash"' : ""}>${value ?? "-"}</dd>`;
+    }
+
+    async function fetchJson(path) {
+      const response = await fetch(`${API_BASE_URL}${path}`, { cache: "no-store" });
+      const text = await response.text();
+      let payload = {};
+      try {
+        payload = text ? JSON.parse(text) : {};
+      } catch (error) {
+        payload = { detail: text };
+      }
+      if (!response.ok) {
+        throw new Error(payload.detail || `HTTP ${response.status}`);
+      }
+      return payload;
+    }
+
+    async function loadStatus() {
+      const state = await fetchJson("/nmnc/status");
+      setMetric("metric-chain", state.chain);
+      setMetric("metric-height", state.blocks);
+      setMetric("metric-blocks", state.headers);
+      setMetric("metric-peers", state.network && state.network.connections);
+      setMetric("metric-difficulty", state.difficulty);
+      return state;
+    }
+
+    function renderBlocks(blocks) {
+      blockList.innerHTML = "";
+      blocks.forEach((block) => {
+        const row = document.createElement("button");
+        row.className = "block-row";
+        row.type = "button";
+        row.setAttribute("aria-current", block.hash === selectedHash ? "true" : "false");
+        row.innerHTML = `
+          <span class="height">#${block.height}</span>
+          <span>
+            <span class="hash">${shortHash(block.hash)}</span><br>
+            <span class="muted">${formatTime(block.time)} · ${block.nTx} tx · ${block.size} octets</span>
+          </span>
+          <span class="pill">${block.confirmations} conf.</span>
+        `;
+        row.addEventListener("click", () => loadBlock(block.hash));
+        blockList.appendChild(row);
+      });
+    }
+
+    function outputHtml(output) {
+      const address = Array.isArray(output.addresses) && output.addresses.length
+        ? output.addresses.join(", ")
+        : output.type || "script";
+      return `
+        <div class="output">
+          <span>${output.value ?? "0"} NMNC</span>
+          <span class="hash">${address}</span>
+        </div>
+      `;
+    }
+
+    function renderBlock(block) {
+      selectedHash = block.hash;
+      renderBlocks(currentBlocks);
+      detailStatus.textContent = `Bloc #${block.height}`;
+      detail.innerHTML = [
+        field("Hash", block.hash, true),
+        field("Confirmations", block.confirmations),
+        field("Horodatage", formatTime(block.time)),
+        field("Transactions", block.nTx),
+        field("Taille", `${block.size} octets`),
+        field("Poids", block.weight),
+        field("Merkle root", block.merkleroot, true),
+        field("Difficulté", block.difficulty),
+        field("Nonce", block.nonce),
+        field("Bits", block.bits),
+        field("Précédent", block.previousblockhash || "genesis", true),
+        field("Suivant", block.nextblockhash || "-", true),
+        field("Coinbase", block.coinbase_txid, true),
+        field("Récompense", `${block.coinbase_value_nmnc || "0.00000000"} NMNC`),
+        field("OP_RETURN", (block.op_returns || []).length),
+        field("OUP2", (block.oup2_op_returns || []).length)
+      ].join("");
+
+      txList.innerHTML = (block.transactions || []).map((tx) => `
+        <section class="tx">
+          <h3>${tx.coinbase ? "Coinbase" : "Transaction"}</h3>
+          <div class="hash">${tx.txid}</div>
+          <div class="muted">${tx.vin_count} entrée(s), ${tx.vout_count} sortie(s), ${tx.size} octets</div>
+          <div class="outputs">${(tx.outputs || []).map(outputHtml).join("")}</div>
+        </section>
+      `).join("");
+    }
+
+    async function loadBlocks(startHeight = null) {
+      statusBox.textContent = "Chargement.";
+      const query = startHeight === null ? "" : `?start_height=${encodeURIComponent(startHeight)}&limit=${pageSize}`;
+      const data = await fetchJson(`/nmnc/blocks${query || `?limit=${pageSize}`}`);
+      currentBlocks = data.blocks || [];
+      currentStartHeight = data.start_height;
+      currentTopHeight = currentBlocks[0]?.height ?? null;
+      currentTipHeight = data.tip_height;
+      const hasBlocks = currentBlocks.length > 0;
+      document.getElementById("prev-page").disabled = !hasBlocks || currentStartHeight <= 0;
+      document.getElementById("latest-page").disabled = !hasBlocks || currentTopHeight === currentTipHeight;
+      statusBox.textContent = `${currentBlocks.length} bloc(s), pointe #${data.tip_height}.`;
+      renderBlocks(currentBlocks);
+      if (currentBlocks.length && !selectedHash) {
+        await loadBlock(currentBlocks[0].hash);
+      }
+    }
+
+    async function loadBlock(identifier) {
+      detailStatus.textContent = "Chargement.";
+      detail.innerHTML = "";
+      txList.innerHTML = "";
+      const block = await fetchJson(`/nmnc/block/${encodeURIComponent(identifier)}`);
+      renderBlock(block);
+    }
+
+    async function openSearch() {
+      const value = search.value.trim();
+      if (!value) return;
+      try {
+        await loadBlock(value);
+      } catch (error) {
+        detailStatus.innerHTML = `<span class="error">${error.message}</span>`;
+      }
+    }
+
+    document.getElementById("search-button").addEventListener("click", openSearch);
+    search.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") openSearch();
+    });
+
+    document.getElementById("prev-page").addEventListener("click", async () => {
+      if (currentStartHeight === null || currentStartHeight <= 0) return;
+      selectedHash = "";
+      await loadBlocks(Math.max(0, currentStartHeight - 1));
+    });
+
+    document.getElementById("latest-page").addEventListener("click", async () => {
+      selectedHash = "";
+      await loadBlocks(null);
+    });
+
+    (async function init() {
+      try {
+        await loadStatus();
+        await loadBlocks(null);
+      } catch (error) {
+        statusBox.innerHTML = `<span class="error">${error.message}</span>`;
+      }
+    })();
+  </script>
+</body>
+</html>
