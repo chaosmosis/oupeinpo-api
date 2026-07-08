@@ -297,6 +297,52 @@
       flex-wrap: wrap;
     }
 
+    .richest-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .rich-list {
+      width: 100%;
+      min-width: 320px;
+      border: 1px solid var(--line);
+      border-collapse: collapse;
+      background: #fff;
+    }
+
+    .rich-list th,
+    .rich-list td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+      font-size: .84rem;
+    }
+
+    .rich-list th {
+      background: #f7fafb;
+      color: var(--muted);
+      font-weight: 650;
+    }
+
+    .rich-list .rank {
+      width: 56px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rich-list .balance {
+      width: 130px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rich-list .address {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      max-width: 1px;
+    }
+
     @media (max-width: 920px) {
       main { width: min(100% - 20px, 760px); padding-top: 18px; }
       header { grid-template-columns: 1fr; }
@@ -357,6 +403,33 @@
         <dl class="detail-grid" id="block-detail"></dl>
         <div class="tx-list" id="tx-list"></div>
       </aside>
+
+      <aside class="panel">
+        <h2>Wallets les plus riches</h2>
+        <div class="toolbar" style="grid-template-columns: minmax(0, 1fr) 110px;">
+          <select id="richest-limit">
+            <option value="10">Top 10</option>
+            <option value="20">Top 20</option>
+            <option value="50">Top 50</option>
+          </select>
+          <button id="richest-refresh" class="secondary">Actualiser</button>
+        </div>
+        <div class="status" id="richest-status">Chargement.</div>
+        <div class="richest-wrap">
+          <table class="rich-list">
+            <thead>
+              <tr>
+                <th class="rank">#</th>
+                <th>Adresse</th>
+                <th class="balance">Solde NMNC</th>
+              </tr>
+            </thead>
+            <tbody id="richest-list">
+              <tr><td colspan="3">Aucun classement chargé.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </aside>
     </div>
   </main>
 
@@ -399,6 +472,10 @@
     const detail = document.getElementById("block-detail");
     const txList = document.getElementById("tx-list");
     const search = document.getElementById("search");
+    const richestStatus = document.getElementById("richest-status");
+    const richestList = document.getElementById("richest-list");
+    const richestLimit = document.getElementById("richest-limit");
+    const richestRefresh = document.getElementById("richest-refresh");
 
     function shortHash(value) {
       if (!value) return "-";
@@ -515,6 +592,71 @@
       `).join("");
     }
 
+    function normalizeNmncAddressBalance(value) {
+      const normalized = Number(value);
+      if (!Number.isFinite(normalized)) return 0;
+      return normalized;
+    }
+
+    function toNmncString(value) {
+      return normalizeNmncAddressBalance(value).toFixed(8);
+    }
+
+    function extractRichestRows(payload) {
+      if (Array.isArray(payload)) return payload;
+      if (Array.isArray(payload?.wallets)) return payload.wallets;
+      if (Array.isArray(payload?.richest)) return payload.richest;
+      if (Array.isArray(payload?.entries)) return payload.entries;
+      if (Array.isArray(payload?.data)) return payload.data;
+      if (Array.isArray(payload?.results)) return payload.results;
+      return [];
+    }
+
+    function normalizeRichestRow(row, fallbackIndex = 0) {
+      const address = row.address || row.addr || row.nmnc_address || row.destination || "-";
+      const balanceNmnc = row.balance_nmnc ?? row.balance || row.amount || row.nmnc || 0;
+      return {
+        rank: row.rank || (fallbackIndex + 1),
+        address,
+        balanceNmnc: normalizeNmncAddressBalance(balanceNmnc)
+      };
+    }
+
+    function renderRichestWallets(rows) {
+      const ordered = rows
+        .map((row, index) => normalizeRichestRow(row, index))
+        .sort((a, b) => b.balanceNmnc - a.balanceNmnc || a.rank - b.rank)
+        .map((row, index) => ({
+          ...row,
+          rank: index + 1
+        }));
+
+      richestList.innerHTML = ordered.map((entry, index) => `
+        <tr>
+          <td class="rank">${entry.rank}</td>
+          <td class="address">${entry.address}</td>
+          <td class="balance">${toNmncString(entry.balanceNmnc)}</td>
+        </tr>
+      `).join("");
+    }
+
+    async function loadRichestWallets() {
+      richestStatus.textContent = "Chargement.";
+      try {
+        const limit = richestLimit.value || "10";
+        const rows = await fetchJson(`/nmnc/richest?limit=${encodeURIComponent(limit)}`);
+        const values = extractRichestRows(rows);
+        if (!Array.isArray(values) || values.length === 0) {
+          throw new Error("Le endpoint /nmnc/richest n'a retourné aucune entrée.");
+        }
+        renderRichestWallets(values);
+        richestStatus.textContent = `${values.length} adresse(s) affichée(s).`;
+      } catch (error) {
+        richestList.innerHTML = '<tr><td colspan="3">Classement indisponible pour le moment.</td></tr>';
+        richestStatus.innerHTML = `<span class="error">${error.message}</span>`;
+      }
+    }
+
     async function loadBlocks(startHeight = null) {
       statusBox.textContent = "Chargement.";
       const query = startHeight === null ? "" : `?start_height=${encodeURIComponent(startHeight)}&limit=${pageSize}`;
@@ -567,10 +709,13 @@
       await loadBlocks(null);
     });
 
+    richestRefresh.addEventListener("click", loadRichestWallets);
+
     (async function init() {
       try {
         await loadStatus();
         await loadBlocks(null);
+        await loadRichestWallets();
       } catch (error) {
         statusBox.innerHTML = `<span class="error">${error.message}</span>`;
       }
