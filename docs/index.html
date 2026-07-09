@@ -184,6 +184,30 @@
       overflow-wrap: anywhere;
     }
 
+    .image-meta {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 8px 0;
+    }
+
+    .image-meta .image-name {
+      margin: 0;
+    }
+
+    .remove-image {
+      flex: 0 0 auto;
+      padding: 5px 8px;
+      background: #e9e2d8;
+      color: var(--ink);
+      font-size: .78rem;
+    }
+
+    .remove-image:hover {
+      background: #ddd4c6;
+    }
+
     .chips {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -289,7 +313,7 @@
         </select>
 
         <label for="images">Images</label>
-        <input id="images" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple required>
+        <input id="images" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple>
         <div class="note">Maximum 12 images, 10 Mo par image, 80 Mo par envoi.</div>
 
         <div class="submit-row">
@@ -417,6 +441,8 @@
     const clearButton = document.getElementById("clear-button");
 
     let selectedFiles = [];
+    const annotationState = new Map();
+    const objectUrls = new Map();
     let pollTimer = null;
 
     function setStatus(message, isError = false) {
@@ -424,8 +450,81 @@
       statusBox.classList.toggle("error", isError);
     }
 
+    function fileKey(file) {
+      return `${file.name}::${file.size}::${file.lastModified}`;
+    }
+
+    function objectUrlFor(file) {
+      const key = fileKey(file);
+      if (!objectUrls.has(key)) {
+        objectUrls.set(key, URL.createObjectURL(file));
+      }
+      return objectUrls.get(key);
+    }
+
+    function releaseUnusedObjectUrls() {
+      const activeKeys = new Set(selectedFiles.map(fileKey));
+      objectUrls.forEach((url, key) => {
+        if (!activeKeys.has(key)) {
+          URL.revokeObjectURL(url);
+          objectUrls.delete(key);
+        }
+      });
+    }
+
+    function storeCurrentAnnotations() {
+      selectedFiles.forEach((file, index) => {
+        const card = imageGrid.querySelector(`[data-index="${index}"]`);
+        if (!card) return;
+
+        const values = {};
+        annotationFields.forEach(([field]) => {
+          const input = card.querySelector(`[data-field="${field}"]`);
+          values[field] = input && input.checked ? 1 : 0;
+        });
+
+        const textInput = card.querySelector('[data-field="mot_libre"]');
+        values.mot_libre = textInput ? textInput.value.trim() : "";
+        annotationState.set(fileKey(file), values);
+      });
+    }
+
+    function addFiles(files) {
+      storeCurrentAnnotations();
+      const incomingFiles = Array.from(files || []);
+      const existingKeys = new Set(selectedFiles.map(fileKey));
+      let duplicateCount = 0;
+
+      incomingFiles.forEach((file) => {
+        const key = fileKey(file);
+        if (existingKeys.has(key)) {
+          duplicateCount += 1;
+          return;
+        }
+        existingKeys.add(key);
+        selectedFiles.push(file);
+      });
+
+      imageInput.value = "";
+      renderFiles();
+
+      if (duplicateCount && selectedFiles.length <= MAX_FILES && !statusBox.classList.contains("error")) {
+        setStatus(`${selectedFiles.length} image(s) prête(s). ${duplicateCount} doublon(s) ignoré(s).`);
+      }
+    }
+
+    function removeFile(index) {
+      storeCurrentAnnotations();
+      const [removed] = selectedFiles.splice(index, 1);
+      if (removed) {
+        annotationState.delete(fileKey(removed));
+      }
+      releaseUnusedObjectUrls();
+      renderFiles();
+    }
+
     function renderFiles() {
-      selectedFiles = Array.from(imageInput.files || []);
+      releaseUnusedObjectUrls();
       imageGrid.innerHTML = "";
 
       if (!selectedFiles.length) {
@@ -447,25 +546,37 @@
       }
 
       selectedFiles.forEach((file, index) => {
+        const savedAnnotations = annotationState.get(fileKey(file)) || {};
         const card = document.createElement("article");
         card.className = "image-card";
         card.dataset.index = String(index);
 
         const image = document.createElement("img");
         image.alt = file.name;
-        image.src = URL.createObjectURL(file);
+        image.src = objectUrlFor(file);
 
         const name = document.createElement("div");
         name.className = "image-name";
         name.textContent = file.name;
+
+        const removeButton = document.createElement("button");
+        removeButton.className = "remove-image";
+        removeButton.type = "button";
+        removeButton.textContent = "Retirer";
+        removeButton.addEventListener("click", () => removeFile(index));
+
+        const meta = document.createElement("div");
+        meta.className = "image-meta";
+        meta.append(name, removeButton);
 
         const freeLabel = document.createElement("label");
         freeLabel.textContent = "Mot libre";
         const freeText = document.createElement("textarea");
         freeText.dataset.field = "mot_libre";
         freeText.placeholder = "souffle, seuil, tension…";
+        freeText.value = savedAnnotations.mot_libre || "";
 
-        card.append(image, name, freeLabel, freeText);
+        card.append(image, meta, freeLabel, freeText);
         annotationGroups.forEach((group) => {
           const groupElement = document.createElement("div");
           groupElement.className = "annotation-group";
@@ -480,6 +591,8 @@
             const chip = document.createElement("label");
             chip.className = "chip";
             chip.innerHTML = `<input type="checkbox" data-field="${field}"><span>${label}</span>`;
+            const input = chip.querySelector("input");
+            input.checked = Boolean(savedAnnotations[field]);
             chips.appendChild(chip);
           });
 
@@ -492,17 +605,16 @@
     }
 
     function collectAnnotations() {
+      storeCurrentAnnotations();
       return selectedFiles.map((file, index) => {
-        const card = imageGrid.querySelector(`[data-index="${index}"]`);
+        const savedAnnotations = annotationState.get(fileKey(file)) || {};
         const row = { image_name: file.name };
 
         annotationFields.forEach(([field]) => {
-          const input = card.querySelector(`[data-field="${field}"]`);
-          row[field] = input && input.checked ? 1 : 0;
+          row[field] = savedAnnotations[field] ? 1 : 0;
         });
 
-        const textInput = card.querySelector('[data-field="mot_libre"]');
-        row.mot_libre = textInput ? textInput.value.trim() : "";
+        row.mot_libre = savedAnnotations.mot_libre || "";
         return row;
       });
     }
@@ -607,10 +719,13 @@
     clearButton.addEventListener("click", () => {
       imageInput.value = "";
       selectedFiles = [];
+      annotationState.clear();
+      objectUrls.forEach((url) => URL.revokeObjectURL(url));
+      objectUrls.clear();
       renderFiles();
     });
 
-    imageInput.addEventListener("change", renderFiles);
+    imageInput.addEventListener("change", () => addFiles(imageInput.files));
     preserveApiOnStaticLinks();
     checkApi();
   </script>
