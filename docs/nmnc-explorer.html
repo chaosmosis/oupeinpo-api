@@ -348,7 +348,7 @@
 
     .rich-list {
       width: 100%;
-      min-width: 320px;
+      min-width: 560px;
       border: 1px solid var(--line);
       border-collapse: collapse;
       background: #fff;
@@ -377,6 +377,12 @@
 
     .rich-list .balance {
       width: 130px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rich-list .meta {
+      width: 110px;
       text-align: right;
       font-variant-numeric: tabular-nums;
     }
@@ -450,7 +456,7 @@
       </aside>
 
       <aside class="panel">
-        <h2>Wallets les plus riches</h2>
+        <h2>Adresses les plus dotées</h2>
         <div class="toolbar" style="grid-template-columns: minmax(0, 1fr) 110px;">
           <select id="richest-limit">
             <option value="10">Top 10</option>
@@ -466,11 +472,13 @@
               <tr>
                 <th class="rank">#</th>
                 <th>Adresse</th>
-                <th class="balance">Solde NMNC</th>
+                <th class="balance">Total</th>
+                <th class="balance">Immature</th>
+                <th class="meta">Sorties</th>
               </tr>
             </thead>
             <tbody id="richest-list">
-              <tr><td colspan="3">Aucun classement chargé.</td></tr>
+              <tr><td colspan="5">Aucun classement chargé.</td></tr>
             </tbody>
           </table>
         </div>
@@ -730,14 +738,19 @@
       else if (row.balance !== undefined && row.balance !== null) balanceNmnc = row.balance;
       else if (row.amount !== undefined && row.amount !== null) balanceNmnc = row.amount;
       else if (row.nmnc !== undefined && row.nmnc !== null) balanceNmnc = row.nmnc;
+      let immatureNmnc = 0;
+      if (row.immature_balance_nmnc !== undefined && row.immature_balance_nmnc !== null) immatureNmnc = row.immature_balance_nmnc;
+      else if (row.immature_balance !== undefined && row.immature_balance !== null) immatureNmnc = row.immature_balance;
       return {
         rank: row.rank || (fallbackIndex + 1),
         address,
-        balanceNmnc: normalizeNmncAddressBalance(balanceNmnc)
+        balanceNmnc: normalizeNmncAddressBalance(balanceNmnc),
+        immatureNmnc: normalizeNmncAddressBalance(immatureNmnc),
+        utxoCount: Number(row.utxo_count || row.outputs || row.output_count || 0)
       };
     }
 
-    function renderRichestWallets(rows) {
+    function renderRichestAddresses(rows) {
       const ordered = rows
         .map((row, index) => normalizeRichestRow(row, index))
         .sort((a, b) => b.balanceNmnc - a.balanceNmnc || a.rank - b.rank)
@@ -751,25 +764,27 @@
           <td class="rank">${entry.rank}</td>
           <td class="address">${entry.address}</td>
           <td class="balance">${toNmncString(entry.balanceNmnc)}</td>
+          <td class="balance">${toNmncString(entry.immatureNmnc)}</td>
+          <td class="meta">${Number.isFinite(entry.utxoCount) ? entry.utxoCount : 0}</td>
         </tr>
       `).join("");
     }
 
-    async function loadRichestWallets() {
+    async function loadRichestAddresses() {
       richestStatus.textContent = "Chargement.";
       try {
         const limit = richestLimit.value || "10";
         const rows = await fetchJson(`/nmnc/richest?limit=${encodeURIComponent(limit)}`);
         const values = extractRichestRows(rows);
         if (!Array.isArray(values) || values.length === 0) {
-          richestList.innerHTML = '<tr><td colspan="3">Aucune adresse à afficher.</td></tr>';
+          richestList.innerHTML = '<tr><td colspan="5">Aucune adresse à afficher.</td></tr>';
           richestStatus.textContent = "Aucune adresse trouvée.";
           return;
         }
-        renderRichestWallets(values);
+        renderRichestAddresses(values);
         richestStatus.textContent = `${values.length} adresse(s) affichée(s).`;
       } catch (error) {
-        richestList.innerHTML = '<tr><td colspan="3">Classement indisponible pour le moment.</td></tr>';
+        richestList.innerHTML = '<tr><td colspan="5">Classement indisponible pour le moment.</td></tr>';
         richestStatus.innerHTML = `<span class="error">${error.message}</span>`;
       }
     }
@@ -827,7 +842,7 @@
       await loadBlocks(null);
     });
 
-    richestRefresh.addEventListener("click", loadRichestWallets);
+    richestRefresh.addEventListener("click", loadRichestAddresses);
     preserveApiOnStaticLinks();
 
     (async function init() {
@@ -837,7 +852,7 @@
       } catch (error) {
         statusBox.innerHTML = `<span class="error">${error.message}</span>`;
       }
-      await loadRichestWallets();
+      await loadRichestAddresses();
     })();
   </script>
 </body>
