@@ -646,6 +646,7 @@
       { label: "voiture urbaine à 50 km/h", watts: 12500, speedKmh: 50 },
       { label: "tram/bus urbain à 25 km/h", watts: 3500, speedKmh: 25 },
       { label: "TGV à 160 km/h", watts: 5500, speedKmh: 160 },
+      { label: "avion court-courrier à 800 km/h", watts: 45000, speedKmh: 800 },
     ];
     let currentStartHeight = null;
     let currentTopHeight = null;
@@ -758,17 +759,19 @@
       return Number.isFinite(peers) && peers >= 0 ? Math.max(1, Math.round(peers) + 1) : 1;
     }
 
-    function updateEnergyHelp(kwh) {
+    function updateEnergyHelp(kwh, machineCount, sourceLabel, runningTime) {
       if (!metricEnergyHelp) return;
       const mobilityScale = MOBILITY_EQUIVALENCES
         .map((mode) => mobilityEquivalent(kwh, mode))
         .filter(Boolean)
         .join(" · ");
+      const machineEquivalent = `${formatReferenceComputers(machineCount, sourceLabel)} continuellement pendant ${runningTime}`;
       metricEnergyHelp.dataset.help = [
         "Quantité d’énergie nécessaire estimée depuis la page 0 du registre jusqu’à la pointe actuelle.",
         "Le calcul prend pour machine de référence un MacBook Air 2019, estimé à 30 W, et compte cette machine plus chaque pair connecté.",
         "Une seule machine valide la page, mais les tentatives des autres machines comptent aussi dans l’énergie consommée.",
-        `Échelle indicative avec des valeurs centrales issues de ces ordres de grandeur de puissance : ${mobilityScale}.`
+        `${formatKwh(kwh)} soit l’équivalent de ${machineEquivalent}.`,
+        `Kilomètres indicatifs avec des valeurs centrales de puissance : ${mobilityScale}.`
       ].join(" ");
     }
 
@@ -811,8 +814,8 @@
       const kwh = (watts * machineCount * stats.seconds) / 3600000;
       const sourceLabel = watts === REFERENCE_COMPUTER_WATTS ? REFERENCE_COMPUTER_LABEL : `${watts} W`;
       const runningTime = formatDurationHoursText(stats.seconds / 3600);
-      setMetric("metric-energy", `${formatKwh(kwh)} soit l’équivalent de ${formatReferenceComputers(machineCount, sourceLabel)} continuellement pendant ${runningTime}`);
-      updateEnergyHelp(kwh);
+      setMetric("metric-energy", formatKwh(kwh));
+      updateEnergyHelp(kwh, machineCount, sourceLabel, runningTime);
     }
 
     async function loadBlocksFromGenesis(tipHeight) {
