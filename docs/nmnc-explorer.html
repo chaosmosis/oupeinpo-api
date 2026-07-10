@@ -535,12 +535,12 @@
         <strong id="metric-hashrate">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Électricité estimée <button class="help" type="button" aria-label="Explication : électricité estimée" data-help="Le registre ne connaît pas les watts consommés par les ordinateurs. Pour estimer l’énergie, ouvrez la page avec ?watts=90, par exemple, puis la page calcule les kWh sur la durée couverte par les pages affichées.">?</button></span>
+        <span class="metric-label">Énergie nécessaire estimée <button class="help" type="button" aria-label="Explication : énergie nécessaire estimée" data-help="Quantité d’énergie nécessaire estimée pour les pages affichées. Le calcul prend pour machine de référence un MacBook Air 2019, estimé à 30 W, et suppose que cette machine plus chaque pair connecté participe à l’effort de minage. Une seule machine valide la page, mais les tentatives des autres machines comptent aussi dans l’énergie consommée.">?</button></span>
         <strong id="metric-energy">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Équivalent vélo <button class="help" type="button" aria-label="Explication : équivalent vélo" data-help="Image pédagogique : on suppose une personne produisant 100 W sur un vélo-générateur. À 15 km/h symboliques, 1 kWh correspond environ à 150 km d’effort.">?</button></span>
-        <strong id="metric-bike">-</strong>
+        <span class="metric-label">Équivalent solaire <button class="help" type="button" aria-label="Explication : équivalent solaire" data-help="Traduction pédagogique en temps de production d’un panneau solaire moyen. Par défaut : panneau de 400 W en plein soleil. On peut modifier l’hypothèse avec ?panel_watts=300.">?</button></span>
+        <strong id="metric-solar">-</strong>
       </div>
     </section>
 
@@ -640,12 +640,14 @@
 
     const API_BASE_URL = resolveApiBaseUrl();
     const pageSize = 24;
-    const HUMAN_GENERATOR_WATTS = 100;
-    const HUMAN_BIKE_KMH = 15;
+    const REFERENCE_COMPUTER_LABEL = "MacBook Air 2019";
+    const REFERENCE_COMPUTER_WATTS = 30;
+    const DEFAULT_SOLAR_PANEL_WATTS = 400;
     let currentStartHeight = null;
     let currentTopHeight = null;
     let currentTipHeight = null;
     let currentBlocks = [];
+    let currentPeerCount = null;
     let selectedHash = "";
 
     const statusBox = document.getElementById("list-status");
@@ -703,19 +705,32 @@
       return `${kwh.toFixed(2)} kWh`;
     }
 
-    function formatDistanceKm(value) {
-      const km = Number(value);
-      if (!Number.isFinite(km) || km < 0) return "-";
-      if (km < 1) return `${Math.round(km * 1000)} m`;
-      if (km < 100) return `${km.toFixed(1)} km`;
-      return `${Math.round(km)} km`;
+    function formatDurationHours(hours) {
+      const value = Number(hours);
+      if (!Number.isFinite(value) || value < 0) return "-";
+      if (value < 1 / 60) return `${Math.round(value * 3600)} s`;
+      if (value < 1) return `${Math.round(value * 60)} min`;
+      if (value < 24) return `${value.toFixed(1)} h`;
+      return `${(value / 24).toFixed(1)} j`;
     }
 
     function configuredEstimatedWatts() {
       const params = new URLSearchParams(window.location.search);
       const raw = params.get("watts") || params.get("watt") || "";
       const watts = Number(raw);
-      return Number.isFinite(watts) && watts > 0 ? watts : null;
+      return Number.isFinite(watts) && watts > 0 ? watts : REFERENCE_COMPUTER_WATTS;
+    }
+
+    function configuredSolarPanelWatts() {
+      const params = new URLSearchParams(window.location.search);
+      const raw = params.get("panel_watts") || params.get("solar_watts") || "";
+      const watts = Number(raw);
+      return Number.isFinite(watts) && watts > 0 ? watts : DEFAULT_SOLAR_PANEL_WATTS;
+    }
+
+    function estimatedNetworkMachineCount() {
+      const peers = Number(currentPeerCount);
+      return Number.isFinite(peers) && peers >= 0 ? Math.max(1, Math.round(peers) + 1) : 1;
     }
 
     function observedWorkStats(blocks) {
@@ -746,24 +761,22 @@
       const stats = observedWorkStats(blocks);
       if (!stats) {
         setMetric("metric-hashrate", "intervalle insuffisant");
-        setMetric("metric-energy", "watts à renseigner");
-        setMetric("metric-bike", "watts à renseigner");
+        setMetric("metric-energy", "intervalle insuffisant");
+        setMetric("metric-solar", "intervalle insuffisant");
         return;
       }
 
       setMetric("metric-hashrate", formatHashrate(stats.hashrate));
 
       const watts = configuredEstimatedWatts();
-      if (!watts) {
-        setMetric("metric-energy", "watts à renseigner");
-        setMetric("metric-bike", "watts à renseigner");
-        return;
-      }
+      const machineCount = estimatedNetworkMachineCount();
+      const kwh = (watts * machineCount * stats.seconds) / 3600000;
+      const sourceLabel = watts === REFERENCE_COMPUTER_WATTS ? REFERENCE_COMPUTER_LABEL : `${watts} W`;
+      setMetric("metric-energy", `${formatKwh(kwh)} · ${machineCount} machine(s) ${sourceLabel}`);
 
-      const kwh = (watts * stats.seconds) / 3600000;
-      setMetric("metric-energy", `${formatKwh(kwh)} à ${watts} W`);
-      const bikeKm = (kwh * 1000 * HUMAN_BIKE_KMH) / HUMAN_GENERATOR_WATTS;
-      setMetric("metric-bike", formatDistanceKm(bikeKm));
+      const panelWatts = configuredSolarPanelWatts();
+      const solarHours = kwh / (panelWatts / 1000);
+      setMetric("metric-solar", `${formatDurationHours(solarHours)} de panneau ${panelWatts} W`);
     }
 
     function field(label, value, mono = false) {
@@ -851,10 +864,12 @@
 
     async function loadStatus() {
       const state = await fetchJson("/nmnc/status");
+      const peerCount = Number(state.network && state.network.connections);
+      currentPeerCount = Number.isFinite(peerCount) ? peerCount : null;
       setMetric("metric-chain", state.chain);
       setMetric("metric-height", state.blocks);
       setMetric("metric-blocks", state.headers);
-      setMetric("metric-peers", state.network && state.network.connections);
+      setMetric("metric-peers", currentPeerCount ?? "-");
       setMetric("metric-difficulty", state.difficulty);
       return state;
     }
