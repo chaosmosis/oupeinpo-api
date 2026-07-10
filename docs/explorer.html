@@ -249,6 +249,13 @@
       margin-bottom: 18px;
     }
 
+    .search-label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: .86rem;
+    }
+
     .thread {
       position: relative;
       margin: 4px 0 0;
@@ -482,6 +489,7 @@
     <div class="layout">
       <section class="panel">
         <h2>Fil des peintures Oupeinpo</h2>
+        <label class="search-label" for="search">Recherche dans le registre</label>
         <input class="search" id="search" type="search" placeholder="Rechercher par numéro, identifiant, image, empreinte, passage vers NMNC ou donnée d’ancrage">
         <ol class="thread" id="thread"></ol>
       </section>
@@ -608,17 +616,47 @@
       return haystack.includes(query.toLowerCase());
     }
 
-    function escapeAttribute(value) {
-      return String(value || "")
-        .replace(/&/g, "&amp;")
-        .replace(/"/g, "&quot;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+    function createTextElement(tagName, text, className = "") {
+      const element = document.createElement(tagName);
+      if (className) element.className = className;
+      element.textContent = text;
+      return element;
+    }
+
+    function appendHashLine(parent, text) {
+      parent.appendChild(createTextElement("div", text, "hash"));
+    }
+
+    function appendMeta(parent, values) {
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      values.forEach((value) => {
+        meta.appendChild(createTextElement("span", value));
+      });
+      parent.appendChild(meta);
+    }
+
+    function setListEmpty(list, message) {
+      const empty = createTextElement("li", message, "empty");
+      list.replaceChildren(empty);
+    }
+
+    function safeApiAssetUrl(value) {
+      if (!value) return "";
+      try {
+        const apiUrl = new URL(API_BASE_URL);
+        const candidate = new URL(value, API_BASE_URL);
+        if (candidate.origin !== apiUrl.origin) return "";
+        if (!candidate.pathname.startsWith("/local-results/")) return "";
+        return candidate.href;
+      } catch (error) {
+        return "";
+      }
     }
 
     function localResultAssetUrl(jobId, path) {
       if (!path) return "";
-      if (path.startsWith("http")) return path;
+      if (/^https?:\/\//i.test(path)) return safeApiAssetUrl(path);
       const encodedJobId = encodeURIComponent(jobId);
       const encodedPath = String(path)
         .split("/")
@@ -630,7 +668,10 @@
 
     function previewImageCandidates(jobId, path) {
       if (!path) return [];
-      if (path.startsWith("http")) return [path];
+      if (/^https?:\/\//i.test(path)) {
+        const safeUrl = safeApiAssetUrl(path);
+        return safeUrl ? [safeUrl] : [];
+      }
 
       const candidates = [];
       const synthMatch = path.match(/^synth\/(cluster_fused_\d+)\.png$/i);
@@ -650,28 +691,27 @@
       return [localResultAssetUrl(jobId, path)];
     }
 
-    function useImageFallback(image) {
-      const fallback = image.dataset.fallbackSrc;
-      if (fallback) {
-        image.dataset.fallbackSrc = "";
-        image.src = fallback;
-      } else {
-        image.removeAttribute("onerror");
+    function createPreviewImage(entry, alt) {
+      if (!entry.preview_image) return null;
+      const image = document.createElement("img");
+      image.src = entry.preview_image;
+      image.alt = alt;
+      if (entry.preview_image_fallback) {
+        image.addEventListener("error", () => {
+          if (image.src !== entry.preview_image_fallback) {
+            image.src = entry.preview_image_fallback;
+          }
+        }, { once: true });
       }
-    }
-
-    function previewImageTag(entry, alt) {
-      if (!entry.preview_image) return "";
-      const fallback = entry.preview_image_fallback ? ` data-fallback-src="${escapeAttribute(entry.preview_image_fallback)}" onerror="useImageFallback(this)"` : "";
-      return `<img src="${escapeAttribute(entry.preview_image)}"${fallback} alt="${escapeAttribute(alt)}">`;
+      return image;
     }
 
     function renderThread(query = "") {
       const visible = entries.filter((entry) => entryMatches(entry, query));
-      thread.innerHTML = "";
+      thread.replaceChildren();
 
       if (!visible.length) {
-        thread.innerHTML = '<li class="empty">Aucune peinture Oupeinpo ne correspond a la recherche.</li>';
+        setListEmpty(thread, "Aucune peinture Oupeinpo ne correspond à la recherche.");
         return;
       }
 
@@ -686,65 +726,93 @@
         const rewardsHash = entry.rewards_hash;
         const payload = entry.oup2_payload && entry.oup2_payload.payload_hex;
         const statusLabel = nmncStatusLabel(entry.nmnc_anchor && entry.nmnc_anchor.status);
-        item.innerHTML = `
-          <div class="point">${pointLabel}</div>
-          <a class="generation" href="${pageUrl("generation.html", { id: entry.id })}">
-            ${previewImageTag(entry, `Image generee ${entry.id}`)}
-            <div>
-              <h3>Peinture Oupeinpo ${pointLabel} · ${imageLabel}</h3>
-              <div class="meta">
-                <span>${formatDate(entry.created_at)}</span>
-                <span>${entry.id}</span>
-                <span>${oup2Label}</span>
-                <span>${rightsAmountLabel(entry)}</span>
-              </div>
-              <div class="hash">Empreinte de génération : ${shortHash(generationHash)}</div>
-              <div class="hash">Empreinte des droits : ${shortHash(rewardsHash)}</div>
-              <div class="hash">${rightsDetailLabel(entry)}</div>
-              <div class="hash">Image : ${entry.image_path || "non renseignee"}</div>
-              <div class="hash">Empreinte image : ${shortHash(entry.image_hash_head)}</div>
-              <div class="hash">Inscription image : ${shortHash(entry.transaction_hash)}</div>
-              <div class="hash">Donnée d’ancrage NMNC : ${shortHash(payload)}</div>
-              <span class="status">NMNC ${statusLabel}</span>
-            </div>
-          </a>
-        `;
+
+        const point = createTextElement("div", pointLabel, "point");
+        const link = document.createElement("a");
+        link.className = "generation";
+        link.href = pageUrl("generation.html", { id: entry.id });
+
+        const preview = createPreviewImage(entry, `Image générée ${entry.id}`);
+        if (preview) link.appendChild(preview);
+
+        const details = document.createElement("div");
+        details.appendChild(createTextElement("h3", `Peinture Oupeinpo ${pointLabel} · ${imageLabel}`));
+        appendMeta(details, [
+          formatDate(entry.created_at),
+          entry.id,
+          oup2Label,
+          rightsAmountLabel(entry)
+        ]);
+        appendHashLine(details, `Empreinte de génération : ${shortHash(generationHash)}`);
+        appendHashLine(details, `Empreinte des droits : ${shortHash(rewardsHash)}`);
+        appendHashLine(details, rightsDetailLabel(entry));
+        appendHashLine(details, `Image : ${entry.image_path || "non renseignée"}`);
+        appendHashLine(details, `Empreinte image : ${shortHash(entry.image_hash_head)}`);
+        appendHashLine(details, `Inscription image : ${shortHash(entry.transaction_hash)}`);
+        appendHashLine(details, `Donnée d’ancrage NMNC : ${shortHash(payload)}`);
+        details.appendChild(createTextElement("span", `NMNC ${statusLabel}`, "status"));
+
+        link.appendChild(details);
+        item.append(point, link);
         thread.appendChild(item);
       });
     }
 
     function renderLatestImages() {
       const latest = [...entries].filter((entry) => entry.preview_image).slice(-6).reverse();
-      latestImages.innerHTML = latest.map((entry) => `
-        <a href="${pageUrl("generation.html", { id: entry.id })}" title="${entry.id}">
-          ${previewImageTag(entry, `Image generee ${entry.id}`)}
-        </a>
-      `).join("");
+      latestImages.replaceChildren();
+      latest.forEach((entry) => {
+        const link = document.createElement("a");
+        link.href = pageUrl("generation.html", { id: entry.id });
+        link.title = entry.id;
+        const preview = createPreviewImage(entry, `Image générée ${entry.id}`);
+        if (preview) link.appendChild(preview);
+        latestImages.appendChild(link);
+      });
+    }
+
+    function createSideItem(label, value, options = {}) {
+      const item = document.createElement("li");
+      const values = Array.isArray(value) ? value : [value];
+      if (options.strongLabel) {
+        const strong = document.createElement("strong");
+        strong.textContent = label;
+        item.appendChild(strong);
+      } else {
+        item.append(label);
+      }
+      values.forEach((line) => {
+        item.append(document.createElement("br"), line);
+      });
+      return item;
     }
 
     function renderHead() {
       const current = entries[entries.length - 1];
       if (!current) {
-        head.innerHTML = '<li>Aucune peinture.</li>';
+        setListEmpty(head, "Aucune peinture.");
         return;
       }
       const generationHash = current.generation_hash;
       const previousHash = current.previous_generation_hash;
       const rewardsHash = current.rewards_hash;
       const payload = current.oup2_payload && current.oup2_payload.payload_hex;
-      head.innerHTML = `
-        <li><strong>Peinture #${String(current.sequence || 0).padStart(6, "0")}</strong><br>${formatDate(current.created_at)}</li>
-        <li>Identifiant<br>${current.id}${current.image_number ? ` · peinture ${current.image_number}` : ""}</li>
-        <li>Empreinte de génération<br>${generationHash}</li>
-        <li>Empreinte précédente<br>${previousHash || "genesis"}</li>
-        <li>Empreinte des droits<br>${rewardsHash || "en attente"}</li>
-        <li>Donnée d’ancrage NMNC<br>${payload || "en attente"}</li>
-        <li>Chemin image<br>${current.image_path || "non renseigne"}</li>
-        <li>Inscription image<br>${current.transaction_hash || "en attente"}</li>
-        <li>Droits d’usage<br>${rightsDetailLabel(current)}</li>
-        <li>Révision GitHub<br>${current.github_commit || "en attente"}</li>
-        <li>Inscription NMNC<br>${nmncAnchorReference(current.nmnc_anchor)}<br>${nmncStatusLabel(current.nmnc_anchor && current.nmnc_anchor.status)}</li>
-      `;
+      head.replaceChildren(
+        createSideItem(`Peinture #${String(current.sequence || 0).padStart(6, "0")}`, formatDate(current.created_at), { strongLabel: true }),
+        createSideItem("Identifiant", `${current.id}${current.image_number ? ` · peinture ${current.image_number}` : ""}`),
+        createSideItem("Empreinte de génération", generationHash || "en attente"),
+        createSideItem("Empreinte précédente", previousHash || "genesis"),
+        createSideItem("Empreinte des droits", rewardsHash || "en attente"),
+        createSideItem("Donnée d’ancrage NMNC", payload || "en attente"),
+        createSideItem("Chemin image", current.image_path || "non renseigné"),
+        createSideItem("Inscription image", current.transaction_hash || "en attente"),
+        createSideItem("Droits d’usage", rightsDetailLabel(current)),
+        createSideItem("Révision GitHub", current.github_commit || "en attente"),
+        createSideItem("Inscription NMNC", [
+          nmncAnchorReference(current.nmnc_anchor),
+          nmncStatusLabel(current.nmnc_anchor && current.nmnc_anchor.status)
+        ])
+      );
     }
 
     async function loadExplorer() {
@@ -807,7 +875,7 @@
         renderLatestImages();
         renderHead();
       } catch (error) {
-        thread.innerHTML = '<li class="empty">Impossible de charger le registre public.</li>';
+        setListEmpty(thread, "Impossible de charger le registre public.");
       }
     }
 

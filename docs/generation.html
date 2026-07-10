@@ -247,29 +247,47 @@
       }).format(new Date(value));
     }
 
-    function field(label, value) {
-      return `<dt>${label}</dt><dd>${value || "-"}</dd>`;
+    function createTextElement(tagName, text, className = "") {
+      const element = document.createElement(tagName);
+      if (className) element.className = className;
+      element.textContent = text;
+      return element;
+    }
+
+    function appendMetadataField(label, value) {
+      metadata.append(
+        createTextElement("dt", label),
+        createTextElement("dd", value || "-")
+      );
+    }
+
+    function safeApiAssetUrl(value) {
+      if (!value) return "";
+      try {
+        const apiUrl = new URL(API_BASE_URL);
+        const candidate = new URL(value, API_BASE_URL);
+        if (candidate.origin !== apiUrl.origin) return "";
+        if (!candidate.pathname.startsWith("/local-results/")) return "";
+        return candidate.href;
+      } catch (error) {
+        return "";
+      }
     }
 
     function asAbsoluteUrl(jobId, path) {
       if (!path) return "";
-      if (path.startsWith("http")) return path;
-      if (path.startsWith("/")) return `${API_BASE_URL}${path}`;
-      if (path.startsWith("local-results/")) return `${API_BASE_URL}/${path}`;
-      return `${API_BASE_URL}/local-results/${jobId}/${path}`;
-    }
-
-    function escapeAttribute(value) {
-      return String(value || "")
-        .replace(/&/g, "&amp;")
-        .replace(/"/g, "&quot;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+      if (/^https?:\/\//i.test(path)) return safeApiAssetUrl(path);
+      if (path.startsWith("/")) return safeApiAssetUrl(`${API_BASE_URL}${path}`);
+      if (path.startsWith("local-results/")) return safeApiAssetUrl(`${API_BASE_URL}/${path}`);
+      return safeApiAssetUrl(`${API_BASE_URL}/local-results/${jobId}/${path}`);
     }
 
     function outputImageCandidates(jobId, path) {
       if (!path) return [];
-      if (path.startsWith("http")) return [path];
+      if (/^https?:\/\//i.test(path)) {
+        const safeUrl = safeApiAssetUrl(path);
+        return safeUrl ? [safeUrl] : [];
+      }
 
       const synthMatch = path.match(/^synth\/(cluster_fused_\d+)\.png$/i);
       if (synthMatch) {
@@ -290,21 +308,20 @@
       return [asAbsoluteUrl(jobId, path)];
     }
 
-    function useImageFallback(image) {
-      const fallback = image.dataset.fallbackSrc;
-      if (fallback) {
-        image.dataset.fallbackSrc = "";
-        image.src = fallback;
-      } else {
-        image.removeAttribute("onerror");
-      }
-    }
-
-    function outputImageTag(jobId, output) {
+    function createOutputImage(jobId, output) {
       const candidates = outputImageCandidates(jobId, output.path);
-      if (!candidates.length) return "";
-      const fallback = candidates[1] ? ` data-fallback-src="${escapeAttribute(candidates[1])}" onerror="useImageFallback(this)"` : "";
-      return `<img src="${escapeAttribute(candidates[0])}"${fallback} alt="${escapeAttribute(`Image generee ${jobId} sortie ${output.index}`)}">`;
+      if (!candidates.length) return null;
+      const image = document.createElement("img");
+      image.src = candidates[0];
+      image.alt = `Image générée ${jobId} sortie ${output.index}`;
+      if (candidates[1]) {
+        image.addEventListener("error", () => {
+          if (image.src !== candidates[1]) {
+            image.src = candidates[1];
+          }
+        }, { once: true });
+      }
+      return image;
     }
 
     function nmncStatusLabel(status) {
@@ -313,10 +330,10 @@
         pending_mining: "validé, à miner",
         approval_failed: "validation à reprendre",
         rejected: "refusé",
-        not_submitted: "non soumis OUP2",
+        not_submitted: "non transmis au registre NMNC",
         pending: "en attente"
       };
-      return labels[status] || status || "non soumis OUP2";
+      return labels[status] || status || "non transmis au registre NMNC";
     }
 
     function nmncAnchorReference(anchor) {
@@ -336,9 +353,11 @@
       return "aucun droit NMNC associé";
     }
 
-    function rewardListHtml(entry) {
+    function renderRewards(entry) {
+      rewards.replaceChildren();
       if (!entry.nmnc_address) {
-        return '<li>Aucune adresse NMNC publique associee a cette génération.</li>';
+        rewards.appendChild(createTextElement("li", "Aucune adresse NMNC publique associée à cette génération."));
+        return;
       }
 
       const actualNo = Number(entry.reward_total_no || 0);
@@ -349,17 +368,60 @@
       const detail = actualNo > 0
         ? `Droits d’usage acquis : ${entry.reward_total_no || 0} no`
         : potentialNo > 0
-          ? `Droits d’usage potentiels du lot si minage OUP2 : ${entry.potential_reward_total_no || 0} no`
+          ? `Droits d’usage potentiels du lot si inscription NMNC : ${entry.potential_reward_total_no || 0} no`
           : "Droits d’usage : aucun droit NMNC associé pour l’instant";
 
-      return `
-        <li>
-          <strong>${title}</strong>
-          Adresse associee : ${entry.nmnc_address}<br>
-          ${detail}<br>
-          Peintures informatiques : ${outputCount || entry.outputs.length || 1}
-        </li>
-      `;
+      const item = document.createElement("li");
+      item.append(
+        createTextElement("strong", title),
+        `Adresse associée : ${entry.nmnc_address}`,
+        document.createElement("br"),
+        detail,
+        document.createElement("br"),
+        `Peintures informatiques : ${outputCount || entry.outputs.length || 1}`
+      );
+      rewards.appendChild(item);
+    }
+
+    function renderOutputs(entry, resultIndexUrl) {
+      outputs.replaceChildren();
+      if (!entry.outputs.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        const link = document.createElement("a");
+        link.href = resultIndexUrl;
+        link.textContent = "Voir les images générées sur le serveur";
+        empty.append(link, ".");
+        outputs.appendChild(empty);
+        return;
+      }
+
+      entry.outputs.forEach((output) => {
+        const article = document.createElement("article");
+        article.className = "output";
+        const image = createOutputImage(entry.id, output);
+        if (image) article.appendChild(image);
+        article.appendChild(createTextElement("div", `SHA256 ${output.sha256 || "-"}`, "caption"));
+        outputs.appendChild(article);
+      });
+    }
+
+    function renderMetadata(entry) {
+      metadata.replaceChildren();
+      appendMetadataField("Identifiant", entry.id);
+      appendMetadataField("Hauteur Oupeinpo", entry.height);
+      appendMetadataField("Empreinte de génération", entry.generation_hash);
+      appendMetadataField("Empreinte précédente", entry.previous_generation_hash || "genesis");
+      appendMetadataField("Empreinte des droits", entry.rewards_hash);
+      appendMetadataField("Droits acquis no", entry.reward_total_no);
+      appendMetadataField("Droits acquis NMNC", entry.reward_total_nmnc);
+      appendMetadataField("Droits potentiels no", entry.potential_reward_total_no);
+      appendMetadataField("Droits potentiels NMNC", entry.potential_reward_total_nmnc);
+      appendMetadataField("Images sources", entry.source_count);
+      appendMetadataField("Clusters", entry.cluster_count);
+      appendMetadataField("Adresse NMNC", entry.nmnc_address);
+      appendMetadataField("Inscription NMNC", nmncAnchorReference(entry.nmnc_anchor));
+      appendMetadataField("État NMNC", nmncStatusLabel(entry.nmnc_anchor && entry.nmnc_anchor.status));
     }
 
     function normalizeOutputs(tx) {
@@ -427,40 +489,18 @@
         const resultIndexUrl = `${API_BASE_URL}/local-results/${entry.id}/index.html`;
 
         title.textContent = `Génération Oupeinpo #${String(entry.height).padStart(6, "0")}`;
-        subtitle.textContent = `${formatDate(entry.created_at)} - ${entry.source_count} images sources privees, ${entry.cluster_count} clusters, ${entry.outputs.length || 1} peinture(s) informatique(s), ${rightsSummary(entry)}.`;
+        subtitle.textContent = `${formatDate(entry.created_at)} - ${entry.source_count} images sources privées, ${entry.cluster_count} clusters, ${entry.outputs.length || 1} peinture(s) informatique(s), ${rightsSummary(entry)}.`;
         rawJson.href = `${API_BASE_URL}/global-blockchain.json`;
 
-        outputs.innerHTML = entry.outputs.length ? entry.outputs.map((output) => `
-          <article class="output">
-            ${outputImageTag(entry.id, output)}
-            <div class="caption">SHA256 ${output.sha256 || "-"}</div>
-          </article>
-        `).join("") : `<div class="empty"><a href="${resultIndexUrl}">Voir les images generees sur le serveur</a>.</div>`;
-
-        rewards.innerHTML = rewardListHtml(entry);
-
-        metadata.innerHTML = [
-          field("Identifiant", entry.id),
-          field("Hauteur Oupeinpo", entry.height),
-          field("Empreinte de génération", entry.generation_hash),
-          field("Empreinte précédente", entry.previous_generation_hash || "genesis"),
-          field("Empreinte des droits", entry.rewards_hash),
-          field("Droits acquis no", entry.reward_total_no),
-          field("Droits acquis NMNC", entry.reward_total_nmnc),
-          field("Droits potentiels no", entry.potential_reward_total_no),
-          field("Droits potentiels NMNC", entry.potential_reward_total_nmnc),
-          field("Images sources", entry.source_count),
-          field("Clusters", entry.cluster_count),
-          field("Adresse NMNC", entry.nmnc_address),
-          field("Inscription NMNC", nmncAnchorReference(entry.nmnc_anchor)),
-          field("État NMNC", nmncStatusLabel(entry.nmnc_anchor && entry.nmnc_anchor.status))
-        ].join("");
+        renderOutputs(entry, resultIndexUrl);
+        renderRewards(entry);
+        renderMetadata(entry);
       } catch (error) {
         title.textContent = "Génération introuvable";
         subtitle.textContent = "Le point demande n’existe pas dans le registre public.";
-        outputs.innerHTML = '<div class="empty">Aucune image a afficher.</div>';
-        rewards.innerHTML = "";
-        metadata.innerHTML = "";
+        outputs.replaceChildren(createTextElement("div", "Aucune image à afficher.", "empty"));
+        rewards.replaceChildren();
+        metadata.replaceChildren();
         rawJson.removeAttribute("href");
       }
     }

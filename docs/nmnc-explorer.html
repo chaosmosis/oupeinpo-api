@@ -544,7 +544,7 @@
       <section class="panel">
         <h2>Pages récentes du registre NMNC</h2>
         <div class="toolbar">
-          <input id="search" type="search" placeholder="Hauteur ou empreinte de page NMNC">
+          <input id="search" type="search" aria-label="Hauteur ou empreinte de page NMNC" placeholder="Hauteur ou empreinte de page NMNC">
           <button id="search-button">Ouvrir</button>
         </div>
         <div class="status" id="list-status">Chargement.</div>
@@ -566,7 +566,7 @@
       <aside class="panel">
         <h2>Adresses les plus dotées</h2>
         <div class="toolbar" style="grid-template-columns: minmax(0, 1fr) 110px;">
-          <select id="richest-limit">
+          <select id="richest-limit" aria-label="Nombre d’adresses à afficher">
             <option value="10">Top 10</option>
             <option value="20">Top 20</option>
             <option value="50">Top 50</option>
@@ -821,8 +821,47 @@
       }
     }
 
-    function field(label, value, mono = false) {
-      return `<dt>${label}</dt><dd${mono ? ' class="hash"' : ""}>${value ?? "-"}</dd>`;
+    function createTextElement(tagName, text, className = "") {
+      const element = document.createElement(tagName);
+      if (className) element.className = className;
+      element.textContent = text;
+      return element;
+    }
+
+    function setStatus(element, text, isError = false) {
+      element.textContent = text;
+      element.classList.toggle("error", Boolean(isError));
+    }
+
+    function appendDetailField(label, value, mono = false) {
+      detail.append(
+        createTextElement("dt", label),
+        createTextElement("dd", value ?? "-", mono ? "hash" : "")
+      );
+    }
+
+    function safeApiAssetUrl(value) {
+      if (!value) return "";
+      try {
+        const apiUrl = new URL(API_BASE_URL);
+        const candidate = new URL(value, API_BASE_URL);
+        if (candidate.origin !== apiUrl.origin) return "";
+        if (!candidate.pathname.startsWith("/local-results/")) return "";
+        return candidate.href;
+      } catch (error) {
+        return "";
+      }
+    }
+
+    function safeApiUrl(value) {
+      if (!value) return "";
+      try {
+        const apiUrl = new URL(API_BASE_URL);
+        const candidate = new URL(value, API_BASE_URL);
+        return candidate.origin === apiUrl.origin ? candidate.href : "";
+      } catch (error) {
+        return "";
+      }
     }
 
     function pageUrl(page, params = {}) {
@@ -842,7 +881,7 @@
         .filter(Boolean)
         .map((part) => encodeURIComponent(part))
         .join("/");
-      return `${API_BASE_URL}/local-results/${encodedJobId}/${encodedPath}`;
+      return safeApiAssetUrl(`${API_BASE_URL}/local-results/${encodedJobId}/${encodedPath}`);
     }
 
     function proofImageCandidates(image, jobId) {
@@ -859,7 +898,10 @@
         candidates.push(localResultAssetUrl(resolvedJobId, `thumbs/${stem}.webp`));
       }
 
-      if (url) candidates.push(url);
+      if (url) {
+        const safeUrl = safeApiAssetUrl(url);
+        if (safeUrl) candidates.push(safeUrl);
+      }
       if (!url && filename && jobId) candidates.push(localResultAssetUrl(jobId, `synth/${filename}`));
       if (!candidates.length && index && jobId) {
         candidates.push(localResultAssetUrl(jobId, `thumbs/cluster_fused_${index}.webp`));
@@ -869,20 +911,19 @@
       return [...new Set(candidates)];
     }
 
-    function imageWithFallback(candidates, alt) {
-      if (!candidates.length) return "";
-      const fallback = candidates[1] ? ` data-fallback-src="${escapeHtml(candidates[1])}" onerror="useImageFallback(this)"` : "";
-      return `<img src="${escapeHtml(candidates[0])}"${fallback} alt="${escapeHtml(alt)}">`;
-    }
-
-    function useImageFallback(image) {
-      const fallback = image.dataset.fallbackSrc;
-      if (fallback) {
-        image.dataset.fallbackSrc = "";
-        image.src = fallback;
-      } else {
-        image.removeAttribute("onerror");
+    function createImageWithFallback(candidates, alt) {
+      if (!candidates.length) return null;
+      const image = document.createElement("img");
+      image.src = candidates[0];
+      image.alt = alt;
+      if (candidates[1]) {
+        image.addEventListener("error", () => {
+          if (image.src !== candidates[1]) {
+            image.src = candidates[1];
+          }
+        }, { once: true });
       }
+      return image;
     }
 
     async function fetchJson(path) {
@@ -913,132 +954,165 @@
     }
 
     function renderBlocks(blocks) {
-      blockList.innerHTML = "";
+      blockList.replaceChildren();
       blocks.forEach((block) => {
         const oup2Count = Array.isArray(block.oup2_op_returns) ? block.oup2_op_returns.length : 0;
         const row = document.createElement("button");
         row.className = "block-row";
         row.type = "button";
         row.setAttribute("aria-current", block.hash === selectedHash ? "true" : "false");
-        row.innerHTML = `
-          <span class="height">#${block.height}</span>
-          <span>
-            <span class="hash">${shortHash(block.hash)}</span><br>
-            <span class="muted">${formatTime(block.time)} · ${block.nTx} tx · ${block.size} octets</span>
-          </span>
-          <span class="block-badges">
-            ${oup2Count ? `<span class="pill oup2">Oupeinpo · ${oup2Count}</span>` : ""}
-            <span class="pill">${block.confirmations} conf.</span>
-          </span>
-        `;
+
+        const height = createTextElement("span", `#${block.height}`, "height");
+        const summary = document.createElement("span");
+        summary.append(
+          createTextElement("span", shortHash(block.hash), "hash"),
+          document.createElement("br"),
+          createTextElement("span", `${formatTime(block.time)} · ${block.nTx} tx · ${block.size} octets`, "muted")
+        );
+
+        const badges = document.createElement("span");
+        badges.className = "block-badges";
+        if (oup2Count) badges.appendChild(createTextElement("span", `Oupeinpo · ${oup2Count}`, "pill oup2"));
+        badges.appendChild(createTextElement("span", `${block.confirmations} conf.`, "pill"));
+
+        row.append(height, summary, badges);
         row.addEventListener("click", () => loadBlock(block.hash));
         blockList.appendChild(row);
       });
     }
 
-    function outputHtml(output) {
+    function createOutputElement(output) {
       const address = Array.isArray(output.addresses) && output.addresses.length
         ? output.addresses.join(", ")
         : output.type || "script";
-      return `
-        <div class="output">
-          <span>${output.value ?? "0"} NMNC</span>
-          <span class="hash">${address}</span>
-        </div>
-      `;
+      const outputElement = document.createElement("div");
+      outputElement.className = "output";
+      outputElement.append(
+        createTextElement("span", `${output.value ?? "0"} NMNC`),
+        createTextElement("span", address, "hash")
+      );
+      return outputElement;
     }
 
-    function escapeHtml(value) {
-      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-      })[char]);
+    function createProofMetaLine(label, value, className = "") {
+      const line = document.createElement("div");
+      line.append(
+        createTextElement("span", label, "muted"),
+        " ",
+        createTextElement("span", value ?? "-", className)
+      );
+      return line;
     }
 
     function renderOupeinpoProofs(proofs) {
+      proofList.replaceChildren();
       if (!Array.isArray(proofs) || proofs.length === 0) {
-        proofList.innerHTML = "";
         return;
       }
 
-      proofList.innerHTML = proofs.map((proof) => {
+      proofs.forEach((proof) => {
         const images = Array.isArray(proof.images) ? proof.images : [];
-        const gallery = images.length
-          ? images.map((image) => {
-              const candidates = proofImageCandidates(image, proof.job_id);
-              const href = candidates[1] || candidates[0] || image.url || "#";
-              return `
-                <figure>
-                  <a href="${escapeHtml(href)}" target="_blank" rel="noopener">
-                    ${imageWithFallback(candidates, `Image Oupeinpo ${image.image_token_index_for_user || image.index || ""}`)}
-                  </a>
-                  <figcaption>
-                    Image ${escapeHtml(image.image_token_index_for_user || image.index || "-")}
-                    · sortie ${escapeHtml(image.coinbase_vout_index ?? "-")}
-                  </figcaption>
-                </figure>
-              `;
-            }).join("")
-          : '<p class="muted">Aucune miniature probante associée à cette page NMNC.</p>';
-
+        const section = document.createElement("section");
+        section.className = "proof-card";
         const generationLink = pageUrl("generation.html", { id: proof.job_id });
         const explorerLink = pageUrl("explorer.html");
-        return `
-          <section class="proof-card">
-            <h3>Preuve Oupeinpo</h3>
-            <div class="proof-meta">
-              <div><span class="muted">Identifiant</span> <span class="hash">${escapeHtml(proof.job_id)}</span></div>
-              <div><span class="muted">Passage Oupeinpo vers NMNC</span> ${escapeHtml(proof.oupeinpo_height ?? "-")}</div>
-              <div><span class="muted">Images</span> ${escapeHtml(proof.image_count ?? images.length)} / ${escapeHtml(proof.expected_user_output_count ?? images.length)}</div>
-              <div><span class="muted">Source</span> ${proof.archive_proof ? "archive probante compacte" : "résultat public vivant"}</div>
-              <div class="proof-links">
-                ${proof.result_url ? `<a href="${escapeHtml(proof.result_url)}" target="_blank" rel="noopener">Page de génération</a>` : ""}
-                <a href="${escapeHtml(generationLink)}">Page de génération</a>
-                <a href="${escapeHtml(explorerLink)}">Consulter le registre de l’Ouvroir</a>
-              </div>
-            </div>
-            <div class="proof-gallery">${gallery}</div>
-          </section>
-        `;
-      }).join("");
+
+        const meta = document.createElement("div");
+        meta.className = "proof-meta";
+        meta.append(
+          createProofMetaLine("Identifiant", proof.job_id, "hash"),
+          createProofMetaLine("Passage Oupeinpo vers NMNC", proof.oupeinpo_height ?? "-"),
+          createProofMetaLine("Images", `${proof.image_count ?? images.length} / ${proof.expected_user_output_count ?? images.length}`),
+          createProofMetaLine("Source", proof.archive_proof ? "archive probante compacte" : "résultat public vivant")
+        );
+
+        const links = document.createElement("div");
+        links.className = "proof-links";
+        const safeResultUrl = safeApiUrl(proof.result_url);
+        if (safeResultUrl) {
+          const resultLink = document.createElement("a");
+          resultLink.href = safeResultUrl;
+          resultLink.target = "_blank";
+          resultLink.rel = "noopener";
+          resultLink.textContent = "Page de génération";
+          links.appendChild(resultLink);
+        }
+        const generationAnchor = document.createElement("a");
+        generationAnchor.href = generationLink;
+        generationAnchor.textContent = "Page de génération";
+        const explorerAnchor = document.createElement("a");
+        explorerAnchor.href = explorerLink;
+        explorerAnchor.textContent = "Consulter le registre de l’Ouvroir";
+        links.append(generationAnchor, explorerAnchor);
+        meta.appendChild(links);
+
+        const gallery = document.createElement("div");
+        gallery.className = "proof-gallery";
+        if (images.length) {
+          images.forEach((image) => {
+            const candidates = proofImageCandidates(image, proof.job_id).filter(Boolean);
+            const figure = document.createElement("figure");
+            const proofImage = createImageWithFallback(candidates, `Image Oupeinpo ${image.image_token_index_for_user || image.index || ""}`);
+            if (proofImage) {
+              const href = candidates[1] || candidates[0];
+              const imageLink = document.createElement("a");
+              imageLink.href = href;
+              imageLink.target = "_blank";
+              imageLink.rel = "noopener";
+              imageLink.appendChild(proofImage);
+              figure.appendChild(imageLink);
+            }
+            figure.appendChild(createTextElement("figcaption", `Image ${image.image_token_index_for_user || image.index || "-"} · sortie ${image.coinbase_vout_index ?? "-"}`));
+            gallery.appendChild(figure);
+          });
+        } else {
+          gallery.appendChild(createTextElement("p", "Aucune miniature probante associée à cette page NMNC.", "muted"));
+        }
+
+        section.append(createTextElement("h3", "Preuve Oupeinpo"), meta, gallery);
+        proofList.appendChild(section);
+      });
     }
 
     function renderBlock(block) {
       selectedHash = block.hash;
       renderBlocks(currentBlocks);
-      detailStatus.textContent = `Page NMNC #${block.height}`;
-      detail.innerHTML = [
-        field("Empreinte", block.hash, true),
-        field("Confirmations", block.confirmations),
-        field("Horodatage", formatTime(block.time)),
-        field("Inscriptions", block.nTx),
-        field("Taille", `${block.size} octets`),
-        field("Poids", block.weight),
-        field("Racine de Merkle", block.merkleroot, true),
-        field("Difficulté", block.difficulty),
-        field("Nonce", block.nonce),
-        field("Bits", block.bits),
-        field("Page précédente", block.previousblockhash || "genesis", true),
-        field("Page suivante", block.nextblockhash || "-", true),
-        field("Inscription d’émission", block.coinbase_txid, true),
-        field("Émission inscrite", `${block.coinbase_value_nmnc || "0.00000000"} NMNC`),
-        field("Données d’ancrage", (block.op_returns || []).length),
-        field("Inscriptions Oupeinpo-NMNC", (block.oup2_op_returns || []).length)
-      ].join("");
+      setStatus(detailStatus, `Page NMNC #${block.height}`);
+      detail.replaceChildren();
+      appendDetailField("Empreinte", block.hash, true);
+      appendDetailField("Confirmations", block.confirmations);
+      appendDetailField("Horodatage", formatTime(block.time));
+      appendDetailField("Inscriptions", block.nTx);
+      appendDetailField("Taille", `${block.size} octets`);
+      appendDetailField("Poids", block.weight);
+      appendDetailField("Racine de Merkle", block.merkleroot, true);
+      appendDetailField("Difficulté", block.difficulty);
+      appendDetailField("Nonce", block.nonce);
+      appendDetailField("Bits", block.bits);
+      appendDetailField("Page précédente", block.previousblockhash || "genesis", true);
+      appendDetailField("Page suivante", block.nextblockhash || "-", true);
+      appendDetailField("Inscription d’émission", block.coinbase_txid, true);
+      appendDetailField("Émission inscrite", `${block.coinbase_value_nmnc || "0.00000000"} NMNC`);
+      appendDetailField("Données d’ancrage", (block.op_returns || []).length);
+      appendDetailField("Inscriptions Oupeinpo-NMNC", (block.oup2_op_returns || []).length);
 
       renderOupeinpoProofs(block.oupeinpo_proofs || []);
 
-      txList.innerHTML = (block.transactions || []).map((tx) => `
-        <section class="tx">
-          <h3>${tx.coinbase ? "Inscription d’émission" : "Inscription"}</h3>
-          <div class="hash">${tx.txid}</div>
-          <div class="muted">${tx.vin_count} entrée(s), ${tx.vout_count} sortie(s), ${tx.size} octets</div>
-          <div class="outputs">${(tx.outputs || []).map(outputHtml).join("")}</div>
-        </section>
-      `).join("");
+      txList.replaceChildren();
+      (block.transactions || []).forEach((tx) => {
+        const section = document.createElement("section");
+        section.className = "tx";
+        const outputList = document.createElement("div");
+        outputList.className = "outputs";
+        (tx.outputs || []).forEach((output) => outputList.appendChild(createOutputElement(output)));
+        section.append(
+          createTextElement("h3", tx.coinbase ? "Inscription d’émission" : "Inscription"),
+          createTextElement("div", tx.txid, "hash"),
+          createTextElement("div", `${tx.vin_count} entrée(s), ${tx.vout_count} sortie(s), ${tx.size} octets`, "muted"),
+          outputList
+        );
+        txList.appendChild(section);
+      });
     }
 
     function normalizeNmncAddressBalance(value) {
@@ -1089,38 +1163,49 @@
           rank: index + 1
         }));
 
-      richestList.innerHTML = ordered.map((entry, index) => `
-        <tr>
-          <td class="rank">${entry.rank}</td>
-          <td class="address">${entry.address}</td>
-          <td class="balance">${toNmncString(entry.balanceNmnc)}</td>
-          <td class="balance">${toNmncString(entry.immatureNmnc)}</td>
-          <td class="meta">${Number.isFinite(entry.utxoCount) ? entry.utxoCount : 0}</td>
-        </tr>
-      `).join("");
+      richestList.replaceChildren();
+      ordered.forEach((entry) => {
+        const row = document.createElement("tr");
+        row.append(
+          createTextElement("td", entry.rank, "rank"),
+          createTextElement("td", entry.address, "address"),
+          createTextElement("td", toNmncString(entry.balanceNmnc), "balance"),
+          createTextElement("td", toNmncString(entry.immatureNmnc), "balance"),
+          createTextElement("td", Number.isFinite(entry.utxoCount) ? entry.utxoCount : 0, "meta")
+        );
+        richestList.appendChild(row);
+      });
+    }
+
+    function setRichestMessage(message) {
+      const row = document.createElement("tr");
+      const cell = createTextElement("td", message);
+      cell.colSpan = 5;
+      row.appendChild(cell);
+      richestList.replaceChildren(row);
     }
 
     async function loadRichestAddresses() {
-      richestStatus.textContent = "Chargement.";
+      setStatus(richestStatus, "Chargement.");
       try {
         const limit = richestLimit.value || "10";
         const rows = await fetchJson(`/nmnc/richest?limit=${encodeURIComponent(limit)}`);
         const values = extractRichestRows(rows);
         if (!Array.isArray(values) || values.length === 0) {
-          richestList.innerHTML = '<tr><td colspan="5">Aucune adresse à afficher.</td></tr>';
-          richestStatus.textContent = "Aucune adresse trouvée.";
+          setRichestMessage("Aucune adresse à afficher.");
+          setStatus(richestStatus, "Aucune adresse trouvée.");
           return;
         }
         renderRichestAddresses(values);
-        richestStatus.textContent = `${values.length} adresse(s) affichée(s).`;
+        setStatus(richestStatus, `${values.length} adresse(s) affichée(s).`);
       } catch (error) {
-        richestList.innerHTML = '<tr><td colspan="5">Classement indisponible pour le moment.</td></tr>';
-        richestStatus.innerHTML = `<span class="error">${error.message}</span>`;
+        setRichestMessage("Classement indisponible pour le moment.");
+        setStatus(richestStatus, error.message, true);
       }
     }
 
     async function loadBlocks(startHeight = null) {
-      statusBox.textContent = "Chargement.";
+      setStatus(statusBox, "Chargement.");
       const query = startHeight === null ? "" : `?start_height=${encodeURIComponent(startHeight)}&limit=${pageSize}`;
       const data = await fetchJson(`/nmnc/blocks${query || `?limit=${pageSize}`}`);
       currentBlocks = data.blocks || [];
@@ -1130,7 +1215,7 @@
       const hasBlocks = currentBlocks.length > 0;
       document.getElementById("prev-page").disabled = !hasBlocks || currentStartHeight <= 0;
       document.getElementById("latest-page").disabled = !hasBlocks || currentTopHeight === currentTipHeight;
-      statusBox.textContent = `${currentBlocks.length} page(s) du registre NMNC, pointe #${data.tip_height}.`;
+      setStatus(statusBox, `${currentBlocks.length} page(s) du registre NMNC, pointe #${data.tip_height}.`);
       await updateWorkMetricsFromGenesis(data.tip_height);
       renderBlocks(currentBlocks);
       if (currentBlocks.length && !selectedHash) {
@@ -1139,10 +1224,10 @@
     }
 
     async function loadBlock(identifier) {
-      detailStatus.textContent = "Chargement.";
-      detail.innerHTML = "";
-      proofList.innerHTML = "";
-      txList.innerHTML = "";
+      setStatus(detailStatus, "Chargement.");
+      detail.replaceChildren();
+      proofList.replaceChildren();
+      txList.replaceChildren();
       const block = await fetchJson(`/nmnc/block/${encodeURIComponent(identifier)}`);
       renderBlock(block);
     }
@@ -1153,7 +1238,7 @@
       try {
         await loadBlock(value);
       } catch (error) {
-        detailStatus.innerHTML = `<span class="error">${error.message}</span>`;
+        setStatus(detailStatus, error.message, true);
       }
     }
 
@@ -1179,7 +1264,7 @@
         await loadStatus();
         await loadBlocks(null);
       } catch (error) {
-        statusBox.innerHTML = `<span class="error">${error.message}</span>`;
+        setStatus(statusBox, error.message, true);
       }
       await loadRichestAddresses();
     })();

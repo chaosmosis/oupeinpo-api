@@ -99,6 +99,7 @@
 
     input[type="text"],
     input[type="email"],
+    input[type="password"],
     input[type="file"],
     select,
     textarea {
@@ -329,7 +330,7 @@
           <a href="nmnc-explorer.html">Consulter le registre NMNC</a>
         </p>
       </div>
-      <div class="api-state" id="api-state">API : vérification…</div>
+      <div class="api-state" id="api-state" role="status" aria-live="polite">API : vérification…</div>
     </header>
 
     <form id="oupeinpo-form">
@@ -345,7 +346,7 @@
         <div class="note">Si vous avez déjà une adresse NMNC publique, indiquez-la ici. Sinon, laissez ce champ vide : l’Ouvroir générera directement une adresse pour ce test. Ne jamais envoyer de clé privée.</div>
 
         <label for="access-code">Code d’accès</label>
-        <input id="access-code" name="access_code" type="text" autocomplete="off" required>
+        <input id="access-code" name="access_code" type="password" autocomplete="off" required>
 
         <label for="clusters">Décidez ici combien de peintures vous souhaitez créer. </label>
         <select id="clusters" name="clusters">
@@ -368,7 +369,7 @@
           <button class="secondary" id="clear-button" type="button">Réinitialiser</button>
         </div>
 
-        <div class="status" id="status">En attente d’images.</div>
+        <div class="status" id="status" role="status" aria-live="polite">En attente d’images.</div>
       </section>
 
       <section>
@@ -384,7 +385,7 @@
         <a href="explorer.html">Consulter le registre</a>
       </div>
       <div class="note">Miniatures publiques des peintures produites par l’Ouvroir. Les images déposées au départ ne sont pas affichées ici.</div>
-      <div class="note" id="recent-status">Chargement des peintures…</div>
+      <div class="note" id="recent-status" role="status" aria-live="polite">Chargement des peintures…</div>
       <div class="recent-grid" id="recent-grid"></div>
     </section>
   </main>
@@ -469,6 +470,13 @@
       statusBox.classList.toggle("error", isError);
     }
 
+    function setImageGridEmpty(message) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = message;
+      imageGrid.replaceChildren(empty);
+    }
+
     function fileKey(file) {
       return `${file.name}::${file.size}::${file.lastModified}`;
     }
@@ -544,10 +552,10 @@
 
     function renderFiles() {
       releaseUnusedObjectUrls();
-      imageGrid.innerHTML = "";
+      imageGrid.replaceChildren();
 
       if (!selectedFiles.length) {
-        imageGrid.innerHTML = '<div class="empty">Les miniatures et les annotations apparaîtront ici.</div>';
+        setImageGridEmpty("Les miniatures et les annotations apparaîtront ici.");
         setStatus("En attente d’images.");
         return;
       }
@@ -609,9 +617,13 @@
           group.fields.forEach(([field, label]) => {
             const chip = document.createElement("label");
             chip.className = "chip";
-            chip.innerHTML = `<input type="checkbox" data-field="${field}"><span>${label}</span>`;
-            const input = chip.querySelector("input");
+            const input = document.createElement("input");
+            input.type = "checkbox";
+            input.dataset.field = field;
             input.checked = Boolean(savedAnnotations[field]);
+            const text = document.createElement("span");
+            text.textContent = label;
+            chip.append(input, text);
             chips.appendChild(chip);
           });
 
@@ -681,14 +693,16 @@
       return [...new Set(candidates)];
     }
 
-    function useImageFallback(image, candidates, index = 0) {
+    function setImageCandidates(image, candidates, index = 0) {
       if (!candidates.length || index >= candidates.length) {
         image.removeAttribute("src");
         image.alt = "Miniature indisponible";
         return;
       }
-      image.onerror = () => useImageFallback(image, candidates, index + 1);
       image.src = candidates[index];
+      image.addEventListener("error", () => {
+        setImageCandidates(image, candidates, index + 1);
+      }, { once: true });
     }
 
     async function loadRecentPaintings() {
@@ -704,7 +718,7 @@
           .slice(-8)
           .reverse();
 
-        recentGrid.innerHTML = "";
+        recentGrid.replaceChildren();
         if (!paintEntries.length) {
           recentStatus.textContent = "Aucune peinture publique disponible pour le moment.";
           return;
@@ -724,7 +738,7 @@
 
           const image = document.createElement("img");
           image.alt = `Peinture informatique ${numberMatch ? numberMatch[1] : ""}`.trim();
-          useImageFallback(image, recentImageCandidates(entry));
+          setImageCandidates(image, recentImageCandidates(entry));
 
           const caption = document.createElement("a");
           caption.href = link.href;
@@ -753,7 +767,20 @@
             pollTimer = null;
             const blockLink = pageUrl("generation.html", { id: jobId });
             const explorerLink = pageUrl("explorer.html");
-            statusBox.innerHTML = `Traitement terminé. <a href="${blockLink}">Voir la page de génération Oupeinpo</a>. <a href="${explorerLink}">Consulter le registre de l’Ouvroir</a>. Le rapport privé est envoyé par e-mail.`;
+            const blockAnchor = document.createElement("a");
+            blockAnchor.href = blockLink;
+            blockAnchor.textContent = "Voir la page de génération Oupeinpo";
+            const explorerAnchor = document.createElement("a");
+            explorerAnchor.href = explorerLink;
+            explorerAnchor.textContent = "Consulter le registre de l’Ouvroir";
+            statusBox.classList.remove("error");
+            statusBox.replaceChildren(
+              "Traitement terminé. ",
+              blockAnchor,
+              ". ",
+              explorerAnchor,
+              ". Le rapport privé est envoyé par e-mail."
+            );
             submitButton.disabled = false;
           }
 
