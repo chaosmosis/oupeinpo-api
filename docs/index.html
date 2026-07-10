@@ -261,12 +261,59 @@
       line-height: 1.35;
     }
 
+    .recent-panel {
+      margin-top: 24px;
+    }
+
+    .recent-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 4px;
+    }
+
+    .recent-head h2 {
+      margin-bottom: 0;
+    }
+
+    .recent-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .recent-card {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 8px;
+      min-width: 0;
+    }
+
+    .recent-card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+      border: 1px solid #e5ded3;
+      background: #eee;
+    }
+
+    .recent-card a {
+      display: block;
+      margin-top: 7px;
+      font-size: .85rem;
+      overflow-wrap: anywhere;
+    }
+
     @media (max-width: 820px) {
       main { width: min(100% - 20px, 680px); padding-top: 18px; }
       header { display: block; }
       .api-state { margin-top: 16px; }
       form { grid-template-columns: 1fr; }
       .chips { grid-template-columns: 1fr; }
+      .recent-head { display: block; }
     }
   </style>
 </head>
@@ -330,6 +377,16 @@
         </div>
       </section>
     </form>
+
+    <section class="panel recent-panel" aria-labelledby="recent-title">
+      <div class="recent-head">
+        <h2 id="recent-title">Dernières peintures informatiques</h2>
+        <a href="explorer.html">Tout explorer</a>
+      </div>
+      <div class="note">Miniatures publiques des peintures produites par l’Ouvroir. Les images déposées au départ ne sont pas affichées ici.</div>
+      <div class="note" id="recent-status">Chargement des peintures…</div>
+      <div class="recent-grid" id="recent-grid"></div>
+    </section>
   </main>
 
   <script>
@@ -439,6 +496,8 @@
     const apiState = document.getElementById("api-state");
     const submitButton = document.getElementById("submit-button");
     const clearButton = document.getElementById("clear-button");
+    const recentGrid = document.getElementById("recent-grid");
+    const recentStatus = document.getElementById("recent-status");
 
     let selectedFiles = [];
     const annotationState = new Map();
@@ -630,6 +689,96 @@
       }
     }
 
+    function localResultAssetUrl(jobId, path) {
+      const encodedJobId = encodeURIComponent(jobId);
+      const encodedPath = String(path || "")
+        .split("/")
+        .filter(Boolean)
+        .map((part) => encodeURIComponent(part))
+        .join("/");
+      return `${API_BASE_URL}/local-results/${encodedJobId}/${encodedPath}`;
+    }
+
+    function recentImageCandidates(entry) {
+      const jobId = entry.job_id || entry.jobId || entry.id;
+      const path = entry.image_path || entry.imagePath || entry.path || "";
+      if (!jobId || !path) return [];
+
+      const candidates = [];
+      const synthMatch = path.match(/^synth\/(cluster_fused_\d+)\.png$/i);
+      if (synthMatch) {
+        candidates.push(localResultAssetUrl(jobId, `thumbs/${synthMatch[1]}.webp`));
+      }
+
+      const thumbMatch = path.match(/^thumbs\/(cluster_fused_\d+)\.webp$/i);
+      if (thumbMatch) {
+        candidates.push(localResultAssetUrl(jobId, path));
+        candidates.push(localResultAssetUrl(jobId, `synth/${thumbMatch[1]}.png`));
+      } else {
+        candidates.push(localResultAssetUrl(jobId, path));
+      }
+
+      return [...new Set(candidates)];
+    }
+
+    function useImageFallback(image, candidates, index = 0) {
+      if (!candidates.length || index >= candidates.length) {
+        image.removeAttribute("src");
+        image.alt = "Miniature indisponible";
+        return;
+      }
+      image.onerror = () => useImageFallback(image, candidates, index + 1);
+      image.src = candidates[index];
+    }
+
+    async function loadRecentPaintings() {
+      if (!recentGrid || !recentStatus) return;
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/global-blockchain.json`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const entries = Array.isArray(data.transactions) ? data.transactions : [];
+        const paintEntries = entries
+          .filter((entry) => recentImageCandidates(entry).length)
+          .slice(-8)
+          .reverse();
+
+        recentGrid.innerHTML = "";
+        if (!paintEntries.length) {
+          recentStatus.textContent = "Aucune peinture publique disponible pour le moment.";
+          return;
+        }
+
+        recentStatus.textContent = `${paintEntries.length} miniature(s) récente(s).`;
+        paintEntries.forEach((entry) => {
+          const jobId = entry.job_id || entry.jobId || entry.id;
+          const path = entry.image_path || entry.imagePath || entry.path || "";
+          const numberMatch = path.match(/cluster_fused_(\d+)/i);
+
+          const card = document.createElement("article");
+          card.className = "recent-card";
+
+          const link = document.createElement("a");
+          link.href = pageUrl("generation.html", { id: jobId });
+
+          const image = document.createElement("img");
+          image.alt = `Peinture informatique ${numberMatch ? numberMatch[1] : ""}`.trim();
+          useImageFallback(image, recentImageCandidates(entry));
+
+          const caption = document.createElement("a");
+          caption.href = link.href;
+          caption.textContent = numberMatch ? `${jobId} · peinture ${numberMatch[1]}` : jobId;
+
+          link.appendChild(image);
+          card.append(link, caption);
+          recentGrid.appendChild(card);
+        });
+      } catch (error) {
+        recentStatus.textContent = "Les peintures publiques sont momentanément indisponibles.";
+      }
+    }
+
     async function pollStatus(jobId) {
       if (pollTimer) clearInterval(pollTimer);
 
@@ -728,6 +877,7 @@
     imageInput.addEventListener("change", () => addFiles(imageInput.files));
     preserveApiOnStaticLinks();
     checkApi();
+    loadRecentPaintings();
   </script>
 </body>
 </html>
