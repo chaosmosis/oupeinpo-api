@@ -535,12 +535,8 @@
         <strong id="metric-hashrate">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Énergie nécessaire estimée <button class="help" type="button" aria-label="Explication : énergie nécessaire estimée" data-help="Quantité d’énergie nécessaire estimée pour les pages affichées. Le calcul prend pour machine de référence un MacBook Air 2019, estimé à 30 W, et suppose que cette machine plus chaque pair connecté participe à l’effort de minage. Une seule machine valide la page, mais les tentatives des autres machines comptent aussi dans l’énergie consommée.">?</button></span>
+        <span class="metric-label">Énergie nécessaire estimée <button id="metric-energy-help" class="help" type="button" aria-label="Explication : énergie nécessaire estimée" data-help="Quantité d’énergie nécessaire estimée pour les pages affichées. Le calcul prend pour machine de référence un MacBook Air 2019, estimé à 30 W, et suppose que cette machine plus chaque pair connecté participe à l’effort de minage. Une seule machine valide la page, mais les tentatives des autres machines comptent aussi dans l’énergie consommée.">?</button></span>
         <strong id="metric-energy">-</strong>
-      </div>
-      <div class="metric">
-        <span class="metric-label">Équivalent solaire <button class="help" type="button" aria-label="Explication : équivalent solaire" data-help="Traduction pédagogique de l’énergie estimée en heures d’ensoleillement sur un panneau solaire moyen. Par défaut : panneau de 400 W en plein soleil. On peut modifier l’hypothèse avec ?panel_watts=300.">?</button></span>
-        <strong id="metric-solar">-</strong>
       </div>
     </section>
 
@@ -642,7 +638,7 @@
     const pageSize = 24;
     const REFERENCE_COMPUTER_LABEL = "MacBook Air 2019";
     const REFERENCE_COMPUTER_WATTS = 30;
-    const DEFAULT_SOLAR_PANEL_WATTS = 400;
+    const CAR_KWH_PER_100KM = 18;
     let currentStartHeight = null;
     let currentTopHeight = null;
     let currentTipHeight = null;
@@ -661,6 +657,7 @@
     const richestList = document.getElementById("richest-list");
     const richestLimit = document.getElementById("richest-limit");
     const richestRefresh = document.getElementById("richest-refresh");
+    const metricEnergyHelp = document.getElementById("metric-energy-help");
 
     function shortHash(value) {
       if (!value) return "-";
@@ -705,12 +702,23 @@
       return `${kwh.toFixed(2)} kWh`;
     }
 
-    function formatDurationHours(hours) {
+    function formatDurationHoursText(hours) {
       const value = Number(hours);
       if (!Number.isFinite(value) || value < 0) return "-";
-      if (value < 1 / 60) return `${Math.round(value * 3600)} s`;
-      if (value < 1) return `${Math.round(value * 60)} min`;
-      return `${value >= 100 ? value.toFixed(0) : value.toFixed(1)} h`;
+      if (value < 1) {
+        const minutes = Math.max(1, Math.round(value * 60));
+        return `${minutes} minute${minutes > 1 ? "s" : ""}`;
+      }
+      const rounded = value >= 100 ? Math.round(value) : Math.round(value * 10) / 10;
+      const formatted = new Intl.NumberFormat("fr-BE", { maximumFractionDigits: 1 }).format(rounded);
+      return `${formatted} heure${rounded > 1 ? "s" : ""}`;
+    }
+
+    function formatKilometers(km) {
+      const value = Number(km);
+      if (!Number.isFinite(value) || value < 0) return "-";
+      if (value < 10) return `${value.toFixed(1)} km`;
+      return `${Math.round(value)} km`;
     }
 
     function formatReferenceComputers(count, label) {
@@ -727,16 +735,19 @@
       return Number.isFinite(watts) && watts > 0 ? watts : REFERENCE_COMPUTER_WATTS;
     }
 
-    function configuredSolarPanelWatts() {
-      const params = new URLSearchParams(window.location.search);
-      const raw = params.get("panel_watts") || params.get("solar_watts") || "";
-      const watts = Number(raw);
-      return Number.isFinite(watts) && watts > 0 ? watts : DEFAULT_SOLAR_PANEL_WATTS;
-    }
-
     function estimatedNetworkMachineCount() {
       const peers = Number(currentPeerCount);
       return Number.isFinite(peers) && peers >= 0 ? Math.max(1, Math.round(peers) + 1) : 1;
+    }
+
+    function updateEnergyHelp(kwh, carKm) {
+      if (!metricEnergyHelp) return;
+      metricEnergyHelp.dataset.help = [
+        "Quantité d’énergie nécessaire estimée pour les pages affichées.",
+        "Le calcul prend pour machine de référence un MacBook Air 2019, estimé à 30 W, et compte cette machine plus chaque pair connecté.",
+        "Une seule machine valide la page, mais les tentatives des autres machines comptent aussi dans l’énergie consommée.",
+        `Avec l’hypothèse d’une voiture électrique moyenne consommant ${CAR_KWH_PER_100KM} kWh / 100 km, ${formatKwh(kwh)} correspondraient environ à ${formatKilometers(carKm)} parcourus.`
+      ].join(" ");
     }
 
     function observedWorkStats(blocks) {
@@ -768,7 +779,6 @@
       if (!stats) {
         setMetric("metric-hashrate", "intervalle insuffisant");
         setMetric("metric-energy", "intervalle insuffisant");
-        setMetric("metric-solar", "intervalle insuffisant");
         return;
       }
 
@@ -778,12 +788,10 @@
       const machineCount = estimatedNetworkMachineCount();
       const kwh = (watts * machineCount * stats.seconds) / 3600000;
       const sourceLabel = watts === REFERENCE_COMPUTER_WATTS ? REFERENCE_COMPUTER_LABEL : `${watts} W`;
-      const runningTime = formatDurationHours(stats.seconds / 3600);
-      setMetric("metric-energy", `${formatKwh(kwh)} · ${formatReferenceComputers(machineCount, sourceLabel)} pendant ${runningTime}`);
-
-      const panelWatts = configuredSolarPanelWatts();
-      const solarHours = kwh / (panelWatts / 1000);
-      setMetric("metric-solar", `${formatDurationHours(solarHours)} d’ensoleillement sur panneau ${panelWatts} W`);
+      const runningTime = formatDurationHoursText(stats.seconds / 3600);
+      const carKm = (kwh / CAR_KWH_PER_100KM) * 100;
+      setMetric("metric-energy", `${formatKwh(kwh)} soit l’équivalent de ${formatReferenceComputers(machineCount, sourceLabel)} continuellement pendant ${runningTime}`);
+      updateEnergyHelp(kwh, carKm);
     }
 
     function field(label, value, mono = false) {
