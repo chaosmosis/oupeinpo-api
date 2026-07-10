@@ -452,6 +452,58 @@
       return haystack.includes(query.toLowerCase());
     }
 
+    function escapeAttribute(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function localResultAssetUrl(jobId, path) {
+      if (!path) return "";
+      if (path.startsWith("http")) return path;
+      return `${API_BASE_URL}/local-results/${jobId}/${path}`;
+    }
+
+    function previewImageCandidates(jobId, path) {
+      if (!path) return [];
+      if (path.startsWith("http")) return [path];
+
+      const candidates = [];
+      const synthMatch = path.match(/^synth\/(cluster_fused_\d+)\.png$/i);
+      if (synthMatch) {
+        candidates.push(localResultAssetUrl(jobId, `thumbs/${synthMatch[1]}.webp`));
+        candidates.push(localResultAssetUrl(jobId, path));
+        return candidates;
+      }
+
+      const thumbMatch = path.match(/^thumbs\/(cluster_fused_\d+)\.webp$/i);
+      if (thumbMatch) {
+        candidates.push(localResultAssetUrl(jobId, path));
+        candidates.push(localResultAssetUrl(jobId, `synth/${thumbMatch[1]}.png`));
+        return candidates;
+      }
+
+      return [localResultAssetUrl(jobId, path)];
+    }
+
+    function useImageFallback(image) {
+      const fallback = image.dataset.fallbackSrc;
+      if (fallback) {
+        image.dataset.fallbackSrc = "";
+        image.src = fallback;
+      } else {
+        image.removeAttribute("onerror");
+      }
+    }
+
+    function previewImageTag(entry, alt) {
+      if (!entry.preview_image) return "";
+      const fallback = entry.preview_image_fallback ? ` data-fallback-src="${escapeAttribute(entry.preview_image_fallback)}" onerror="useImageFallback(this)"` : "";
+      return `<img src="${escapeAttribute(entry.preview_image)}"${fallback} alt="${escapeAttribute(alt)}">`;
+    }
+
     function renderThread(query = "") {
       const visible = entries.filter((entry) => entryMatches(entry, query));
       thread.innerHTML = "";
@@ -471,7 +523,7 @@
         item.innerHTML = `
           <div class="point">#${String(height).padStart(3, "0")}</div>
           <a class="generation" href="${pageUrl("generation.html", { id: entry.id })}">
-            <img src="${entry.preview_image}" alt="Image generee ${entry.id}">
+            ${previewImageTag(entry, `Image generee ${entry.id}`)}
             <div>
               <h3>Bloc Oupeinpo #${String(height).padStart(6, "0")}</h3>
               <div class="meta">
@@ -498,7 +550,7 @@
       const latest = [...entries].slice(-3).reverse();
       latestImages.innerHTML = latest.map((entry) => `
         <a href="${pageUrl("generation.html", { id: entry.id })}" title="${entry.id}">
-          <img src="${entry.preview_image}" alt="Image generee ${entry.id}">
+          ${previewImageTag(entry, `Image generee ${entry.id}`)}
         </a>
       `).join("");
     }
@@ -533,6 +585,7 @@
           const jobId = tx.job_id || tx.id;
           const firstOutput = Array.isArray(tx.outputs) && tx.outputs.length ? tx.outputs[0] : {};
           const imagePath = tx.preview_image || tx.image_path || tx.output_image || tx.generated_image || tx.result_image || firstOutput.path || firstOutput.url || firstOutput.image_path || "";
+          const previewCandidates = previewImageCandidates(jobId, imagePath);
           return {
             id: jobId,
             sequence: tx.sequence || tx.index,
@@ -550,7 +603,8 @@
             rewards_hash: tx.rewards_hash,
             image_hash_head: tx.image_hash_head || tx.image_sha256_seed || tx.image_hash,
             github_commit: tx.github_commit,
-            preview_image: imagePath ? (imagePath.startsWith("http") ? imagePath : `${API_BASE_URL}/local-results/${jobId}/${imagePath}`) : "",
+            preview_image: previewCandidates[0] || "",
+            preview_image_fallback: previewCandidates[1] || "",
             oup2_payload: tx.oup2_payload || null,
             nmnc_anchor: tx.nmnc_anchor || { status: "pending" }
           };

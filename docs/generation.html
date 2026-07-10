@@ -295,6 +295,54 @@
       return `${API_BASE_URL}/local-results/${jobId}/${path}`;
     }
 
+    function escapeAttribute(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function outputImageCandidates(jobId, path) {
+      if (!path) return [];
+      if (path.startsWith("http")) return [path];
+
+      const synthMatch = path.match(/^synth\/(cluster_fused_\d+)\.png$/i);
+      if (synthMatch) {
+        return [
+          asAbsoluteUrl(jobId, `thumbs/${synthMatch[1]}.webp`),
+          asAbsoluteUrl(jobId, path)
+        ];
+      }
+
+      const thumbMatch = path.match(/^thumbs\/(cluster_fused_\d+)\.webp$/i);
+      if (thumbMatch) {
+        return [
+          asAbsoluteUrl(jobId, path),
+          asAbsoluteUrl(jobId, `synth/${thumbMatch[1]}.png`)
+        ];
+      }
+
+      return [asAbsoluteUrl(jobId, path)];
+    }
+
+    function useImageFallback(image) {
+      const fallback = image.dataset.fallbackSrc;
+      if (fallback) {
+        image.dataset.fallbackSrc = "";
+        image.src = fallback;
+      } else {
+        image.removeAttribute("onerror");
+      }
+    }
+
+    function outputImageTag(jobId, output) {
+      const candidates = outputImageCandidates(jobId, output.path);
+      if (!candidates.length) return "";
+      const fallback = candidates[1] ? ` data-fallback-src="${escapeAttribute(candidates[1])}" onerror="useImageFallback(this)"` : "";
+      return `<img src="${escapeAttribute(candidates[0])}"${fallback} alt="${escapeAttribute(`Image generee ${jobId} sortie ${output.index}`)}">`;
+    }
+
     function normalizeOutputs(tx) {
       if (Array.isArray(tx.outputs) && tx.outputs.length) {
         return tx.outputs.map((output, index) => ({
@@ -358,7 +406,7 @@
 
         outputs.innerHTML = entry.outputs.length ? entry.outputs.map((output) => `
           <article class="output">
-            <img src="${asAbsoluteUrl(entry.id, output.path)}" alt="Image generee ${entry.id} sortie ${output.index}">
+            ${outputImageTag(entry.id, output)}
             <div class="caption">SHA256 ${output.sha256 || "-"}</div>
           </article>
         `).join("") : `<div class="empty"><a href="${resultIndexUrl}">Voir les images generees sur le serveur</a>.</div>`;
