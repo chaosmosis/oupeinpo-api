@@ -508,34 +508,10 @@
     const registryLink = document.getElementById("registry-link");
     const DEFAULT_API_BASE_URL = "https://survie.tailc688f6.ts.net";
 
-    function resolveApiBaseUrl() {
-      const params = new URLSearchParams(window.location.search);
-      const configured = params.get("api");
-      if (configured) {
-        return configured.replace(/\/+$/, "");
-      }
-
-      if (window.location.protocol === "file:") {
-        return DEFAULT_API_BASE_URL;
-      }
-
-      if (["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)) {
-        return `${window.location.origin}`.replace(/\/+$/, "");
-      }
-
-      if (window.location.hostname.includes("github.io")) {
-        return DEFAULT_API_BASE_URL;
-      }
-
-      return window.location.origin.replace(/\/+$/, "") || DEFAULT_API_BASE_URL;
-    }
+    const API_BASE_URL = DEFAULT_API_BASE_URL;
 
     function pageUrl(page, params = {}) {
       const url = new URL(page, window.location.href);
-      const currentApi = new URLSearchParams(window.location.search).get("api");
-      if (currentApi) {
-        url.searchParams.set("api", currentApi);
-      }
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== "") {
           url.searchParams.set(key, value);
@@ -544,22 +520,6 @@
       return `${url.pathname.split("/").pop()}${url.search}`;
     }
 
-    function preserveApiOnStaticLinks() {
-      const currentApi = new URLSearchParams(window.location.search).get("api");
-      if (!currentApi) return;
-
-      document.querySelectorAll("a[href]").forEach((link) => {
-        const href = link.getAttribute("href") || "";
-        if (!/^[^:/#?]+\.html(\?.*)?$/.test(href)) return;
-        const [page, query = ""] = href.split("?");
-        const url = new URL(page, window.location.href);
-        new URLSearchParams(query).forEach((value, key) => url.searchParams.set(key, value));
-        url.searchParams.set("api", currentApi);
-        link.href = `${url.pathname.split("/").pop()}${url.search}`;
-      });
-    }
-
-    const API_BASE_URL = resolveApiBaseUrl();
     registryLink.href = `${API_BASE_URL}/global-blockchain.json`;
     let entries = [];
 
@@ -852,7 +812,6 @@
     }
 
     search.addEventListener("input", () => renderThread(search.value.trim()));
-    preserveApiOnStaticLinks();
     loadExplorer();
   </script>
 </body>
