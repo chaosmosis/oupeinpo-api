@@ -161,7 +161,7 @@
       left: 50%;
       top: calc(100% + 8px);
       transform: translateX(-50%);
-      width: min(270px, 72vw);
+      width: min(380px, 86vw);
       padding: 10px 11px;
       border: 1px solid var(--line);
       background: #fff;
@@ -531,11 +531,11 @@
         <strong id="metric-difficulty">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Effort moyen récent <button class="help" type="button" aria-label="Explication : effort moyen récent" data-help="Estimation du nombre moyen de tentatives de calcul par seconde sur les pages récentes affichées. C’est une moyenne observée, pas la vitesse instantanée d’une machine.">?</button></span>
+        <span class="metric-label">Effort moyen depuis le départ <button class="help" type="button" aria-label="Explication : effort moyen depuis le départ" data-help="Estimation du nombre moyen de tentatives de calcul par seconde depuis la page 0 du registre jusqu’à la pointe actuelle. C’est une moyenne observée sur toute la chaîne, pas la vitesse instantanée d’une machine.">?</button></span>
         <strong id="metric-hashrate">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Énergie nécessaire estimée <button id="metric-energy-help" class="help" type="button" aria-label="Explication : énergie nécessaire estimée" data-help="Quantité d’énergie nécessaire estimée pour les pages affichées. Le calcul prend pour machine de référence un MacBook Air 2019, estimé à 30 W, et suppose que cette machine plus chaque pair connecté participe à l’effort de minage. Une seule machine valide la page, mais les tentatives des autres machines comptent aussi dans l’énergie consommée.">?</button></span>
+        <span class="metric-label">Énergie nécessaire estimée <button id="metric-energy-help" class="help" type="button" aria-label="Explication : énergie nécessaire estimée" data-help="Quantité d’énergie nécessaire estimée depuis la page 0 du registre jusqu’à la pointe actuelle. Le calcul prend pour machine de référence un MacBook Air 2019, estimé à 30 W, et suppose que cette machine plus chaque pair connecté participe à l’effort de minage. Une seule machine valide la page, mais les tentatives des autres machines comptent aussi dans l’énergie consommée.">?</button></span>
         <strong id="metric-energy">-</strong>
       </div>
     </section>
@@ -638,12 +638,22 @@
     const pageSize = 24;
     const REFERENCE_COMPUTER_LABEL = "MacBook Air 2019";
     const REFERENCE_COMPUTER_WATTS = 30;
-    const CAR_KWH_PER_100KM = 18;
+    const MOBILITY_EQUIVALENCES = [
+      { label: "marche à 5 km/h", watts: 90, speedKmh: 5 },
+      { label: "vélo à 18 km/h", watts: 200, speedKmh: 18 },
+      { label: "vélo électrique à 25 km/h", watts: 375, speedKmh: 25 },
+      { label: "scooter électrique à 45 km/h", watts: 1500, speedKmh: 45 },
+      { label: "voiture urbaine à 50 km/h", watts: 12500, speedKmh: 50 },
+      { label: "tram/bus urbain à 25 km/h", watts: 3500, speedKmh: 25 },
+      { label: "TGV à 160 km/h", watts: 5500, speedKmh: 160 },
+    ];
     let currentStartHeight = null;
     let currentTopHeight = null;
     let currentTipHeight = null;
     let currentBlocks = [];
     let currentPeerCount = null;
+    let fullChainWorkTipHeight = null;
+    let fullChainWorkBlocks = [];
     let selectedHash = "";
 
     const statusBox = document.getElementById("list-status");
@@ -721,6 +731,14 @@
       return `${Math.round(value)} km`;
     }
 
+    function mobilityEquivalent(kwh, mode) {
+      const energyWh = Number(kwh) * 1000;
+      if (!Number.isFinite(energyWh) || energyWh < 0) return "";
+      const hours = energyWh / mode.watts;
+      const kilometers = hours * mode.speedKmh;
+      return `${mode.label} ${formatKilometers(kilometers)}`;
+    }
+
     function formatReferenceComputers(count, label) {
       const value = Number(count);
       const machineLabel = label || "machine";
@@ -740,13 +758,17 @@
       return Number.isFinite(peers) && peers >= 0 ? Math.max(1, Math.round(peers) + 1) : 1;
     }
 
-    function updateEnergyHelp(kwh, carKm) {
+    function updateEnergyHelp(kwh) {
       if (!metricEnergyHelp) return;
+      const mobilityScale = MOBILITY_EQUIVALENCES
+        .map((mode) => mobilityEquivalent(kwh, mode))
+        .filter(Boolean)
+        .join(" · ");
       metricEnergyHelp.dataset.help = [
-        "Quantité d’énergie nécessaire estimée pour les pages affichées.",
+        "Quantité d’énergie nécessaire estimée depuis la page 0 du registre jusqu’à la pointe actuelle.",
         "Le calcul prend pour machine de référence un MacBook Air 2019, estimé à 30 W, et compte cette machine plus chaque pair connecté.",
         "Une seule machine valide la page, mais les tentatives des autres machines comptent aussi dans l’énergie consommée.",
-        `Avec l’hypothèse d’une voiture électrique moyenne consommant ${CAR_KWH_PER_100KM} kWh / 100 km, ${formatKwh(kwh)} correspondraient environ à ${formatKilometers(carKm)} parcourus.`
+        `Échelle indicative avec des valeurs centrales issues de ces ordres de grandeur de puissance : ${mobilityScale}.`
       ].join(" ");
     }
 
@@ -789,9 +811,48 @@
       const kwh = (watts * machineCount * stats.seconds) / 3600000;
       const sourceLabel = watts === REFERENCE_COMPUTER_WATTS ? REFERENCE_COMPUTER_LABEL : `${watts} W`;
       const runningTime = formatDurationHoursText(stats.seconds / 3600);
-      const carKm = (kwh / CAR_KWH_PER_100KM) * 100;
       setMetric("metric-energy", `${formatKwh(kwh)} soit l’équivalent de ${formatReferenceComputers(machineCount, sourceLabel)} continuellement pendant ${runningTime}`);
-      updateEnergyHelp(kwh, carKm);
+      updateEnergyHelp(kwh);
+    }
+
+    async function loadBlocksFromGenesis(tipHeight) {
+      const tip = Number(tipHeight);
+      if (!Number.isFinite(tip) || tip < 0) return [];
+      if (fullChainWorkTipHeight === tip && fullChainWorkBlocks.length) {
+        return fullChainWorkBlocks;
+      }
+
+      const blocks = [];
+      let cursor = tip;
+      while (cursor >= 0) {
+        const data = await fetchJson(`/nmnc/blocks?start_height=${encodeURIComponent(cursor)}&limit=100`);
+        const batch = data.blocks || [];
+        if (!batch.length) break;
+        blocks.push(...batch);
+
+        const heights = batch.map((block) => Number(block.height)).filter(Number.isFinite);
+        if (!heights.length) break;
+        const minHeight = Math.min(...heights);
+        if (minHeight <= 0) break;
+        cursor = minHeight - 1;
+      }
+
+      fullChainWorkTipHeight = tip;
+      fullChainWorkBlocks = blocks;
+      return blocks;
+    }
+
+    async function updateWorkMetricsFromGenesis(tipHeight) {
+      setMetric("metric-hashrate", "calcul depuis la page 0");
+      setMetric("metric-energy", "calcul depuis la page 0");
+      try {
+        const blocks = await loadBlocksFromGenesis(tipHeight);
+        updateWorkMetrics(blocks);
+      } catch (error) {
+        setMetric("metric-hashrate", "calcul indisponible");
+        setMetric("metric-energy", "calcul indisponible");
+        console.warn("Calcul NMNC depuis la page 0 indisponible", error);
+      }
     }
 
     function field(label, value, mono = false) {
@@ -1108,7 +1169,7 @@
       document.getElementById("prev-page").disabled = !hasBlocks || currentStartHeight <= 0;
       document.getElementById("latest-page").disabled = !hasBlocks || currentTopHeight === currentTipHeight;
       statusBox.textContent = `${currentBlocks.length} page(s) du registre NMNC, pointe #${data.tip_height}.`;
-      updateWorkMetrics(currentBlocks);
+      await updateWorkMetricsFromGenesis(data.tip_height);
       renderBlocks(currentBlocks);
       if (currentBlocks.length && !selectedHash) {
         await loadBlock(currentBlocks[0].hash);
