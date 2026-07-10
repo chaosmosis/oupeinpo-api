@@ -115,6 +115,7 @@
     }
 
     .metric {
+      position: relative;
       background: var(--panel);
       border: 1px solid var(--line);
       padding: 14px;
@@ -122,9 +123,69 @@
     }
 
     .metric span {
-      display: block;
       color: var(--muted);
       font-size: .82rem;
+    }
+
+    .metric-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      min-height: 34px;
+    }
+
+    .help {
+      position: relative;
+      flex: 0 0 auto;
+      display: inline-grid;
+      place-items: center;
+      width: 19px;
+      height: 19px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      padding: 0;
+      background: #fff;
+      color: var(--accent-dark);
+      font: 700 .72rem/1 system-ui, sans-serif;
+      cursor: help;
+    }
+
+    .help:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .help::after {
+      content: attr(data-help);
+      position: absolute;
+      z-index: 10;
+      left: 50%;
+      top: calc(100% + 8px);
+      transform: translateX(-50%);
+      width: min(260px, 72vw);
+      padding: 10px 11px;
+      border: 1px solid var(--line);
+      background: #fffdf8;
+      color: var(--ink);
+      box-shadow: 0 8px 22px rgba(36, 33, 29, .14);
+      font: 400 .84rem/1.35 system-ui, sans-serif;
+      text-align: left;
+      overflow-wrap: normal;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .help:hover::after,
+    .help:focus::after {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .summary .metric:nth-child(n+4) .help::after {
+      left: auto;
+      right: 0;
+      transform: none;
     }
 
     .metric strong {
@@ -133,6 +194,48 @@
       font-size: clamp(1.2rem, 3vw, 1.9rem);
       font-weight: 500;
       overflow-wrap: anywhere;
+    }
+
+    #metric-anchor {
+      font-size: clamp(1rem, 2.2vw, 1.25rem);
+      line-height: 1.2;
+    }
+
+    .reading-help {
+      margin-top: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 0;
+    }
+
+    .reading-help summary {
+      cursor: pointer;
+      padding: 13px 16px;
+      color: var(--accent-dark);
+      font-weight: 600;
+    }
+
+    .reading-help[open] summary {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .reading-help dl {
+      display: grid;
+      grid-template-columns: minmax(150px, .35fr) minmax(0, 1fr);
+      gap: 10px 16px;
+      margin: 0;
+      padding: 16px;
+    }
+
+    .reading-help dt {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .reading-help dd {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.4;
     }
 
     .search {
@@ -308,6 +411,7 @@
       .thread-item { grid-template-columns: 42px minmax(0, 1fr); }
       .point { width: 38px; height: 38px; }
       .image-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .reading-help dl { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -316,34 +420,75 @@
     <header>
       <div>
         <h1>Registre de l’Ouvroir</h1>
-        <p class="tagline">Fil public de l’ouvroir. Les peintures informatiques issues des fichiers confiés par les contrbuteurices y sont visible par tous et toutes. </p>
+        <p class="tagline">Fil public de l’Ouvroir. Les peintures informatiques issues des fichiers confiés par les contributeurices y sont visibles par toutes et tous.</p>
       </div>
       <nav aria-label="Navigation">
         <a href="index.html">Contribuer</a>
         <a href="explorer.html" aria-current="page">Registre de l’Ouvroir</a>
-        <a href="nmnc-explorer.html">Registre NMNC</a>
+        <a href="nmnc-explorer.html">Registre du No Migration No Coin</a>
         <a id="registry-link" href="#">Registre JSON</a>
       </nav>
     </header>
 
-    <section class="summary" aria-label="Synthese du registre">
-      <div class="metric"><span>Peintures generees</span><strong id="metric-images">-</strong></div>
-      <div class="metric"><span>Pages de l’ouvroir</span><strong id="metric-generations">-</strong></div>
-      <div class="metric"><span>Fichiers televerses</span><strong id="metric-sources">-</strong></div>
-      <div class="metric"><span>Droits NMNC acquis par les contributeurices</span><strong id="metric-rewards">-</strong></div>
-      <div class="metric"><span>État NMNC</span><strong id="metric-anchor">-</strong></div>
+    <section class="summary" aria-label="Synthèse du registre">
+      <div class="metric">
+        <span class="metric-label">Peintures générées <button class="help" type="button" aria-label="Explication : peintures générées" data-help="Nombre total de peintures informatiques visibles dans le registre public. Une page de l’Ouvroir peut contenir plusieurs peintures.">?</button></span>
+        <strong id="metric-images">-</strong>
+      </div>
+      <div class="metric">
+        <span class="metric-label">Pages de l’Ouvroir <button class="help" type="button" aria-label="Explication : pages de l’Ouvroir" data-help="Nombre de générations inscrites dans le registre public de l’Ouvroir. Une page rassemble le résultat d’une contribution et ses peintures.">?</button></span>
+        <strong id="metric-generations">-</strong>
+      </div>
+      <div class="metric">
+        <span class="metric-label">Fichiers téléversés <button class="help" type="button" aria-label="Explication : fichiers téléversés" data-help="Nombre de fichiers sources reçus au départ. Quand cette donnée n’est pas publiée par l’API, un tiret signifie simplement qu’elle reste indisponible publiquement.">?</button></span>
+        <strong id="metric-sources">-</strong>
+      </div>
+      <div class="metric">
+        <span class="metric-label">Droits NMNC acquis par les contributeurices <button class="help" type="button" aria-label="Explication : droits NMNC acquis" data-help="Total des droits NMNC déjà acquis par les pages ancrées au registre NMNC. Les droits potentiels ne sont pas comptés ici tant qu’ils ne sont pas minés.">?</button></span>
+        <strong id="metric-rewards">-</strong>
+      </div>
+      <div class="metric">
+        <span class="metric-label">État NMNC <button class="help" type="button" aria-label="Explication : état NMNC" data-help="Indique combien de pages de l’Ouvroir ont déjà reçu une inscription vérifiable dans le registre NMNC.">?</button></span>
+        <strong id="metric-anchor">-</strong>
+      </div>
     </section>
+
+    <details class="reading-help">
+      <summary>Aide à la lecture du registre</summary>
+      <dl>
+        <dt>Peinture Oupeinpo #001</dt>
+        <dd>Rang de la peinture dans le fil public de l’Ouvroir. Une même page de l’Ouvroir peut contenir plusieurs peintures.</dd>
+        <dt>Identifiant</dt>
+        <dd>Nom court de la page de l’Ouvroir. Il permet de retrouver une génération, ses peintures, son rapport privé et ses traces techniques.</dd>
+        <dt>Passage Oupeinpo vers NMNC #000082</dt>
+        <dd>Numéro de passage dans le protocole Oupeinpo vers NMNC. C’est la hauteur propre à l’Ouvroir, distincte de la hauteur du registre NMNC.</dd>
+        <dt>NMNC acquis</dt>
+        <dd>Droits déjà ancrés dans le registre NMNC. Ils ne sont plus seulement attendus : une page du registre distribué NMNC les contient.</dd>
+        <dt>NMNC potentiels pour le lot</dt>
+        <dd>Droits calculés par l’Ouvroir mais pas encore ancrés dans le registre NMNC. Ils dépendent encore de l’inscription au registre NMNC.</dd>
+        <dt>Empreinte</dt>
+        <dd>Résumé cryptographique d’un élément. Si le contenu change, l’empreinte change.</dd>
+        <dt>Inscription image</dt>
+        <dd>Trace interne qui identifie cette peinture dans le registre de l’Ouvroir.</dd>
+        <dt>Donnée d’ancrage NMNC</dt>
+        <dd>Donnée courte inscrite dans le registre du NMNC pour relier cette page de l’Ouvroir à ses empreintes et à ses droits.</dd>
+        <dt>NMNC miné</dt>
+        <dd>La génération est ancrée dans le registre NMNC.</dd>
+        <dt>NMNC validé, à miner</dt>
+        <dd>La génération a été validée côté Ouvroir, mais son inscription NMNC reste à faire.</dd>
+      </dl>
+    </details>
 
     <div class="layout">
       <section class="panel">
         <h2>Fil des peintures Oupeinpo</h2>
-        <input class="search" id="search" type="search" placeholder="Rechercher par numéro, identifiant, image, empreinte, OUP2 ou inscription NMNC">
+        <input class="search" id="search" type="search" placeholder="Rechercher par numéro, identifiant, image, empreinte, passage vers NMNC ou donnée d’ancrage">
         <ol class="thread" id="thread"></ol>
       </section>
 
       <aside>
         <section class="panel">
-          <h2>Dernieres peintures</h2>
+          <h2>Dernières peintures</h2>
           <div class="image-strip" id="latest-images"></div>
         </section>
 
@@ -429,10 +574,10 @@
         pending_mining: "validé, à miner",
         approval_failed: "validation à reprendre",
         rejected: "refusé",
-        not_submitted: "non soumis OUP2",
+        not_submitted: "non transmis au registre NMNC",
         pending: "en attente"
       };
-      return labels[status] || status || "non soumis OUP2";
+      return labels[status] || status || "non transmis au registre NMNC";
     }
 
     function nmncAnchorReference(anchor) {
@@ -455,7 +600,7 @@
         return `Droits d’usage acquis : ${entry.reward_user_count || 0} adresse(s), ${entry.reward_total_no || 0} no`;
       }
       if (potentialNo > 0) {
-        return `Droits d’usage potentiels du lot si minage OUP2 : ${entry.potential_reward_user_count || 0} adresse(s), ${entry.potential_reward_total_no || 0} no`;
+        return `Droits d’usage potentiels du lot si inscription NMNC : ${entry.potential_reward_user_count || 0} adresse(s), ${entry.potential_reward_total_no || 0} no`;
       }
       return "Droits d’usage : aucun droit NMNC associé";
     }
@@ -575,7 +720,7 @@
         item.className = "thread-item";
         const registryIndex = entry.sequence;
         const pointLabel = registryIndex ? `#${String(registryIndex).padStart(3, "0")}` : "#---";
-        const oup2Label = entry.oupeinpo_height ? `OUP2 #${String(entry.oupeinpo_height).padStart(6, "0")}` : "OUP2 pending";
+        const oup2Label = entry.oupeinpo_height ? `Passage NMNC #${String(entry.oupeinpo_height).padStart(6, "0")}` : "passage NMNC en attente";
         const imageLabel = entry.image_number ? `peinture ${entry.image_number}` : "peinture";
         const generationHash = entry.generation_hash;
         const rewardsHash = entry.rewards_hash;
@@ -599,7 +744,7 @@
               <div class="hash">Image : ${entry.image_path || "non renseignee"}</div>
               <div class="hash">Empreinte image : ${shortHash(entry.image_hash_head)}</div>
               <div class="hash">Inscription image : ${shortHash(entry.transaction_hash)}</div>
-              <div class="hash">OUP2 : ${shortHash(payload)}</div>
+              <div class="hash">Donnée d’ancrage NMNC : ${shortHash(payload)}</div>
               <span class="status">NMNC ${statusLabel}</span>
             </div>
           </a>
@@ -633,7 +778,7 @@
         <li>Empreinte de génération<br>${generationHash}</li>
         <li>Empreinte précédente<br>${previousHash || "genesis"}</li>
         <li>Empreinte des droits<br>${rewardsHash || "en attente"}</li>
-        <li>Charge OUP2<br>${payload || "en attente"}</li>
+        <li>Donnée d’ancrage NMNC<br>${payload || "en attente"}</li>
         <li>Chemin image<br>${current.image_path || "non renseigne"}</li>
         <li>Inscription image<br>${current.transaction_hash || "en attente"}</li>
         <li>Droits d’usage<br>${rightsDetailLabel(current)}</li>
@@ -696,7 +841,7 @@
         document.getElementById("metric-generations").textContent = ouvroirPages.length;
         document.getElementById("metric-sources").textContent = "-";
         document.getElementById("metric-rewards").textContent = (totalNo / 100000000).toFixed(8);
-        document.getElementById("metric-anchor").textContent = `${minedPages}/${ouvroirPages.length} pages minées`;
+        document.getElementById("metric-anchor").textContent = `${minedPages} des ${ouvroirPages.length} pages ancrées au registre NMNC`;
 
         renderThread();
         renderLatestImages();
