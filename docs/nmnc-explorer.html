@@ -539,7 +539,7 @@
         <strong id="metric-energy">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Équivalent solaire <button class="help" type="button" aria-label="Explication : équivalent solaire" data-help="Traduction pédagogique en temps de production d’un panneau solaire moyen. Par défaut : panneau de 400 W en plein soleil. On peut modifier l’hypothèse avec ?panel_watts=300.">?</button></span>
+        <span class="metric-label">Équivalent solaire <button class="help" type="button" aria-label="Explication : équivalent solaire" data-help="Traduction pédagogique de l’énergie estimée en heures d’ensoleillement sur un panneau solaire moyen. Par défaut : panneau de 400 W en plein soleil. On peut modifier l’hypothèse avec ?panel_watts=300.">?</button></span>
         <strong id="metric-solar">-</strong>
       </div>
     </section>
@@ -710,8 +710,14 @@
       if (!Number.isFinite(value) || value < 0) return "-";
       if (value < 1 / 60) return `${Math.round(value * 3600)} s`;
       if (value < 1) return `${Math.round(value * 60)} min`;
-      if (value < 24) return `${value.toFixed(1)} h`;
-      return `${(value / 24).toFixed(1)} j`;
+      return `${value >= 100 ? value.toFixed(0) : value.toFixed(1)} h`;
+    }
+
+    function formatReferenceComputers(count, label) {
+      const value = Number(count);
+      const machineLabel = label || "machine";
+      if (!Number.isFinite(value) || value <= 1) return `1 ${machineLabel} allumé`;
+      return `${Math.round(value)} ${machineLabel} allumés`;
     }
 
     function configuredEstimatedWatts() {
@@ -772,11 +778,12 @@
       const machineCount = estimatedNetworkMachineCount();
       const kwh = (watts * machineCount * stats.seconds) / 3600000;
       const sourceLabel = watts === REFERENCE_COMPUTER_WATTS ? REFERENCE_COMPUTER_LABEL : `${watts} W`;
-      setMetric("metric-energy", `${formatKwh(kwh)} · ${machineCount} machine(s) ${sourceLabel}`);
+      const runningTime = formatDurationHours(stats.seconds / 3600);
+      setMetric("metric-energy", `${formatKwh(kwh)} · ${formatReferenceComputers(machineCount, sourceLabel)} pendant ${runningTime}`);
 
       const panelWatts = configuredSolarPanelWatts();
       const solarHours = kwh / (panelWatts / 1000);
-      setMetric("metric-solar", `${formatDurationHours(solarHours)} de panneau ${panelWatts} W`);
+      setMetric("metric-solar", `${formatDurationHours(solarHours)} d’ensoleillement sur panneau ${panelWatts} W`);
     }
 
     function field(label, value, mono = false) {
