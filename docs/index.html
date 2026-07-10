@@ -324,9 +324,9 @@
         <h1>Ouvroir de peinture informatique potentielle</h1>
         <p class="tagline">Cet ouvroir de peinture informatique potentielle vise à amplifier la maxime "All refugees are welcome". Pour ce faire, nous vous proposons de déposer des images importantes pour vous et de les annoter à votre guise avec notre petit formulaire. Ces contraintes, imposées pour vous, migrantes et migrants, ont été conçues afin de nourrir nos imaginaires de peintures informatiques. Nous vous invitons également à nous confier une adresse e-mail afin de vous embrigader plus amoureusement. NB : xyzetc@riseup.net pour toute information complémentaire.</p>
         <p class="tagline">
-          <a href="explorer.html">Explorer l’ouvroir des peintures informatiques réalisées</a>
+          <a href="explorer.html">Consulter le registre de l’Ouvroir</a>
           ·
-          <a href="nmnc-explorer.html">Explorer la chaîne NMNC</a>
+          <a href="nmnc-explorer.html">Consulter le registre NMNC</a>
         </p>
       </div>
       <div class="api-state" id="api-state">API : vérification…</div>
@@ -347,7 +347,7 @@
         <label for="access-code">Code d’accès</label>
         <input id="access-code" name="access_code" type="text" autocomplete="off" required>
 
-        <label for="clusters">Décidez ici combien de peinture vous souhaitez créer. </label>
+        <label for="clusters">Décidez ici combien de peintures vous souhaitez créer. </label>
         <select id="clusters" name="clusters">
           <option value="auto">Automatique</option>
           <option value="1">1</option>
@@ -381,7 +381,7 @@
     <section class="panel recent-panel" aria-labelledby="recent-title">
       <div class="recent-head">
         <h2 id="recent-title">Dernières peintures informatiques</h2>
-        <a href="explorer.html">Tout explorer</a>
+        <a href="explorer.html">Consulter le registre</a>
       </div>
       <div class="note">Miniatures publiques des peintures produites par l’Ouvroir. Les images déposées au départ ne sont pas affichées ici.</div>
       <div class="note" id="recent-status">Chargement des peintures…</div>
@@ -793,7 +793,7 @@
             pollTimer = null;
             const blockLink = pageUrl("generation.html", { id: jobId });
             const explorerLink = pageUrl("explorer.html");
-            statusBox.innerHTML = `Traitement terminé. <a href="${blockLink}">Voir la page du bloc Oupeinpo</a>. <a href="${explorerLink}">Explorer l’ouvroir des peintures informatiques réalisées</a>. Le rapport privé est envoyé par e-mail.`;
+            statusBox.innerHTML = `Traitement terminé. <a href="${blockLink}">Voir la page de génération Oupeinpo</a>. <a href="${explorerLink}">Consulter le registre de l’Ouvroir</a>. Le rapport privé est envoyé par e-mail.`;
             submitButton.disabled = false;
           }
 

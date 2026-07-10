@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Oupeinpo - explorer</title>
+  <title>Oupeinpo - registre</title>
   <style>
     :root {
       color-scheme: light;
@@ -315,29 +315,29 @@
   <main>
     <header>
       <div>
-        <h1>Oupeinpo Chain Explorer</h1>
+        <h1>Registre de l’Ouvroir</h1>
         <p class="tagline">Fil public de l’ouvroir. Chaque point relie des peintures informatiques a un horizon commun ou les potentialites de nos vies-en-fichiers ouvrent des droits d’usage contre la privatisation des imaginaires, des circulations et des personnes migrantes.</p>
       </div>
       <nav aria-label="Navigation">
         <a href="index.html">Contribuer</a>
-        <a href="explorer.html" aria-current="page">Explorer</a>
-        <a href="nmnc-explorer.html">NMNC</a>
+        <a href="explorer.html" aria-current="page">Registre de l’Ouvroir</a>
+        <a href="nmnc-explorer.html">Registre NMNC</a>
         <a id="registry-link" href="#">Registre JSON</a>
       </nav>
     </header>
 
     <section class="summary" aria-label="Synthese du registre">
       <div class="metric"><span>Images generees</span><strong id="metric-images">-</strong></div>
-      <div class="metric"><span>Blocs Oupeinpo</span><strong id="metric-generations">-</strong></div>
+      <div class="metric"><span>Pages de l’ouvroir</span><strong id="metric-generations">-</strong></div>
       <div class="metric"><span>Images sources traitees</span><strong id="metric-sources">-</strong></div>
-      <div class="metric"><span>Droits NMNC</span><strong id="metric-rewards">-</strong></div>
-      <div class="metric"><span>Ancrage NMNC</span><strong id="metric-anchor">-</strong></div>
+      <div class="metric"><span>Droits NMNC acquis</span><strong id="metric-rewards">-</strong></div>
+      <div class="metric"><span>État NMNC</span><strong id="metric-anchor">-</strong></div>
     </section>
 
     <div class="layout">
       <section class="panel">
         <h2>Fil des peintures Oupeinpo</h2>
-        <input class="search" id="search" type="search" placeholder="Rechercher par index, job, image, generation_hash, rewards_hash, OUP2, commit, txid NMNC">
+        <input class="search" id="search" type="search" placeholder="Rechercher par numéro, identifiant, image, empreinte, OUP2 ou inscription NMNC">
         <ol class="thread" id="thread"></ol>
       </section>
 
@@ -348,7 +348,7 @@
         </section>
 
         <section class="panel" style="margin-top: 18px;">
-          <h2>Dernier bloc Oupeinpo</h2>
+          <h2>Dernier point de registre</h2>
           <ul class="side-list" id="head"></ul>
         </section>
       </aside>
@@ -419,7 +419,7 @@
     let entries = [];
 
     function shortHash(value) {
-      if (!value) return "pending";
+      if (!value) return "en attente";
       return value.length > 14 ? `${value.slice(0, 10)}...${value.slice(-6)}` : value;
     }
 
@@ -458,6 +458,15 @@
         return `Droits d’usage potentiels du lot si minage OUP2 : ${entry.potential_reward_user_count || 0} adresse(s), ${entry.potential_reward_total_no || 0} no`;
       }
       return "Droits d’usage : aucun droit NMNC associé";
+    }
+
+    function uniqueOuvroirPages() {
+      const pages = new Map();
+      entries.forEach((entry) => {
+        const key = entry.id || `point-${entry.sequence}`;
+        if (!pages.has(key)) pages.set(key, entry);
+      });
+      return [...pages.values()];
     }
 
     function formatDate(value) {
@@ -557,7 +566,7 @@
       thread.innerHTML = "";
 
       if (!visible.length) {
-        thread.innerHTML = '<li class="empty">Aucun bloc Oupeinpo ne correspond a la recherche.</li>';
+        thread.innerHTML = '<li class="empty">Aucune peinture Oupeinpo ne correspond a la recherche.</li>';
         return;
       }
 
@@ -584,12 +593,12 @@
                 <span>${oup2Label}</span>
                 <span>${rightsAmountLabel(entry)}</span>
               </div>
-              <div class="hash">Generation hash : ${shortHash(generationHash)}</div>
-              <div class="hash">Rewards hash : ${shortHash(rewardsHash)}</div>
+              <div class="hash">Empreinte de génération : ${shortHash(generationHash)}</div>
+              <div class="hash">Empreinte des droits : ${shortHash(rewardsHash)}</div>
               <div class="hash">${rightsDetailLabel(entry)}</div>
               <div class="hash">Image : ${entry.image_path || "non renseignee"}</div>
-              <div class="hash">Image hash : ${shortHash(entry.image_hash_head)}</div>
-              <div class="hash">Transaction image : ${shortHash(entry.transaction_hash)}</div>
+              <div class="hash">Empreinte image : ${shortHash(entry.image_hash_head)}</div>
+              <div class="hash">Inscription image : ${shortHash(entry.transaction_hash)}</div>
               <div class="hash">OUP2 : ${shortHash(payload)}</div>
               <span class="status">NMNC ${statusLabel}</span>
             </div>
@@ -620,16 +629,16 @@
       const payload = current.oup2_payload && current.oup2_payload.payload_hex;
       head.innerHTML = `
         <li><strong>Peinture #${String(current.sequence || 0).padStart(6, "0")}</strong><br>${formatDate(current.created_at)}</li>
-        <li>Job<br>${current.id}${current.image_number ? ` · peinture ${current.image_number}` : ""}</li>
-        <li>Generation hash<br>${generationHash}</li>
-        <li>Hash precedent<br>${previousHash || "genesis"}</li>
-        <li>Rewards hash<br>${rewardsHash || "pending"}</li>
-        <li>Payload OUP2<br>${payload || "pending"}</li>
+        <li>Identifiant<br>${current.id}${current.image_number ? ` · peinture ${current.image_number}` : ""}</li>
+        <li>Empreinte de génération<br>${generationHash}</li>
+        <li>Empreinte précédente<br>${previousHash || "genesis"}</li>
+        <li>Empreinte des droits<br>${rewardsHash || "en attente"}</li>
+        <li>Charge OUP2<br>${payload || "en attente"}</li>
         <li>Chemin image<br>${current.image_path || "non renseigne"}</li>
-        <li>Transaction image<br>${current.transaction_hash || "pending"}</li>
+        <li>Inscription image<br>${current.transaction_hash || "en attente"}</li>
         <li>Droits d’usage<br>${rightsDetailLabel(current)}</li>
-        <li>Commit GitHub<br>${current.github_commit || "pending"}</li>
-        <li>Ancrage NMNC<br>${nmncAnchorReference(current.nmnc_anchor)}<br>${nmncStatusLabel(current.nmnc_anchor && current.nmnc_anchor.status)}</li>
+        <li>Révision GitHub<br>${current.github_commit || "en attente"}</li>
+        <li>Inscription NMNC<br>${nmncAnchorReference(current.nmnc_anchor)}<br>${nmncStatusLabel(current.nmnc_anchor && current.nmnc_anchor.status)}</li>
       `;
     }
 
@@ -680,13 +689,14 @@
           };
         }).sort((a, b) => (a.sort_key || 0) - (b.sort_key || 0));
 
-        const totalNo = entries.reduce((sum, entry) => sum + Number(entry.reward_total_no || 0), 0);
-        const uniqueJobs = new Set(entries.map((entry) => entry.id).filter(Boolean));
+        const ouvroirPages = uniqueOuvroirPages();
+        const totalNo = ouvroirPages.reduce((sum, entry) => sum + Number(entry.reward_total_no || 0), 0);
+        const minedPages = ouvroirPages.filter((entry) => entry.nmnc_anchor && entry.nmnc_anchor.status === "mined").length;
         document.getElementById("metric-images").textContent = entries.length;
-        document.getElementById("metric-generations").textContent = uniqueJobs.size;
+        document.getElementById("metric-generations").textContent = ouvroirPages.length;
         document.getElementById("metric-sources").textContent = "-";
         document.getElementById("metric-rewards").textContent = (totalNo / 100000000).toFixed(8);
-        document.getElementById("metric-anchor").textContent = nmncStatusLabel(entries.at(-1)?.nmnc_anchor?.status);
+        document.getElementById("metric-anchor").textContent = `${minedPages}/${ouvroirPages.length} pages minées`;
 
         renderThread();
         renderLatestImages();

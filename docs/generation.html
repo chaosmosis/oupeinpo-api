@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Oupeinpo - bloc</title>
+  <title>Oupeinpo - génération</title>
   <style>
     :root {
       color-scheme: light;
@@ -196,18 +196,18 @@
   <main>
     <header>
       <div>
-        <h1 id="title">Bloc Oupeinpo</h1>
+        <h1 id="title">Génération Oupeinpo</h1>
         <p class="tagline" id="subtitle">Chargement du point de registre depuis l’API.</p>
       </div>
       <nav aria-label="Navigation">
         <a href="index.html">Contribuer</a>
-        <a href="explorer.html">Explorer</a>
+        <a href="explorer.html">Registre de l’Ouvroir</a>
       </nav>
     </header>
 
     <div class="layout">
       <section class="panel">
-        <h2>Images generees</h2>
+        <h2>Peintures informatiques</h2>
         <div class="outputs" id="outputs"></div>
         <div class="rewards">
           <h2>Droits d’usage</h2>
@@ -374,7 +374,7 @@
 
     function rewardListHtml(entry) {
       if (!entry.nmnc_address) {
-        return '<li>Aucune adresse NMNC publique associee a ce bloc.</li>';
+        return '<li>Aucune adresse NMNC publique associee a cette génération.</li>';
       }
 
       const actualNo = Number(entry.reward_total_no || 0);
@@ -462,7 +462,7 @@
         const entry = normalizeEntry(tx);
         const resultIndexUrl = `${API_BASE_URL}/local-results/${entry.id}/index.html`;
 
-        title.textContent = `Bloc Oupeinpo #${String(entry.height).padStart(6, "0")}`;
+        title.textContent = `Génération Oupeinpo #${String(entry.height).padStart(6, "0")}`;
         subtitle.textContent = `${formatDate(entry.created_at)} - ${entry.source_count} images sources privees, ${entry.cluster_count} clusters, ${entry.outputs.length || 1} peinture(s) informatique(s), ${rightsSummary(entry)}.`;
         rawJson.href = `${API_BASE_URL}/global-blockchain.json`;
 
@@ -478,9 +478,9 @@
         metadata.innerHTML = [
           field("Identifiant", entry.id),
           field("Hauteur Oupeinpo", entry.height),
-          field("Generation hash", entry.generation_hash),
-          field("Hash precedent", entry.previous_generation_hash || "genesis"),
-          field("Rewards hash", entry.rewards_hash),
+          field("Empreinte de génération", entry.generation_hash),
+          field("Empreinte précédente", entry.previous_generation_hash || "genesis"),
+          field("Empreinte des droits", entry.rewards_hash),
           field("Droits acquis no", entry.reward_total_no),
           field("Droits acquis NMNC", entry.reward_total_nmnc),
           field("Droits potentiels no", entry.potential_reward_total_no),
@@ -488,11 +488,11 @@
           field("Images sources", entry.source_count),
           field("Clusters", entry.cluster_count),
           field("Adresse NMNC", entry.nmnc_address),
-          field("Ancrage NMNC", nmncAnchorReference(entry.nmnc_anchor)),
-          field("Statut NMNC", nmncStatusLabel(entry.nmnc_anchor && entry.nmnc_anchor.status))
+          field("Inscription NMNC", nmncAnchorReference(entry.nmnc_anchor)),
+          field("État NMNC", nmncStatusLabel(entry.nmnc_anchor && entry.nmnc_anchor.status))
         ].join("");
       } catch (error) {
-        title.textContent = "Bloc introuvable";
+        title.textContent = "Génération introuvable";
         subtitle.textContent = "Le point demande n’existe pas dans le registre public.";
         outputs.innerHTML = '<div class="empty">Aucune image a afficher.</div>';
         rewards.innerHTML = "";

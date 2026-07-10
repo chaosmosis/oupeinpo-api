@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>NMNC - explorateur de blocs</title>
+  <title>NMNC - consulter le registre</title>
   <style>
     :root {
       color-scheme: light;
@@ -435,42 +435,42 @@
   <main>
     <header>
       <div>
-        <h1>NMNC Block Explorer</h1>
-        <p class="tagline">Chaîne locale NMNC observée par l’API Oupeinpo.</p>
+        <h1>Consulter le registre NMNC</h1>
+        <p class="tagline">Registre distribué NMNC observé par l’API Oupeinpo.</p>
       </div>
       <nav aria-label="Navigation">
         <a href="index.html">Contribuer</a>
-        <a href="explorer.html">Ouvroir</a>
-        <a href="nmnc-explorer.html" aria-current="page">NMNC</a>
+        <a href="explorer.html">Registre de l’Ouvroir</a>
+        <a href="nmnc-explorer.html" aria-current="page">Registre NMNC</a>
       </nav>
     </header>
 
-    <section class="metrics" aria-label="Etat de la chaine NMNC">
-      <div class="metric"><span>Chaîne</span><strong id="metric-chain">-</strong></div>
+    <section class="metrics" aria-label="Etat du registre NMNC">
+      <div class="metric"><span>Réseau</span><strong id="metric-chain">-</strong></div>
       <div class="metric"><span>Hauteur</span><strong id="metric-height">-</strong></div>
-      <div class="metric"><span>Blocs</span><strong id="metric-blocks">-</strong></div>
+      <div class="metric"><span>Blocs NMNC</span><strong id="metric-blocks">-</strong></div>
       <div class="metric"><span>Pairs</span><strong id="metric-peers">-</strong></div>
       <div class="metric"><span>Difficulté</span><strong id="metric-difficulty">-</strong></div>
     </section>
 
     <div class="layout">
       <section class="panel">
-        <h2>Blocs récents</h2>
+        <h2>Blocs NMNC récents</h2>
         <div class="toolbar">
-          <input id="search" type="search" placeholder="Hauteur ou hash de bloc">
+          <input id="search" type="search" placeholder="Hauteur ou empreinte de bloc NMNC">
           <button id="search-button">Ouvrir</button>
         </div>
         <div class="status" id="list-status">Chargement.</div>
         <div class="block-list" id="block-list"></div>
     <div class="pager">
       <button class="secondary" id="prev-page">Plus anciens</button>
-      <button class="secondary" id="latest-page">Derniers blocs</button>
+      <button class="secondary" id="latest-page">Derniers blocs NMNC</button>
     </div>
   </section>
 
       <aside class="panel">
-        <h2>Détail du bloc</h2>
-        <div class="status" id="detail-status">Sélectionnez un bloc.</div>
+        <h2>Détail du bloc NMNC</h2>
+        <div class="status" id="detail-status">Sélectionnez un bloc NMNC.</div>
         <dl class="detail-grid" id="block-detail"></dl>
         <div class="proof-list" id="oupeinpo-proof-list"></div>
         <div class="tx-list" id="tx-list"></div>
@@ -751,7 +751,7 @@
                 </figure>
               `;
             }).join("")
-          : '<p class="muted">Aucune miniature probante associée à ce bloc.</p>';
+          : '<p class="muted">Aucune miniature probante associée à ce bloc NMNC.</p>';
 
         const generationLink = pageUrl("generation.html", { id: proof.job_id });
         const explorerLink = pageUrl("explorer.html");
@@ -759,14 +759,14 @@
           <section class="proof-card">
             <h3>Preuve Oupeinpo</h3>
             <div class="proof-meta">
-              <div><span class="muted">Job</span> <span class="hash">${escapeHtml(proof.job_id)}</span></div>
+              <div><span class="muted">Identifiant</span> <span class="hash">${escapeHtml(proof.job_id)}</span></div>
               <div><span class="muted">Hauteur OUP2</span> ${escapeHtml(proof.oupeinpo_height ?? "-")}</div>
               <div><span class="muted">Images</span> ${escapeHtml(proof.image_count ?? images.length)} / ${escapeHtml(proof.expected_user_output_count ?? images.length)}</div>
               <div><span class="muted">Source</span> ${proof.archive_proof ? "archive probante compacte" : "résultat public vivant"}</div>
               <div class="proof-links">
-                ${proof.result_url ? `<a href="${escapeHtml(proof.result_url)}" target="_blank" rel="noopener">Page du résultat</a>` : ""}
-                <a href="${escapeHtml(generationLink)}">Page génération</a>
-                <a href="${escapeHtml(explorerLink)}">Explorer l’ouvroir</a>
+                ${proof.result_url ? `<a href="${escapeHtml(proof.result_url)}" target="_blank" rel="noopener">Page de génération</a>` : ""}
+                <a href="${escapeHtml(generationLink)}">Page de génération</a>
+                <a href="${escapeHtml(explorerLink)}">Consulter le registre de l’Ouvroir</a>
               </div>
             </div>
             <div class="proof-gallery">${gallery}</div>
@@ -780,20 +780,20 @@
       renderBlocks(currentBlocks);
       detailStatus.textContent = `Bloc #${block.height}`;
       detail.innerHTML = [
-        field("Hash", block.hash, true),
+        field("Empreinte", block.hash, true),
         field("Confirmations", block.confirmations),
         field("Horodatage", formatTime(block.time)),
-        field("Transactions", block.nTx),
+        field("Inscriptions", block.nTx),
         field("Taille", `${block.size} octets`),
         field("Poids", block.weight),
-        field("Merkle root", block.merkleroot, true),
+        field("Racine de Merkle", block.merkleroot, true),
         field("Difficulté", block.difficulty),
         field("Nonce", block.nonce),
         field("Bits", block.bits),
         field("Précédent", block.previousblockhash || "genesis", true),
         field("Suivant", block.nextblockhash || "-", true),
-        field("Coinbase", block.coinbase_txid, true),
-        field("Récompense", `${block.coinbase_value_nmnc || "0.00000000"} NMNC`),
+        field("Inscription d’émission", block.coinbase_txid, true),
+        field("Émission inscrite", `${block.coinbase_value_nmnc || "0.00000000"} NMNC`),
         field("OP_RETURN", (block.op_returns || []).length),
         field("OUP2", (block.oup2_op_returns || []).length)
       ].join("");
@@ -802,7 +802,7 @@
 
       txList.innerHTML = (block.transactions || []).map((tx) => `
         <section class="tx">
-          <h3>${tx.coinbase ? "Coinbase" : "Transaction"}</h3>
+          <h3>${tx.coinbase ? "Inscription d’émission" : "Inscription"}</h3>
           <div class="hash">${tx.txid}</div>
           <div class="muted">${tx.vin_count} entrée(s), ${tx.vout_count} sortie(s), ${tx.size} octets</div>
           <div class="outputs">${(tx.outputs || []).map(outputHtml).join("")}</div>
@@ -899,7 +899,7 @@
       const hasBlocks = currentBlocks.length > 0;
       document.getElementById("prev-page").disabled = !hasBlocks || currentStartHeight <= 0;
       document.getElementById("latest-page").disabled = !hasBlocks || currentTopHeight === currentTipHeight;
-      statusBox.textContent = `${currentBlocks.length} bloc(s), pointe #${data.tip_height}.`;
+      statusBox.textContent = `${currentBlocks.length} bloc(s) NMNC, pointe #${data.tip_height}.`;
       renderBlocks(currentBlocks);
       if (currentBlocks.length && !selectedHash) {
         await loadBlock(currentBlocks[0].hash);
