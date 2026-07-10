@@ -423,6 +423,43 @@
       return value.length > 14 ? `${value.slice(0, 10)}...${value.slice(-6)}` : value;
     }
 
+    function nmncStatusLabel(status) {
+      const labels = {
+        mined: "miné",
+        pending_mining: "validé, à miner",
+        approval_failed: "validation à reprendre",
+        rejected: "refusé",
+        not_submitted: "non soumis OUP2",
+        pending: "en attente"
+      };
+      return labels[status] || status || "non soumis OUP2";
+    }
+
+    function nmncAnchorReference(anchor) {
+      if (!anchor) return "non miné";
+      return anchor.block_hash || anchor.txid || anchor.payload_hash || "non miné";
+    }
+
+    function rightsAmountLabel(entry) {
+      const actualNo = Number(entry.reward_total_no || 0);
+      const potentialNo = Number(entry.potential_reward_total_no || 0);
+      if (actualNo > 0) return `${entry.reward_total_nmnc} NMNC acquis`;
+      if (potentialNo > 0) return `${entry.potential_reward_total_nmnc} NMNC potentiels pour le lot`;
+      return "0.00000000 NMNC";
+    }
+
+    function rightsDetailLabel(entry) {
+      const actualNo = Number(entry.reward_total_no || 0);
+      const potentialNo = Number(entry.potential_reward_total_no || 0);
+      if (actualNo > 0) {
+        return `Droits d’usage acquis : ${entry.reward_user_count || 0} adresse(s), ${entry.reward_total_no || 0} no`;
+      }
+      if (potentialNo > 0) {
+        return `Droits d’usage potentiels du lot si minage OUP2 : ${entry.potential_reward_user_count || 0} adresse(s), ${entry.potential_reward_total_no || 0} no`;
+      }
+      return "Droits d’usage : aucun droit NMNC associé";
+    }
+
     function formatDate(value) {
       if (!value) return "-";
       return new Intl.DateTimeFormat("fr-BE", {
@@ -451,7 +488,8 @@
         entry.image_hash_head,
         entry.github_commit,
         entry.oup2_payload && entry.oup2_payload.payload_hex,
-        entry.nmnc_anchor && entry.nmnc_anchor.txid
+        entry.nmnc_anchor && entry.nmnc_anchor.txid,
+        entry.nmnc_anchor && entry.nmnc_anchor.block_hash
       ].filter(Boolean).join(" ").toLowerCase();
       return haystack.includes(query.toLowerCase());
     }
@@ -533,6 +571,7 @@
         const generationHash = entry.generation_hash;
         const rewardsHash = entry.rewards_hash;
         const payload = entry.oup2_payload && entry.oup2_payload.payload_hex;
+        const statusLabel = nmncStatusLabel(entry.nmnc_anchor && entry.nmnc_anchor.status);
         item.innerHTML = `
           <div class="point">${pointLabel}</div>
           <a class="generation" href="${pageUrl("generation.html", { id: entry.id })}">
@@ -543,16 +582,16 @@
                 <span>${formatDate(entry.created_at)}</span>
                 <span>${entry.id}</span>
                 <span>${oup2Label}</span>
-                <span>${entry.reward_total_nmnc || "0.00000000"} NMNC</span>
+                <span>${rightsAmountLabel(entry)}</span>
               </div>
               <div class="hash">Generation hash : ${shortHash(generationHash)}</div>
               <div class="hash">Rewards hash : ${shortHash(rewardsHash)}</div>
-              <div class="hash">Droits d’usage : ${entry.reward_user_count || 0} adresse(s), ${entry.reward_total_no || 0} no</div>
+              <div class="hash">${rightsDetailLabel(entry)}</div>
               <div class="hash">Image : ${entry.image_path || "non renseignee"}</div>
               <div class="hash">Image hash : ${shortHash(entry.image_hash_head)}</div>
               <div class="hash">Transaction image : ${shortHash(entry.transaction_hash)}</div>
               <div class="hash">OUP2 : ${shortHash(payload)}</div>
-              <span class="status">NMNC ${entry.nmnc_anchor && entry.nmnc_anchor.status ? entry.nmnc_anchor.status : "pending"}</span>
+              <span class="status">NMNC ${statusLabel}</span>
             </div>
           </a>
         `;
@@ -588,9 +627,9 @@
         <li>Payload OUP2<br>${payload || "pending"}</li>
         <li>Chemin image<br>${current.image_path || "non renseigne"}</li>
         <li>Transaction image<br>${current.transaction_hash || "pending"}</li>
-        <li>Droits d’usage<br>${current.reward_total_no || 0} no vers ${current.reward_user_count || 0} adresse(s)</li>
+        <li>Droits d’usage<br>${rightsDetailLabel(current)}</li>
         <li>Commit GitHub<br>${current.github_commit || "pending"}</li>
-        <li>Ancrage NMNC<br>${current.nmnc_anchor && current.nmnc_anchor.txid ? current.nmnc_anchor.txid : "pending"}</li>
+        <li>Ancrage NMNC<br>${nmncAnchorReference(current.nmnc_anchor)}<br>${nmncStatusLabel(current.nmnc_anchor && current.nmnc_anchor.status)}</li>
       `;
     }
 
@@ -619,9 +658,14 @@
             source_count: tx.source_count || "-",
             cluster_count: tx.cluster_count || "-",
             output_count: tx.output_count || (Array.isArray(tx.outputs) ? tx.outputs.length : 1),
-            reward_total_nmnc: tx.reward_total_nmnc || "1.00000000",
-            reward_total_no: tx.reward_total_no || 100000000,
+            reward_total_nmnc: tx.reward_total_nmnc ?? "0.00000000",
+            reward_total_no: tx.reward_total_no ?? 0,
             reward_user_count: tx.reward_user_count || (tx.nmnc_address ? 1 : 0),
+            reward_output_count: tx.reward_output_count || 0,
+            potential_reward_total_nmnc: tx.potential_reward_total_nmnc ?? (tx.expected_coinbase_rewards && tx.expected_coinbase_rewards.total_amount_nmnc) ?? "0.00000000",
+            potential_reward_total_no: tx.potential_reward_total_no ?? (tx.expected_coinbase_rewards && tx.expected_coinbase_rewards.total_amount_no) ?? 0,
+            potential_reward_user_count: tx.potential_reward_user_count || tx.reward_user_count || (tx.nmnc_address ? 1 : 0),
+            potential_reward_output_count: tx.potential_reward_output_count || tx.reward_output_count || 0,
             generation_hash: tx.generation_hash || tx.block_hash,
             previous_generation_hash: tx.previous_generation_hash || tx.previous_block_hash,
             rewards_hash: tx.rewards_hash,
@@ -632,7 +676,7 @@
             preview_image: previewCandidates[0] || "",
             preview_image_fallback: previewCandidates[1] || "",
             oup2_payload: tx.oup2_payload || null,
-            nmnc_anchor: tx.nmnc_anchor || { status: "pending" }
+            nmnc_anchor: tx.nmnc_anchor || { status: "not_submitted" }
           };
         }).sort((a, b) => (a.sort_key || 0) - (b.sort_key || 0));
 
@@ -642,7 +686,7 @@
         document.getElementById("metric-generations").textContent = uniqueJobs.size;
         document.getElementById("metric-sources").textContent = "-";
         document.getElementById("metric-rewards").textContent = (totalNo / 100000000).toFixed(8);
-        document.getElementById("metric-anchor").textContent = entries.at(-1)?.nmnc_anchor?.status || "pending";
+        document.getElementById("metric-anchor").textContent = nmncStatusLabel(entries.at(-1)?.nmnc_anchor?.status);
 
         renderThread();
         renderLatestImages();

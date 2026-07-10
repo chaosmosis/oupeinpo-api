@@ -343,6 +343,61 @@
       return `<img src="${escapeAttribute(candidates[0])}"${fallback} alt="${escapeAttribute(`Image generee ${jobId} sortie ${output.index}`)}">`;
     }
 
+    function nmncStatusLabel(status) {
+      const labels = {
+        mined: "miné",
+        pending_mining: "validé, à miner",
+        approval_failed: "validation à reprendre",
+        rejected: "refusé",
+        not_submitted: "non soumis OUP2",
+        pending: "en attente"
+      };
+      return labels[status] || status || "non soumis OUP2";
+    }
+
+    function nmncAnchorReference(anchor) {
+      if (!anchor) return "non miné";
+      return anchor.block_hash || anchor.txid || anchor.payload_hash || "non miné";
+    }
+
+    function rightsSummary(entry) {
+      const actualNo = Number(entry.reward_total_no || 0);
+      const potentialNo = Number(entry.potential_reward_total_no || 0);
+      if (actualNo > 0) {
+        return `${entry.reward_total_nmnc} NMNC acquis (${actualNo} no)`;
+      }
+      if (potentialNo > 0) {
+        return `${entry.potential_reward_total_nmnc} NMNC potentiels pour le lot si la génération est minée (${potentialNo} no)`;
+      }
+      return "aucun droit NMNC associé";
+    }
+
+    function rewardListHtml(entry) {
+      if (!entry.nmnc_address) {
+        return '<li>Aucune adresse NMNC publique associee a ce bloc.</li>';
+      }
+
+      const actualNo = Number(entry.reward_total_no || 0);
+      const potentialNo = Number(entry.potential_reward_total_no || 0);
+      const outputCount = actualNo > 0 ? entry.reward_output_count : entry.potential_reward_output_count;
+      const amount = actualNo > 0 ? entry.reward_total_nmnc : entry.potential_reward_total_nmnc;
+      const title = actualNo > 0 ? `${amount} NMNC acquis` : `${amount} NMNC potentiels pour le lot`;
+      const detail = actualNo > 0
+        ? `Droits d’usage acquis : ${entry.reward_total_no || 0} no`
+        : potentialNo > 0
+          ? `Droits d’usage potentiels du lot si minage OUP2 : ${entry.potential_reward_total_no || 0} no`
+          : "Droits d’usage : aucun droit NMNC associé pour l’instant";
+
+      return `
+        <li>
+          <strong>${title}</strong>
+          Adresse associee : ${entry.nmnc_address}<br>
+          ${detail}<br>
+          Peintures informatiques : ${outputCount || entry.outputs.length || 1}
+        </li>
+      `;
+    }
+
     function normalizeOutputs(tx) {
       if (Array.isArray(tx.outputs) && tx.outputs.length) {
         return tx.outputs.map((output, index) => ({
@@ -380,10 +435,15 @@
         previous_generation_hash: tx.previous_generation_hash || tx.previous_block_hash,
         rewards_hash: tx.rewards_hash || (tx.expected_coinbase_rewards && tx.expected_coinbase_rewards.rewards_hash),
         nmnc_address: tx.nmnc_address,
-        reward_total_no: tx.reward_total_no || (tx.expected_coinbase_rewards && tx.expected_coinbase_rewards.total_amount_no) || 0,
-        reward_total_nmnc: tx.reward_total_nmnc || (tx.expected_coinbase_rewards && tx.expected_coinbase_rewards.total_amount_nmnc) || "0.00000000",
+        reward_total_no: tx.reward_total_no ?? 0,
+        reward_total_nmnc: tx.reward_total_nmnc ?? "0.00000000",
         reward_user_count: tx.reward_user_count || (tx.nmnc_address ? 1 : 0),
-        nmnc_anchor: tx.nmnc_anchor || { status: "pending" },
+        reward_output_count: tx.reward_output_count || 0,
+        potential_reward_total_no: tx.potential_reward_total_no ?? (tx.expected_coinbase_rewards && tx.expected_coinbase_rewards.total_amount_no) ?? 0,
+        potential_reward_total_nmnc: tx.potential_reward_total_nmnc ?? (tx.expected_coinbase_rewards && tx.expected_coinbase_rewards.total_amount_nmnc) ?? "0.00000000",
+        potential_reward_output_count: tx.potential_reward_output_count || 0,
+        potential_reward_user_count: tx.potential_reward_user_count || (tx.nmnc_address ? 1 : 0),
+        nmnc_anchor: tx.nmnc_anchor || { status: "not_submitted" },
         outputs: normalizeOutputs(tx),
         raw: tx
       };
@@ -394,14 +454,16 @@
         const response = await fetch(`${API_BASE_URL}/global-blockchain.json`, { cache: "no-store" });
         const chain = await response.json();
         const transactions = chain.transactions || [];
-        const tx = transactions.find((item) => (item.job_id || item.id) === requestedId) || transactions[transactions.length - 1];
+        const tx = requestedId
+          ? transactions.find((item) => (item.job_id || item.id) === requestedId)
+          : transactions[transactions.length - 1];
         if (!tx) throw new Error("empty ledger");
 
         const entry = normalizeEntry(tx);
         const resultIndexUrl = `${API_BASE_URL}/local-results/${entry.id}/index.html`;
 
         title.textContent = `Bloc Oupeinpo #${String(entry.height).padStart(6, "0")}`;
-        subtitle.textContent = `${formatDate(entry.created_at)} - ${entry.source_count} images sources privees, ${entry.cluster_count} clusters, ${entry.outputs.length || 1} peinture(s) informatique(s), ${entry.reward_total_no || 0} no en droits d’usage.`;
+        subtitle.textContent = `${formatDate(entry.created_at)} - ${entry.source_count} images sources privees, ${entry.cluster_count} clusters, ${entry.outputs.length || 1} peinture(s) informatique(s), ${rightsSummary(entry)}.`;
         rawJson.href = `${API_BASE_URL}/global-blockchain.json`;
 
         outputs.innerHTML = entry.outputs.length ? entry.outputs.map((output) => `
@@ -411,16 +473,7 @@
           </article>
         `).join("") : `<div class="empty"><a href="${resultIndexUrl}">Voir les images generees sur le serveur</a>.</div>`;
 
-        rewards.innerHTML = entry.nmnc_address
-          ? `
-            <li>
-              <strong>${entry.reward_total_nmnc} NMNC</strong>
-              Adresse associee : ${entry.nmnc_address}<br>
-              Droits d’usage : ${entry.reward_total_no || 0} no<br>
-              Peintures informatiques : ${entry.outputs.length || 1}
-            </li>
-          `
-          : '<li>Aucune adresse NMNC publique associee a ce bloc.</li>';
+        rewards.innerHTML = rewardListHtml(entry);
 
         metadata.innerHTML = [
           field("Identifiant", entry.id),
@@ -428,13 +481,15 @@
           field("Generation hash", entry.generation_hash),
           field("Hash precedent", entry.previous_generation_hash || "genesis"),
           field("Rewards hash", entry.rewards_hash),
-          field("Droits no", entry.reward_total_no),
-          field("Droits NMNC", entry.reward_total_nmnc),
+          field("Droits acquis no", entry.reward_total_no),
+          field("Droits acquis NMNC", entry.reward_total_nmnc),
+          field("Droits potentiels no", entry.potential_reward_total_no),
+          field("Droits potentiels NMNC", entry.potential_reward_total_nmnc),
           field("Images sources", entry.source_count),
           field("Clusters", entry.cluster_count),
           field("Adresse NMNC", entry.nmnc_address),
-          field("Ancrage NMNC", entry.nmnc_anchor && entry.nmnc_anchor.txid ? entry.nmnc_anchor.txid : "pending"),
-          field("Statut NMNC", entry.nmnc_anchor && entry.nmnc_anchor.status ? entry.nmnc_anchor.status : "pending")
+          field("Ancrage NMNC", nmncAnchorReference(entry.nmnc_anchor)),
+          field("Statut NMNC", nmncStatusLabel(entry.nmnc_anchor && entry.nmnc_anchor.status))
         ].join("");
       } catch (error) {
         title.textContent = "Bloc introuvable";
