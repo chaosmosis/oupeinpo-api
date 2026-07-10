@@ -336,14 +336,14 @@
 
     <div class="layout">
       <section class="panel">
-        <h2>Fil des blocs Oupeinpo</h2>
-        <input class="search" id="search" type="search" placeholder="Rechercher par hauteur, generation_hash, rewards_hash, OUP2, commit, txid NMNC">
+        <h2>Fil des peintures Oupeinpo</h2>
+        <input class="search" id="search" type="search" placeholder="Rechercher par index, job, image, generation_hash, rewards_hash, OUP2, commit, txid NMNC">
         <ol class="thread" id="thread"></ol>
       </section>
 
       <aside>
         <section class="panel">
-          <h2>Dernieres images</h2>
+          <h2>Dernieres peintures</h2>
           <div class="image-strip" id="latest-images"></div>
         </section>
 
@@ -440,7 +440,11 @@
         entry.id,
         entry.sequence,
         entry.oupeinpo_height,
+        entry.image_number,
+        entry.image_path,
         entry.title,
+        entry.token_id,
+        entry.transaction_hash,
         entry.generation_hash,
         entry.previous_generation_hash,
         entry.rewards_hash,
@@ -463,7 +467,13 @@
     function localResultAssetUrl(jobId, path) {
       if (!path) return "";
       if (path.startsWith("http")) return path;
-      return `${API_BASE_URL}/local-results/${jobId}/${path}`;
+      const encodedJobId = encodeURIComponent(jobId);
+      const encodedPath = String(path)
+        .split("/")
+        .filter(Boolean)
+        .map((part) => encodeURIComponent(part))
+        .join("/");
+      return `${API_BASE_URL}/local-results/${encodedJobId}/${encodedPath}`;
     }
 
     function previewImageCandidates(jobId, path) {
@@ -516,27 +526,31 @@
       visible.forEach((entry) => {
         const item = document.createElement("li");
         item.className = "thread-item";
-        const height = entry.oupeinpo_height || entry.sequence;
+        const registryIndex = entry.sequence;
+        const pointLabel = registryIndex ? `#${String(registryIndex).padStart(3, "0")}` : "#---";
+        const oup2Label = entry.oupeinpo_height ? `OUP2 #${String(entry.oupeinpo_height).padStart(6, "0")}` : "OUP2 pending";
+        const imageLabel = entry.image_number ? `peinture ${entry.image_number}` : "peinture";
         const generationHash = entry.generation_hash;
         const rewardsHash = entry.rewards_hash;
         const payload = entry.oup2_payload && entry.oup2_payload.payload_hex;
         item.innerHTML = `
-          <div class="point">#${String(height).padStart(3, "0")}</div>
+          <div class="point">${pointLabel}</div>
           <a class="generation" href="${pageUrl("generation.html", { id: entry.id })}">
             ${previewImageTag(entry, `Image generee ${entry.id}`)}
             <div>
-              <h3>Bloc Oupeinpo #${String(height).padStart(6, "0")}</h3>
+              <h3>Peinture Oupeinpo ${pointLabel} · ${imageLabel}</h3>
               <div class="meta">
                 <span>${formatDate(entry.created_at)}</span>
-                <span>${entry.source_count} sources</span>
-                <span>${entry.cluster_count} clusters</span>
-                <span>${entry.output_count} sortie(s)</span>
+                <span>${entry.id}</span>
+                <span>${oup2Label}</span>
                 <span>${entry.reward_total_nmnc || "0.00000000"} NMNC</span>
               </div>
               <div class="hash">Generation hash : ${shortHash(generationHash)}</div>
               <div class="hash">Rewards hash : ${shortHash(rewardsHash)}</div>
               <div class="hash">Droits d’usage : ${entry.reward_user_count || 0} adresse(s), ${entry.reward_total_no || 0} no</div>
-              <div class="hash">Image head : ${shortHash(entry.image_hash_head)}</div>
+              <div class="hash">Image : ${entry.image_path || "non renseignee"}</div>
+              <div class="hash">Image hash : ${shortHash(entry.image_hash_head)}</div>
+              <div class="hash">Transaction image : ${shortHash(entry.transaction_hash)}</div>
               <div class="hash">OUP2 : ${shortHash(payload)}</div>
               <span class="status">NMNC ${entry.nmnc_anchor && entry.nmnc_anchor.status ? entry.nmnc_anchor.status : "pending"}</span>
             </div>
@@ -547,7 +561,7 @@
     }
 
     function renderLatestImages() {
-      const latest = [...entries].slice(-3).reverse();
+      const latest = [...entries].filter((entry) => entry.preview_image).slice(-6).reverse();
       latestImages.innerHTML = latest.map((entry) => `
         <a href="${pageUrl("generation.html", { id: entry.id })}" title="${entry.id}">
           ${previewImageTag(entry, `Image generee ${entry.id}`)}
@@ -558,7 +572,7 @@
     function renderHead() {
       const current = entries[entries.length - 1];
       if (!current) {
-        head.innerHTML = '<li>Aucun bloc.</li>';
+        head.innerHTML = '<li>Aucune peinture.</li>';
         return;
       }
       const generationHash = current.generation_hash;
@@ -566,11 +580,14 @@
       const rewardsHash = current.rewards_hash;
       const payload = current.oup2_payload && current.oup2_payload.payload_hex;
       head.innerHTML = `
-        <li><strong>Bloc #${String(current.oupeinpo_height || current.sequence).padStart(6, "0")}</strong><br>${formatDate(current.created_at)}</li>
+        <li><strong>Peinture #${String(current.sequence || 0).padStart(6, "0")}</strong><br>${formatDate(current.created_at)}</li>
+        <li>Job<br>${current.id}${current.image_number ? ` · peinture ${current.image_number}` : ""}</li>
         <li>Generation hash<br>${generationHash}</li>
         <li>Hash precedent<br>${previousHash || "genesis"}</li>
         <li>Rewards hash<br>${rewardsHash || "pending"}</li>
         <li>Payload OUP2<br>${payload || "pending"}</li>
+        <li>Chemin image<br>${current.image_path || "non renseigne"}</li>
+        <li>Transaction image<br>${current.transaction_hash || "pending"}</li>
         <li>Droits d’usage<br>${current.reward_total_no || 0} no vers ${current.reward_user_count || 0} adresse(s)</li>
         <li>Commit GitHub<br>${current.github_commit || "pending"}</li>
         <li>Ancrage NMNC<br>${current.nmnc_anchor && current.nmnc_anchor.txid ? current.nmnc_anchor.txid : "pending"}</li>
@@ -581,17 +598,24 @@
       try {
         const response = await fetch(`${API_BASE_URL}/global-blockchain.json`, { cache: "no-store" });
         const chain = await response.json();
-        entries = (chain.transactions || []).map((tx) => {
+        entries = (chain.transactions || []).map((tx, position) => {
           const jobId = tx.job_id || tx.id;
           const firstOutput = Array.isArray(tx.outputs) && tx.outputs.length ? tx.outputs[0] : {};
           const imagePath = tx.preview_image || tx.image_path || tx.output_image || tx.generated_image || tx.result_image || firstOutput.path || firstOutput.url || firstOutput.image_path || "";
           const previewCandidates = previewImageCandidates(jobId, imagePath);
+          const registryIndex = Number(tx.index ?? tx.sequence ?? position + 1);
+          const imageNumber = Number(tx.job_index ?? tx.output_index ?? tx.image_index ?? 0);
+          const createdAt = tx.created_at || tx.timestamp;
+          const sortKey = Number.isFinite(registryIndex) && registryIndex > 0 ? registryIndex : Date.parse(createdAt || "") || position;
           return {
             id: jobId,
-            sequence: tx.sequence || tx.index,
-            oupeinpo_height: tx.oupeinpo_height || tx.job_index || tx.sequence || tx.index,
+            sequence: registryIndex,
+            oupeinpo_height: tx.oupeinpo_height || tx.oup2_height || null,
+            image_number: Number.isFinite(imageNumber) && imageNumber > 0 ? imageNumber : null,
+            image_path: imagePath,
+            sort_key: sortKey,
             title: tx.title,
-            created_at: tx.created_at || tx.timestamp,
+            created_at: createdAt,
             source_count: tx.source_count || "-",
             cluster_count: tx.cluster_count || "-",
             output_count: tx.output_count || (Array.isArray(tx.outputs) ? tx.outputs.length : 1),
@@ -602,17 +626,20 @@
             previous_generation_hash: tx.previous_generation_hash || tx.previous_block_hash,
             rewards_hash: tx.rewards_hash,
             image_hash_head: tx.image_hash_head || tx.image_sha256_seed || tx.image_hash,
+            token_id: tx.token_id,
+            transaction_hash: tx.transaction_hash,
             github_commit: tx.github_commit,
             preview_image: previewCandidates[0] || "",
             preview_image_fallback: previewCandidates[1] || "",
             oup2_payload: tx.oup2_payload || null,
             nmnc_anchor: tx.nmnc_anchor || { status: "pending" }
           };
-        }).sort((a, b) => (a.oupeinpo_height || a.sequence || 0) - (b.oupeinpo_height || b.sequence || 0));
+        }).sort((a, b) => (a.sort_key || 0) - (b.sort_key || 0));
 
         const totalNo = entries.reduce((sum, entry) => sum + Number(entry.reward_total_no || 0), 0);
-        document.getElementById("metric-images").textContent = entries.reduce((sum, entry) => sum + Number(entry.output_count || 0), 0);
-        document.getElementById("metric-generations").textContent = entries.length;
+        const uniqueJobs = new Set(entries.map((entry) => entry.id).filter(Boolean));
+        document.getElementById("metric-images").textContent = entries.length;
+        document.getElementById("metric-generations").textContent = uniqueJobs.size;
         document.getElementById("metric-sources").textContent = "-";
         document.getElementById("metric-rewards").textContent = (totalNo / 100000000).toFixed(8);
         document.getElementById("metric-anchor").textContent = entries.at(-1)?.nmnc_anchor?.status || "pending";
