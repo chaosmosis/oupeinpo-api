@@ -373,7 +373,7 @@
         <label for="access-code">Code d’accès</label>
         <input id="access-code" name="access_code" type="password" autocomplete="off" required>
 
-        <label for="clusters">Décidez ici combien de peintures vous souhaitez créer. </label>
+        <label for="clusters">Combien de peintures souhaitez-vous créer ?</label>
         <select id="clusters" name="clusters">
           <option value="auto">Automatique</option>
           <option value="1">1</option>
@@ -386,8 +386,8 @@
         </select>
 
         <label for="images">Images</label>
-        <input id="images" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple>
-        <div class="note">Maximum 12 images, 10 Mo par image, 80 Mo par envoi.</div>
+        <input id="images" name="images" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="images-help" multiple>
+        <div class="note" id="images-help">Formats acceptés : JPEG, PNG ou WebP. Maximum 12 images, 10 Mo par image, 80 Mo par envoi.</div>
 
         <div class="consent-box">
           <label for="privacy-consent">
@@ -444,6 +444,8 @@
     const MAX_FILES = 12;
     const MAX_FILE_BYTES = 10 * 1024 * 1024;
     const MAX_TOTAL_BYTES = 80 * 1024 * 1024;
+    const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+    const ALLOWED_IMAGE_EXTENSIONS = /\.(jpe?g|png|webp)$/i;
 
     const annotationGroups = [
       {
@@ -517,6 +519,18 @@
       return `${file.name}::${file.size}::${file.lastModified}`;
     }
 
+    function isAllowedImageFile(file) {
+      const type = String(file.type || "").toLowerCase();
+      if (ALLOWED_IMAGE_TYPES.has(type)) return true;
+      return !type && ALLOWED_IMAGE_EXTENSIONS.test(file.name || "");
+    }
+
+    function rejectedFileMessage(files) {
+      const names = files.slice(0, 3).map((file) => file.name).join(", ");
+      const suffix = files.length > 3 ? ` et ${files.length - 3} autre(s)` : "";
+      return `Format refusé : ${names}${suffix}. Formats acceptés : JPEG, PNG ou WebP.`;
+    }
+
     function objectUrlFor(file) {
       const key = fileKey(file);
       if (!objectUrls.has(key)) {
@@ -557,8 +571,13 @@
       const incomingFiles = Array.from(files || []);
       const existingKeys = new Set(selectedFiles.map(fileKey));
       let duplicateCount = 0;
+      const rejectedFiles = [];
 
       incomingFiles.forEach((file) => {
+        if (!isAllowedImageFile(file)) {
+          rejectedFiles.push(file);
+          return;
+        }
         const key = fileKey(file);
         if (existingKeys.has(key)) {
           duplicateCount += 1;
@@ -571,7 +590,9 @@
       imageInput.value = "";
       renderFiles();
 
-      if (duplicateCount && selectedFiles.length <= MAX_FILES && !statusBox.classList.contains("error")) {
+      if (rejectedFiles.length) {
+        setStatus(rejectedFileMessage(rejectedFiles), true);
+      } else if (duplicateCount && selectedFiles.length <= MAX_FILES && !statusBox.classList.contains("error")) {
         setStatus(`${selectedFiles.length} image(s) prête(s). ${duplicateCount} doublon(s) ignoré(s).`);
       }
     }
@@ -598,8 +619,11 @@
 
       const totalBytes = selectedFiles.reduce((sum, file) => sum + file.size, 0);
       const oversized = selectedFiles.find((file) => file.size > MAX_FILE_BYTES);
+      const invalidFile = selectedFiles.find((file) => !isAllowedImageFile(file));
       if (selectedFiles.length > MAX_FILES) {
         setStatus(`Trop d’images : maximum ${MAX_FILES}.`, true);
+      } else if (invalidFile) {
+        setStatus(rejectedFileMessage([invalidFile]), true);
       } else if (oversized) {
         setStatus(`Image trop lourde : ${oversized.name}. Maximum 10 Mo par image.`, true);
       } else if (totalBytes > MAX_TOTAL_BYTES) {
@@ -844,6 +868,11 @@
       }
       if (selectedFiles.length > MAX_FILES) {
         setStatus(`Trop d’images : maximum ${MAX_FILES}.`, true);
+        return;
+      }
+      const invalidFile = selectedFiles.find((file) => !isAllowedImageFile(file));
+      if (invalidFile) {
+        setStatus(rejectedFileMessage([invalidFile]), true);
         return;
       }
       const totalBytes = selectedFiles.reduce((sum, file) => sum + file.size, 0);
