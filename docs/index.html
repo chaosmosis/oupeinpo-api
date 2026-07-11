@@ -813,18 +813,26 @@
       }
     }
 
-    async function pollStatus(jobId) {
-      if (pollTimer) clearInterval(pollTimer);
+    function stopPolling() {
+      if (!pollTimer) return;
+      clearTimeout(pollTimer);
+      pollTimer = null;
+    }
 
-      pollTimer = setInterval(async () => {
+    async function pollStatus(jobId) {
+      stopPolling();
+      let networkFailures = 0;
+
+      const pollOnce = async () => {
         try {
           const response = await fetch(`${API_BASE_URL}/status/${jobId}`, { cache: "no-store" });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const data = await response.json();
+          networkFailures = 0;
           setStatus(data.message || data.status || "Traitement en cours…");
 
           if (data.status === "done") {
-            clearInterval(pollTimer);
-            pollTimer = null;
+            stopPolling();
             const blockLink = pageUrl("generation.html", { id: jobId });
             const explorerLink = pageUrl("explorer.html");
             const blockAnchor = document.createElement("a");
@@ -842,21 +850,27 @@
               ". Le rapport privé est envoyé par e-mail."
             );
             submitButton.disabled = false;
+            return;
           }
 
           if (data.status === "error") {
-            clearInterval(pollTimer);
-            pollTimer = null;
+            stopPolling();
             setStatus(`Erreur : ${data.message || "traitement interrompu"}`, true);
             submitButton.disabled = false;
+            return;
           }
         } catch (error) {
-          clearInterval(pollTimer);
-          pollTimer = null;
-          setStatus("Impossible de lire le statut du traitement.", true);
-          submitButton.disabled = false;
+          networkFailures += 1;
+          const delaySeconds = Math.min(30, 5 + networkFailures * 5);
+          setStatus(`Connexion interrompue pendant le suivi. Nouvelle tentative dans ${delaySeconds} secondes…`, true);
+          pollTimer = setTimeout(pollOnce, delaySeconds * 1000);
+          return;
         }
-      }, 5000);
+
+        pollTimer = setTimeout(pollOnce, 5000);
+      };
+
+      pollOnce();
     }
 
     form.addEventListener("submit", async (event) => {
@@ -923,6 +937,8 @@
     });
 
     clearButton.addEventListener("click", () => {
+      stopPolling();
+      submitButton.disabled = false;
       imageInput.value = "";
       selectedFiles = [];
       annotationState.clear();
