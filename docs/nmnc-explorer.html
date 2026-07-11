@@ -516,49 +516,49 @@
         <strong id="metric-chain">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Hauteur <button class="help" type="button" aria-label="Explication : hauteur" data-help="Numéro de la dernière page du registre NMNC connue par cette machine. La page de départ vaut 0, puis chaque nouvelle page ajoute une hauteur.">?</button></span>
+        <span class="metric-label">Pointe validée <button class="help" type="button" aria-label="Explication : pointe validée" data-help="Hauteur de la dernière entrée NMNC entièrement validée par cette machine. La hauteur de départ vaut 0, puis chaque nouvelle entrée validée augmente ce nombre.">?</button></span>
         <strong id="metric-height">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Pages du registre NMNC <button class="help" type="button" aria-label="Explication : pages du registre NMNC" data-help="Nombre de pages du registre NMNC déjà vues par cette machine. Si ce nombre suit la hauteur, elle voit bien le registre le plus récent.">?</button></span>
-        <strong id="metric-blocks">-</strong>
+        <span class="metric-label">Pointe annoncée <button class="help" type="button" aria-label="Explication : pointe annoncée" data-help="Hauteur la plus haute annoncée par les en-têtes connus. Si elle reste proche de la pointe validée, le nœud suit correctement le registre.">?</button></span>
+        <strong id="metric-headers">-</strong>
       </div>
       <div class="metric">
         <span class="metric-label">Pairs <button class="help" type="button" aria-label="Explication : pairs" data-help="Nombre d’autres machines NMNC connectées. Plus il y a de pairs, plus le registre circule entre tes ordinateurs.">?</button></span>
         <strong id="metric-peers">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Difficulté <button class="help" type="button" aria-label="Explication : difficulté" data-help="Mesure de l’effort demandé pour trouver une nouvelle page du registre. Plus elle monte, plus il faut tenter de calculs avant qu’une machine trouve une page valide.">?</button></span>
+        <span class="metric-label">Difficulté <button class="help" type="button" aria-label="Explication : difficulté" data-help="Mesure de l’effort demandé pour trouver une nouvelle entrée du registre. Plus elle monte, plus il faut tenter de calculs avant qu’une machine trouve une entrée valide.">?</button></span>
         <strong id="metric-difficulty">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Effort moyen depuis le départ <button class="help" type="button" aria-label="Explication : effort moyen depuis le départ" data-help="Estimation du nombre moyen de tentatives de calcul par seconde depuis la page 0 du registre jusqu’à la pointe actuelle. C’est une moyenne observée sur toute la chaîne, pas la vitesse instantanée d’une machine.">?</button></span>
+        <span class="metric-label">Effort moyen depuis le départ <button class="help" type="button" aria-label="Explication : effort moyen depuis le départ" data-help="Estimation du nombre moyen de tentatives de calcul par seconde depuis la hauteur 0 du registre jusqu’à la pointe actuelle. C’est une moyenne observée sur toute la chaîne, pas la vitesse instantanée d’une machine.">?</button></span>
         <strong id="metric-hashrate">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Énergie nécessaire estimée <button id="metric-energy-help" class="help" type="button" aria-label="Explication : énergie nécessaire estimée" data-help="Quantité d’énergie nécessaire estimée depuis la page 0 du registre jusqu’à la pointe actuelle. Le calcul prend pour machine de référence un MacBook Air 2019, estimé à 30 W, et suppose que cette machine plus chaque pair connecté participe à l’effort de minage. Une seule machine valide la page, mais les tentatives des autres machines comptent aussi dans l’énergie consommée.">?</button></span>
+        <span class="metric-label">Énergie nécessaire estimée <button id="metric-energy-help" class="help" type="button" aria-label="Explication : énergie nécessaire estimée" data-help="Quantité d’énergie nécessaire estimée depuis la hauteur 0 du registre jusqu’à la pointe actuelle. Le calcul prend pour machine de référence un MacBook Air 2019, estimé à 30 W, et suppose que cette machine plus chaque pair connecté participe à l’effort de minage. Une seule machine valide une nouvelle entrée, mais les tentatives des autres machines comptent aussi dans l’énergie consommée.">?</button></span>
         <strong id="metric-energy">-</strong>
       </div>
     </section>
 
     <div class="layout">
       <section class="panel">
-        <h2>Pages récentes du registre NMNC</h2>
+        <h2>Entrées récentes du registre NMNC</h2>
         <div class="toolbar">
-          <input id="search" type="search" aria-label="Hauteur ou empreinte de page NMNC" placeholder="Hauteur ou empreinte de page NMNC">
+          <input id="search" type="search" aria-label="Hauteur ou empreinte d’entrée NMNC" placeholder="Hauteur ou empreinte d’entrée NMNC">
           <button id="search-button">Ouvrir</button>
         </div>
         <div class="status" id="list-status">Chargement.</div>
         <div class="block-list" id="block-list"></div>
     <div class="pager">
       <button class="secondary" id="prev-page">Plus anciens</button>
-      <button class="secondary" id="latest-page">Dernières pages NMNC</button>
+      <button class="secondary" id="latest-page">Dernières entrées NMNC</button>
     </div>
   </section>
 
       <aside class="panel">
-        <h2>Détail de la page NMNC</h2>
-        <div class="status" id="detail-status">Sélectionnez une page NMNC.</div>
+        <h2>Détail de l’entrée NMNC</h2>
+        <div class="status" id="detail-status">Sélectionnez une hauteur NMNC.</div>
         <dl class="detail-grid" id="block-detail"></dl>
         <div class="proof-list" id="oupeinpo-proof-list"></div>
         <div class="tx-list" id="tx-list"></div>
@@ -731,9 +731,9 @@
         .join(" · ");
       const machineEquivalent = `${formatReferenceComputers(machineCount, sourceLabel)} continuellement pendant ${runningTime}`;
       metricEnergyHelp.dataset.help = [
-        "Quantité d’énergie nécessaire estimée depuis la page 0 du registre jusqu’à la pointe actuelle.",
+        "Quantité d’énergie nécessaire estimée depuis la hauteur 0 du registre jusqu’à la pointe actuelle.",
         "Le calcul prend pour machine de référence un MacBook Air 2019, estimé à 30 W, et compte cette machine plus chaque pair connecté.",
-        "Une seule machine valide la page, mais les tentatives des autres machines comptent aussi dans l’énergie consommée.",
+        "Une seule machine valide une nouvelle entrée, mais les tentatives des autres machines comptent aussi dans l’énergie consommée.",
         `${formatKwh(kwh)} soit l’équivalent de ${machineEquivalent}.`,
         `Kilomètres indicatifs avec des valeurs centrales de puissance : ${mobilityScale}.`
       ].join(" ");
@@ -810,15 +810,15 @@
     }
 
     async function updateWorkMetricsFromGenesis(tipHeight) {
-      setMetric("metric-hashrate", "calcul depuis la page 0");
-      setMetric("metric-energy", "calcul depuis la page 0");
+      setMetric("metric-hashrate", "calcul depuis la hauteur 0");
+      setMetric("metric-energy", "calcul depuis la hauteur 0");
       try {
         const blocks = await loadBlocksFromGenesis(tipHeight);
         updateWorkMetrics(blocks);
       } catch (error) {
         setMetric("metric-hashrate", "calcul indisponible");
         setMetric("metric-energy", "calcul indisponible");
-        console.warn("Calcul NMNC depuis la page 0 indisponible", error);
+        console.warn("Calcul NMNC depuis la hauteur 0 indisponible", error);
       }
     }
 
@@ -948,7 +948,7 @@
       currentPeerCount = Number.isFinite(peerCount) ? peerCount : null;
       setMetric("metric-chain", state.chain);
       setMetric("metric-height", state.blocks);
-      setMetric("metric-blocks", state.headers);
+      setMetric("metric-headers", state.headers);
       setMetric("metric-peers", currentPeerCount ?? "-");
       setMetric("metric-difficulty", state.difficulty);
       return state;
@@ -1067,7 +1067,7 @@
             gallery.appendChild(figure);
           });
         } else {
-          gallery.appendChild(createTextElement("p", "Aucune miniature probante associée à cette page NMNC.", "muted"));
+          gallery.appendChild(createTextElement("p", "Aucune miniature probante associée à cette entrée NMNC.", "muted"));
         }
 
         section.append(createTextElement("h3", "Preuve Oupeinpo"), meta, gallery);
@@ -1078,7 +1078,7 @@
     function renderBlock(block) {
       selectedHash = block.hash;
       renderBlocks(currentBlocks);
-      setStatus(detailStatus, `Page NMNC #${block.height}`);
+      setStatus(detailStatus, `Hauteur NMNC #${block.height}`);
       detail.replaceChildren();
       appendDetailField("Empreinte", block.hash, true);
       appendDetailField("Confirmations", block.confirmations);
@@ -1090,8 +1090,8 @@
       appendDetailField("Difficulté", block.difficulty);
       appendDetailField("Nonce", block.nonce);
       appendDetailField("Bits", block.bits);
-      appendDetailField("Page précédente", block.previousblockhash || "genesis", true);
-      appendDetailField("Page suivante", block.nextblockhash || "-", true);
+      appendDetailField("Entrée précédente", block.previousblockhash || "genesis", true);
+      appendDetailField("Entrée suivante", block.nextblockhash || "-", true);
       appendDetailField("Inscription d’émission", block.coinbase_txid, true);
       appendDetailField("Émission inscrite", `${block.coinbase_value_nmnc || "0.00000000"} NMNC`);
       appendDetailField("Données d’ancrage", (block.op_returns || []).length);
@@ -1216,7 +1216,7 @@
       const hasBlocks = currentBlocks.length > 0;
       document.getElementById("prev-page").disabled = !hasBlocks || currentStartHeight <= 0;
       document.getElementById("latest-page").disabled = !hasBlocks || currentTopHeight === currentTipHeight;
-      setStatus(statusBox, `${currentBlocks.length} page(s) du registre NMNC, pointe #${data.tip_height}.`);
+      setStatus(statusBox, `${currentBlocks.length} entrée(s) du registre NMNC affichée(s), pointe #${data.tip_height}.`);
       await updateWorkMetricsFromGenesis(data.tip_height);
       renderBlocks(currentBlocks);
       if (currentBlocks.length && !selectedHash) {

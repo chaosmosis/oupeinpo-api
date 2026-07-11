@@ -440,23 +440,23 @@
 
     <section class="summary" aria-label="Synthèse du registre">
       <div class="metric">
-        <span class="metric-label">Peintures générées <button class="help" type="button" aria-label="Explication : peintures générées" data-help="Nombre total de peintures informatiques visibles dans le registre public. Une page de l’Ouvroir peut contenir plusieurs peintures.">?</button></span>
+        <span class="metric-label">Peintures générées <button class="help" type="button" aria-label="Explication : peintures générées" data-help="Nombre total de peintures informatiques visibles dans le registre public. Une génération de l’Ouvroir peut contenir plusieurs peintures.">?</button></span>
         <strong id="metric-images">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Pages de l’Ouvroir <button class="help" type="button" aria-label="Explication : pages de l’Ouvroir" data-help="Nombre de générations inscrites dans le registre public de l’Ouvroir. Une page rassemble le résultat d’une contribution et ses peintures.">?</button></span>
+        <span class="metric-label">Générations de l’Ouvroir <button class="help" type="button" aria-label="Explication : générations de l’Ouvroir" data-help="Nombre de générations inscrites dans le registre public de l’Ouvroir. Une génération rassemble le résultat d’une contribution et ses peintures.">?</button></span>
         <strong id="metric-generations">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Fichiers téléversés <button class="help" type="button" aria-label="Explication : fichiers téléversés" data-help="Nombre de fichiers sources reçus au départ, compté par page de l’Ouvroir. Quand cette donnée n’est pas publiée par l’API, un tiret signifie qu’elle reste indisponible publiquement; un signe + indique un total partiel.">?</button></span>
+        <span class="metric-label">Fichiers téléversés <button class="help" type="button" aria-label="Explication : fichiers téléversés" data-help="Nombre de fichiers sources reçus au départ, compté par génération de l’Ouvroir. Quand cette donnée n’est pas publiée par l’API, un tiret signifie qu’elle reste indisponible publiquement; un signe + indique un total partiel.">?</button></span>
         <strong id="metric-sources">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Droits NMNC acquis par les contributeurices <button class="help" type="button" aria-label="Explication : droits NMNC acquis" data-help="Total des droits NMNC déjà acquis par les pages ancrées au registre NMNC. Les droits potentiels ne sont pas comptés ici tant qu’ils ne sont pas minés.">?</button></span>
+        <span class="metric-label">Droits NMNC acquis par les contributeurices <button class="help" type="button" aria-label="Explication : droits NMNC acquis" data-help="Total des droits NMNC déjà acquis par les générations ancrées au registre NMNC. Les droits potentiels ne sont pas comptés ici tant qu’ils ne sont pas minés.">?</button></span>
         <strong id="metric-rewards">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">État NMNC <button class="help" type="button" aria-label="Explication : état NMNC" data-help="Indique combien de pages de l’Ouvroir ont déjà reçu une inscription vérifiable dans le registre NMNC.">?</button></span>
+        <span class="metric-label">État NMNC <button class="help" type="button" aria-label="Explication : état NMNC" data-help="Indique combien de générations de l’Ouvroir ont déjà reçu une inscription vérifiable dans le registre NMNC.">?</button></span>
         <strong id="metric-anchor">-</strong>
       </div>
     </section>
@@ -465,13 +465,13 @@
       <summary>Aide à la lecture du registre</summary>
       <dl>
         <dt>Peinture Oupeinpo #001</dt>
-        <dd>Rang de la peinture dans le fil public de l’Ouvroir. Une même page de l’Ouvroir peut contenir plusieurs peintures.</dd>
+        <dd>Rang de la peinture dans le fil public de l’Ouvroir. Une même génération de l’Ouvroir peut contenir plusieurs peintures.</dd>
         <dt>Identifiant</dt>
-        <dd>Nom court de la page de l’Ouvroir. Il permet de retrouver une génération, ses peintures, son rapport privé et ses traces techniques.</dd>
+        <dd>Nom court de la génération de l’Ouvroir. Il permet de retrouver ses peintures, son rapport privé et ses traces techniques.</dd>
         <dt>Passage Oupeinpo vers NMNC #000082</dt>
         <dd>Numéro de passage dans le protocole Oupeinpo vers NMNC. C’est la hauteur propre à l’Ouvroir, distincte de la hauteur du registre NMNC.</dd>
         <dt>NMNC acquis</dt>
-        <dd>Droits déjà ancrés dans le registre NMNC. Ils ne sont plus seulement attendus : une page du registre distribué NMNC les contient.</dd>
+        <dd>Droits déjà ancrés dans le registre NMNC. Ils ne sont plus seulement attendus : une inscription du registre distribué NMNC les contient.</dd>
         <dt>NMNC potentiels pour le lot</dt>
         <dd>Droits calculés par l’Ouvroir mais pas encore ancrés dans le registre NMNC. Ils dépendent encore de l’inscription au registre NMNC.</dd>
         <dt>Empreinte</dt>
@@ -479,7 +479,7 @@
         <dt>Inscription image</dt>
         <dd>Trace interne qui identifie cette peinture dans le registre de l’Ouvroir.</dd>
         <dt>Donnée d’ancrage NMNC</dt>
-        <dd>Donnée courte inscrite dans le registre du NMNC pour relier cette page de l’Ouvroir à ses empreintes et à ses droits.</dd>
+        <dd>Donnée courte inscrite dans le registre du NMNC pour relier cette génération de l’Ouvroir à ses empreintes et à ses droits.</dd>
         <dt>NMNC miné</dt>
         <dd>La génération est ancrée dans le registre NMNC.</dd>
         <dt>NMNC validé, à miner</dt>
@@ -897,7 +897,7 @@
         document.getElementById("metric-generations").textContent = ouvroirPages.length;
         document.getElementById("metric-sources").textContent = sourceMetricLabel(ouvroirPages);
         document.getElementById("metric-rewards").textContent = (totalNo / 100000000).toFixed(8);
-        document.getElementById("metric-anchor").textContent = `${minedPages} des ${ouvroirPages.length} pages ancrées au registre NMNC`;
+        document.getElementById("metric-anchor").textContent = `${minedPages} des ${ouvroirPages.length} générations ancrées au registre NMNC`;
 
         renderThread();
         renderLatestImages();
