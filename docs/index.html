@@ -262,6 +262,29 @@
       line-height: 1.35;
     }
 
+    .consent-box {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      background: #fbfaf7;
+      padding: 12px;
+    }
+
+    .consent-box label {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin: 0;
+      color: var(--ink);
+      line-height: 1.4;
+    }
+
+    .consent-box input {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      margin-top: 2px;
+    }
+
     .recent-panel {
       margin-top: 24px;
     }
@@ -328,6 +351,8 @@
           <a href="explorer.html">Consulter le registre de l’Ouvroir</a>
           ·
           <a href="nmnc-explorer.html">Consulter le registre NMNC</a>
+          ·
+          <a href="confidentialite.html">Confidentialité</a>
         </p>
       </div>
       <div class="api-state" id="api-state" role="status" aria-live="polite">API : vérification…</div>
@@ -363,6 +388,17 @@
         <label for="images">Images</label>
         <input id="images" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple>
         <div class="note">Maximum 12 images, 10 Mo par image, 80 Mo par envoi.</div>
+
+        <div class="consent-box">
+          <label for="privacy-consent">
+            <input id="privacy-consent" name="privacy_consent" type="checkbox" required>
+            <span>
+              J’ai compris que les images déposées au départ restent privées et ne sont pas affichées dans le registre public.
+              Les peintures informatiques produites par l’Ouvroir, leurs miniatures, leurs empreintes et les traces NMNC associées peuvent être visibles publiquement.
+              <a href="confidentialite.html">Lire la note de confidentialité</a>.
+            </span>
+          </label>
+        </div>
 
         <div class="submit-row">
           <button id="submit-button" type="submit">Envoyer</button>
@@ -820,6 +856,10 @@
         setStatus("Envoi trop lourd : maximum 80 Mo au total.", true);
         return;
       }
+      if (!document.getElementById("privacy-consent").checked) {
+        setStatus("Merci de confirmer la note de confidentialité avant l’envoi.", true);
+        return;
+      }
 
       submitButton.disabled = true;
       setStatus("Envoi des images vers l’API Oupeinpo…");
@@ -831,6 +871,7 @@
       formData.append("access_code", document.getElementById("access-code").value);
       formData.append("clusters", document.getElementById("clusters").value);
       formData.append("annotations", JSON.stringify(collectAnnotations()));
+      formData.append("privacy_consent", "yes");
       selectedFiles.forEach((file) => formData.append("images", file, file.name));
 
       try {

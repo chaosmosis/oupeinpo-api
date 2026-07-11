@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oupeinpo - confidentialité</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #24211d;
+      --muted: #666058;
+      --line: #d8d2c8;
+      --paper: #f7f4ef;
+      --panel: #ffffff;
+      --accent: #176b63;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    main {
+      width: min(860px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.7rem);
+      font-weight: 500;
+      line-height: 1;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    p,
+    li {
+      line-height: 1.5;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    nav a {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 8px 10px;
+      border-radius: 4px;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .tagline {
+      margin: 10px 0 0;
+      color: var(--muted);
+      max-width: 680px;
+    }
+
+    .panel {
+      margin-top: 22px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 18px;
+    }
+
+    .panel ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    @media (max-width: 760px) {
+      main { width: min(100% - 20px, 680px); padding-top: 18px; }
+      header { grid-template-columns: 1fr; }
+      nav { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Confidentialité</h1>
+        <p class="tagline">Ce texte précise ce qui reste privé, ce qui peut devenir public, et ce qui sert au registre de l’Ouvroir.</p>
+      </div>
+      <nav aria-label="Navigation">
+        <a href="index.html">Contribuer</a>
+        <a href="explorer.html">Registre de l’Ouvroir</a>
+        <a href="nmnc-explorer.html">Registre NMNC</a>
+      </nav>
+    </header>
+
+    <section class="panel">
+      <h2>Images déposées</h2>
+      <p>Les images que vous déposez au départ servent à produire des peintures informatiques. Elles ne sont pas affichées dans le registre public de l’Ouvroir.</p>
+      <p>Elles sont traitées par le serveur pour calculer des formes, des proximités, des compositions et un rapport privé. Elles ne doivent pas être confondues avec les peintures informatiques produites à partir d’elles.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Peintures informatiques</h2>
+      <p>Les peintures informatiques produites par l’Ouvroir peuvent être visibles publiquement sous forme de miniatures, de pages de génération et d’inscriptions dans le registre.</p>
+      <p>Le registre public peut afficher leurs empreintes, leurs identifiants, leurs chemins de fichier, leurs traces d’inscription et leur état NMNC.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Rapport privé</h2>
+      <p>Le rapport envoyé par e-mail est une archive privée. Il peut contenir des éléments plus complets que le registre public, notamment des rapprochements, des analyses et des images destinées à la consultation personnelle.</p>
+      <p>Ce rapport n’est pas destiné à devenir une page publique du site.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Adresse NMNC</h2>
+      <p>Si vous fournissez une adresse NMNC, elle peut apparaître dans les traces publiques liées aux droits d’usage.</p>
+      <p>Si vous n’en fournissez pas, l’Ouvroir peut créer une adresse transitoire pour cette expérience. Dans ce cas, la clé de reprise doit vous être restituée par le rapport privé, et vous devez transférer vos droits vers une adresse que vous créez vous-même.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Ce qui peut être public</h2>
+      <ul>
+        <li>les peintures informatiques produites;</li>
+        <li>les miniatures de ces peintures;</li>
+        <li>les empreintes cryptographiques;</li>
+        <li>les identifiants de génération;</li>
+        <li>les traces d’ancrage dans le registre NMNC;</li>
+        <li>les adresses NMNC associées aux droits d’usage.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Ce qui ne doit pas être public</h2>
+      <ul>
+        <li>les images déposées au départ;</li>
+        <li>les clés privées;</li>
+        <li>les mots de passe;</li>
+        <li>les codes d’accès;</li>
+        <li>les fichiers internes du serveur;</li>
+        <li>les archives privées de conversation ou de reprise.</li>
+      </ul>
+    </section>
+
+    <p class="muted">Contact : xyzetc@riseup.net</p>
+  </main>
+</body>
+</html>
