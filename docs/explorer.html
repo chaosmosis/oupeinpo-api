@@ -448,7 +448,7 @@
         <strong id="metric-generations">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Fichiers téléversés <button class="help" type="button" aria-label="Explication : fichiers téléversés" data-help="Nombre de fichiers sources reçus au départ. Quand cette donnée n’est pas publiée par l’API, un tiret signifie simplement qu’elle reste indisponible publiquement.">?</button></span>
+        <span class="metric-label">Fichiers téléversés <button class="help" type="button" aria-label="Explication : fichiers téléversés" data-help="Nombre de fichiers sources reçus au départ, compté par page de l’Ouvroir. Quand cette donnée n’est pas publiée par l’API, un tiret signifie qu’elle reste indisponible publiquement; un signe + indique un total partiel.">?</button></span>
         <strong id="metric-sources">-</strong>
       </div>
       <div class="metric">
@@ -582,6 +582,32 @@
         if (!pages.has(key)) pages.set(key, entry);
       });
       return [...pages.values()];
+    }
+
+    function numericCount(value) {
+      const count = Number(value);
+      return Number.isFinite(count) && count >= 0 ? count : null;
+    }
+
+    function sourceCountFromTransaction(tx) {
+      const directCount = numericCount(tx.source_count ?? tx.source_file_count ?? tx.uploaded_source_count);
+      if (directCount !== null) return directCount;
+
+      const candidateLists = [
+        tx.saved_files,
+        tx.source_images,
+        tx.sources,
+        tx.uploaded_sources
+      ];
+      const sourceList = candidateLists.find((value) => Array.isArray(value));
+      return sourceList ? sourceList.length : null;
+    }
+
+    function sourceMetricLabel(pages) {
+      const counts = pages.map((entry) => numericCount(entry.source_count)).filter((value) => value !== null);
+      if (!counts.length) return "-";
+      const total = counts.reduce((sum, value) => sum + value, 0);
+      return counts.length === pages.length ? String(total) : `${total}+`;
     }
 
     function formatDate(value) {
@@ -839,7 +865,7 @@
             sort_key: sortKey,
             title: tx.title,
             created_at: createdAt,
-            source_count: tx.source_count || "-",
+            source_count: sourceCountFromTransaction(tx),
             cluster_count: tx.cluster_count || "-",
             output_count: tx.output_count || (Array.isArray(tx.outputs) ? tx.outputs.length : 1),
             reward_total_nmnc: tx.reward_total_nmnc ?? "0.00000000",
@@ -869,7 +895,7 @@
         const minedPages = ouvroirPages.filter((entry) => entry.nmnc_anchor && entry.nmnc_anchor.status === "mined").length;
         document.getElementById("metric-images").textContent = entries.length;
         document.getElementById("metric-generations").textContent = ouvroirPages.length;
-        document.getElementById("metric-sources").textContent = "-";
+        document.getElementById("metric-sources").textContent = sourceMetricLabel(ouvroirPages);
         document.getElementById("metric-rewards").textContent = (totalNo / 100000000).toFixed(8);
         document.getElementById("metric-anchor").textContent = `${minedPages} des ${ouvroirPages.length} pages ancrées au registre NMNC`;
 
