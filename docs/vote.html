@@ -27,6 +27,8 @@
       background: var(--paper);
     }
 
+    body.viewer-open { overflow: hidden; }
+
     main {
       width: min(1180px, calc(100% - 32px));
       margin: 0 auto;
@@ -325,6 +327,121 @@
       border: 0;
     }
 
+    .candidate-image-button {
+      position: relative;
+      border-radius: 0;
+      padding: 0;
+      background: #eee;
+      color: var(--ink);
+      cursor: zoom-in;
+    }
+
+    .candidate-image-button:hover { background: #eee; }
+
+    .candidate-image-button::after {
+      content: "⛶";
+      position: absolute;
+      right: 7px;
+      bottom: 7px;
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(36, 33, 29, .35);
+      border-radius: 4px;
+      background: rgba(255, 255, 255, .9);
+      color: var(--ink);
+      font-family: Arial, sans-serif;
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+
+    .image-viewer {
+      width: min(1180px, calc(100% - 24px));
+      height: min(900px, calc(100% - 24px));
+      max-width: none;
+      max-height: none;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 0;
+      background: var(--panel);
+      color: var(--ink);
+    }
+
+    .image-viewer::backdrop { background: rgba(20, 18, 16, .82); }
+
+    .viewer-shell {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .viewer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-width: 0;
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px 10px 16px;
+    }
+
+    .viewer-head strong {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .viewer-close,
+    .viewer-nav {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      flex: 0 0 44px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 0;
+      background: #fff;
+      color: var(--ink);
+      font-family: Arial, sans-serif;
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+
+    .viewer-close:hover,
+    .viewer-nav:hover { background: var(--soft); }
+
+    .viewer-stage {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) 44px;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      min-height: 0;
+      padding: 12px;
+      background: #1e1c19;
+    }
+
+    .viewer-stage img {
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+      object-fit: contain;
+      display: block;
+    }
+
+    .viewer-caption {
+      min-height: 42px;
+      margin: 0;
+      border-top: 1px solid var(--line);
+      padding: 11px 16px;
+      color: var(--muted);
+      text-align: center;
+    }
+
     .candidate strong {
       font-weight: 500;
       font-size: .92rem;
@@ -412,6 +529,22 @@
       header,
       .layout { grid-template-columns: 1fr; }
       nav { justify-content: flex-start; }
+
+      .image-viewer {
+        width: calc(100% - 12px);
+        height: calc(100% - 12px);
+      }
+
+      .viewer-stage {
+        grid-template-columns: 40px minmax(0, 1fr) 40px;
+        gap: 6px;
+        padding: 6px;
+      }
+
+      .viewer-nav {
+        width: 40px;
+        height: 44px;
+      }
     }
   </style>
 </head>
@@ -484,6 +617,21 @@
     </div>
   </main>
 
+  <dialog class="image-viewer" id="image-viewer" aria-labelledby="viewer-title">
+    <div class="viewer-shell">
+      <div class="viewer-head">
+        <strong id="viewer-title">Peinture soumise au scrutin</strong>
+        <button class="viewer-close" id="viewer-close" type="button" aria-label="Fermer l’image agrandie" title="Fermer">×</button>
+      </div>
+      <div class="viewer-stage">
+        <button class="viewer-nav" id="viewer-previous" type="button" aria-label="Peinture précédente" title="Peinture précédente">←</button>
+        <img id="viewer-image" alt="" referrerpolicy="no-referrer">
+        <button class="viewer-nav" id="viewer-next" type="button" aria-label="Peinture suivante" title="Peinture suivante">→</button>
+      </div>
+      <p class="viewer-caption" id="viewer-caption" aria-live="polite"></p>
+    </div>
+  </dialog>
+
   <script>
     const DEFAULT_API_BASE_URL = "https://survie.tailc688f6.ts.net";
     const API_BASE_URL = DEFAULT_API_BASE_URL;
@@ -500,12 +648,22 @@
     const scrutinyOpens = document.getElementById("scrutiny-opens");
     const scrutinyCloses = document.getElementById("scrutiny-closes");
     const currentVoteLink = document.querySelector('a[aria-current="page"]');
+    const imageViewer = document.getElementById("image-viewer");
+    const viewerTitle = document.getElementById("viewer-title");
+    const viewerImage = document.getElementById("viewer-image");
+    const viewerCaption = document.getElementById("viewer-caption");
+    const viewerClose = document.getElementById("viewer-close");
+    const viewerPrevious = document.getElementById("viewer-previous");
+    const viewerNext = document.getElementById("viewer-next");
     let voteState = null;
     let currentRoundIndex = 0;
     let rankings = {};
     let finalReviewReady = false;
     let ballotSubmitted = false;
     let boundaryTimer = null;
+    let viewerItems = [];
+    let viewerIndex = 0;
+    let viewerReturnFocus = null;
 
     function getScrutinyId() {
       return new URLSearchParams(window.location.search).get("scrutiny") || "";
@@ -573,7 +731,77 @@
       }
     }
 
-    function renderCandidateImage(candidate, index) {
+    function renderImageViewer() {
+      const item = viewerItems[viewerIndex];
+      if (!item) return;
+      const label = candidateLabel(item.candidate, item.candidateIndex);
+      viewerTitle.textContent = label;
+      viewerImage.hidden = false;
+      viewerImage.src = item.imageUrl;
+      viewerImage.alt = `${label}, peinture agrandie`;
+      viewerCaption.textContent = `${label} · ${viewerIndex + 1} sur ${viewerItems.length}`;
+      const multiple = viewerItems.length > 1;
+      viewerPrevious.hidden = !multiple;
+      viewerNext.hidden = !multiple;
+    }
+
+    function moveImageViewer(offset) {
+      if (viewerItems.length < 2) return;
+      viewerIndex = (viewerIndex + offset + viewerItems.length) % viewerItems.length;
+      renderImageViewer();
+    }
+
+    function openImageViewer(candidates, selectedCandidate) {
+      viewerItems = candidates
+        .map((candidate, candidateIndex) => ({
+          candidate,
+          candidateIndex,
+          imageUrl: candidateImageUrl(candidate)
+        }))
+        .filter((item) => item.imageUrl);
+      viewerIndex = viewerItems.findIndex((item) => (
+        candidateId(item.candidate) === candidateId(selectedCandidate)
+      ));
+      if (viewerIndex < 0) return;
+      viewerReturnFocus = document.activeElement;
+      renderImageViewer();
+      document.body.classList.add("viewer-open");
+      imageViewer.showModal();
+      viewerClose.focus();
+    }
+
+    function closeImageViewer() {
+      if (imageViewer.open) imageViewer.close();
+    }
+
+    viewerClose.addEventListener("click", closeImageViewer);
+    viewerPrevious.addEventListener("click", () => moveImageViewer(-1));
+    viewerNext.addEventListener("click", () => moveImageViewer(1));
+    imageViewer.addEventListener("click", (event) => {
+      if (event.target === imageViewer) closeImageViewer();
+    });
+    imageViewer.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        moveImageViewer(-1);
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        moveImageViewer(1);
+      }
+    });
+    imageViewer.addEventListener("close", () => {
+      document.body.classList.remove("viewer-open");
+      viewerImage.removeAttribute("src");
+      viewerItems = [];
+      if (viewerReturnFocus && viewerReturnFocus.isConnected) viewerReturnFocus.focus();
+      viewerReturnFocus = null;
+    });
+    viewerImage.addEventListener("error", () => {
+      viewerImage.hidden = true;
+      viewerCaption.textContent = "Aperçu indisponible.";
+    });
+
+    function renderCandidateImage(candidate, index, candidates = [candidate]) {
       const media = document.createElement("div");
       media.className = "candidate-image";
       const imageUrl = candidateImageUrl(candidate);
@@ -582,17 +810,25 @@
         return media;
       }
 
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "candidate-image candidate-image-button";
+      button.setAttribute("aria-label", `Agrandir ${candidateLabel(candidate, index)}`);
+      button.title = `Agrandir ${candidateLabel(candidate, index)}`;
+
       const image = document.createElement("img");
       image.src = imageUrl;
       image.alt = candidateLabel(candidate, index);
       image.loading = "eager";
       image.referrerPolicy = "no-referrer";
       image.addEventListener("error", () => {
-        media.replaceChildren();
-        media.textContent = "Aperçu indisponible";
+        button.replaceChildren();
+        button.disabled = true;
+        button.textContent = "Aperçu indisponible";
       });
-      media.appendChild(image);
-      return media;
+      button.addEventListener("click", () => openImageViewer(candidates, candidate));
+      button.appendChild(image);
+      return button;
     }
 
     function validateScrutinyState(state, requestedId) {
@@ -805,14 +1041,16 @@
       const grid = document.createElement("div");
       grid.className = "candidate-grid";
       candidates.forEach((candidate, index) => {
-        const label = document.createElement("label");
-        label.className = "candidate";
+        const card = document.createElement("article");
+        card.className = "candidate";
         const strong = document.createElement("strong");
         strong.textContent = candidateLabel(candidate, index);
-        const rankLabel = document.createElement("span");
+        const rankLabel = document.createElement("label");
         rankLabel.className = "meta";
         rankLabel.textContent = "Place dans votre ordre de préférence";
         const select = document.createElement("select");
+        select.id = `candidate-rank-${currentRoundIndex + 1}-${index + 1}`;
+        rankLabel.htmlFor = select.id;
         select.dataset.candidate = candidateId(candidate);
         select.setAttribute("aria-label", `Place de ${candidateLabel(candidate, index)}`);
         select.required = true;
@@ -827,8 +1065,8 @@
           select.appendChild(option);
         }
         select.addEventListener("change", () => refreshRankState(section));
-        label.append(renderCandidateImage(candidate, index), strong, rankLabel, select);
-        grid.appendChild(label);
+        card.append(renderCandidateImage(candidate, index, candidates), strong, rankLabel, select);
+        grid.appendChild(card);
       });
 
       const actions = document.createElement("div");
