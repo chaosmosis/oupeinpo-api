@@ -109,7 +109,7 @@
 
     .summary {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 12px;
       margin-top: 24px;
     }
@@ -182,7 +182,7 @@
       visibility: visible;
     }
 
-    .summary .metric:nth-child(n+4) .help::after {
+    .summary .metric:nth-child(3n) .help::after {
       left: auto;
       right: 0;
       transform: none;
@@ -254,6 +254,40 @@
       margin-bottom: 7px;
       color: var(--muted);
       font-size: .86rem;
+    }
+
+    .feed-tabs {
+      display: flex;
+      gap: 6px;
+      margin: 14px 0 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .feed-tab {
+      min-height: 42px;
+      margin-bottom: -1px;
+      border: 1px solid transparent;
+      border-bottom-color: var(--line);
+      border-radius: 4px 4px 0 0;
+      padding: 9px 12px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .feed-tab[aria-selected="true"] {
+      border-color: var(--line);
+      border-bottom-color: var(--panel);
+      background: var(--panel);
+      color: var(--accent-dark);
+      font-weight: 600;
+    }
+
+    .feed-tab:focus-visible,
+    .show-vote-tab:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
 
     .thread {
@@ -376,6 +410,29 @@
       display: block;
     }
 
+    .image-strip .empty {
+      grid-column: 1 / -1;
+      margin: 0;
+    }
+
+    .show-vote-tab {
+      width: 100%;
+      margin-top: 14px;
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      padding: 10px 12px;
+      background: #fff;
+      color: var(--accent-dark);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .show-vote-tab:disabled {
+      border-color: var(--line);
+      color: var(--muted);
+      cursor: default;
+    }
+
     .side-list {
       margin: 0;
       padding: 0;
@@ -427,7 +484,7 @@
     <header>
       <div>
         <h1>Registre de l’Ouvroir</h1>
-        <p class="tagline">Fil public de l’Ouvroir. Les peintures informatiques issues des fichiers confiés par les contributeurices y sont visibles par toutes et tous.</p>
+        <p class="tagline">Fil public de l’Ouvroir. Il rend visibles les propositions mises au scrutin, leur devenir et les peintures finalement admises au registre.</p>
       </div>
       <nav aria-label="Navigation">
         <a href="index.html">Contribuer</a>
@@ -440,8 +497,12 @@
 
     <section class="summary" aria-label="Synthèse du registre">
       <div class="metric">
-        <span class="metric-label">Peintures générées <button class="help" type="button" aria-label="Explication : peintures générées" data-help="Nombre total de peintures informatiques visibles dans le registre public. Une génération de l’Ouvroir peut contenir plusieurs peintures.">?</button></span>
+        <span class="metric-label">Peintures admises au registre <button class="help" type="button" aria-label="Explication : peintures admises au registre" data-help="Nombre de peintures retenues par un scrutin puis admises au registre par l’Assemblée OUPEINPO. Les propositions encore au scrutin ne sont pas comptées ici.">?</button></span>
         <strong id="metric-images">-</strong>
+      </div>
+      <div class="metric">
+        <span class="metric-label">Peintures mises au scrutin <button class="help" type="button" aria-label="Explication : peintures mises au scrutin" data-help="Nombre de propositions actuellement soumises au classement du corps électoral. Elles ne produisent encore ni inscription NMNC ni droits acquis.">?</button></span>
+        <strong id="metric-scrutiny-images">-</strong>
       </div>
       <div class="metric">
         <span class="metric-label">Générations de l’Ouvroir <button class="help" type="button" aria-label="Explication : générations de l’Ouvroir" data-help="Nombre de générations inscrites dans le registre public de l’Ouvroir. Une génération rassemble le résultat d’une contribution et ses peintures.">?</button></span>
@@ -489,16 +550,21 @@
 
     <div class="layout">
       <section class="panel">
-        <h2>Fil des peintures Oupeinpo</h2>
+        <h2>Fil des peintures et des scrutins Oupeinpo</h2>
+        <div class="feed-tabs" role="tablist" aria-label="Vues du registre">
+          <button class="feed-tab" id="tab-all" type="button" role="tab" aria-selected="true" aria-controls="thread">Tout le fil</button>
+          <button class="feed-tab" id="tab-votes" type="button" role="tab" aria-selected="false" aria-controls="thread" tabindex="-1">Peintures mises au vote</button>
+        </div>
         <label class="search-label" for="search">Recherche dans le registre</label>
         <input class="search" id="search" type="search" placeholder="Rechercher par numéro, identifiant, image, empreinte, passage vers NMNC ou donnée d’ancrage">
-        <ol class="thread" id="thread"></ol>
+        <ol class="thread" id="thread" role="tabpanel" aria-labelledby="tab-all" tabindex="0"></ol>
       </section>
 
       <aside>
         <section class="panel">
-          <h2>Dernières peintures</h2>
+          <h2>Dernières peintures mises au vote</h2>
           <div class="image-strip" id="latest-images"></div>
+          <button class="show-vote-tab" id="show-all-votes" type="button">Voir toutes les peintures mises au vote</button>
         </section>
 
         <section class="panel" style="margin-top: 18px;">
@@ -515,6 +581,9 @@
     const head = document.getElementById("head");
     const search = document.getElementById("search");
     const registryLink = document.getElementById("registry-link");
+    const tabAll = document.getElementById("tab-all");
+    const tabVotes = document.getElementById("tab-votes");
+    const showAllVotes = document.getElementById("show-all-votes");
     const DEFAULT_API_BASE_URL = "https://survie.tailc688f6.ts.net";
 
     const API_BASE_URL = DEFAULT_API_BASE_URL;
@@ -531,6 +600,20 @@
 
     registryLink.href = `${API_BASE_URL}/global-blockchain.json`;
     let entries = [];
+    let registryEntries = [];
+    let scrutinyEntries = [];
+    let feedMode = "all";
+
+    const scrutinyStatusLabels = {
+      scrutin_programme: "Scrutin programmé",
+      mise_au_scrutin: "Mise au scrutin",
+      scrutin_clos_en_depouillement: "Scrutin clos, dépouillement en cours",
+      scrutin_clos_en_attente_assemblee_oupeinpo: "Scrutin clos, en attente de l’Assemblée OUPEINPO",
+      admise_au_registre_par_assemblee_oupeinpo: "Admise au registre par l’Assemblée OUPEINPO",
+      non_retenue_par_le_scrutin: "Non retenue par le scrutin",
+      scrutin_invalide_par_assemblee_oupeinpo: "Scrutin invalidé par l’Assemblée OUPEINPO",
+      statut_en_attente: "Statut en attente"
+    };
 
     function shortHash(value) {
       if (!value) return "en attente";
@@ -575,9 +658,9 @@
       return "Droits d’usage : aucun droit NMNC associé";
     }
 
-    function uniqueOuvroirPages() {
+    function uniqueOuvroirPages(sourceEntries = registryEntries) {
       const pages = new Map();
-      entries.forEach((entry) => {
+      sourceEntries.forEach((entry) => {
         const key = entry.id || `point-${entry.sequence}`;
         if (!pages.has(key)) pages.set(key, entry);
       });
@@ -639,7 +722,10 @@
         entry.github_commit,
         entry.oup2_payload && entry.oup2_payload.payload_hex,
         entry.nmnc_anchor && entry.nmnc_anchor.txid,
-        entry.nmnc_anchor && entry.nmnc_anchor.block_hash
+        entry.nmnc_anchor && entry.nmnc_anchor.block_hash,
+        entry.scrutiny_id,
+        entry.scrutiny_status,
+        entry.public_label
       ].filter(Boolean).join(" ").toLowerCase();
       return haystack.includes(query.toLowerCase());
     }
@@ -675,7 +761,7 @@
         const apiUrl = new URL(API_BASE_URL);
         const candidate = new URL(value, API_BASE_URL);
         if (candidate.origin !== apiUrl.origin) return "";
-        if (!candidate.pathname.startsWith("/local-results/")) return "";
+        if (!candidate.pathname.startsWith("/local-results/") && !candidate.pathname.startsWith("/vote-assets/")) return "";
         return candidate.href;
       } catch (error) {
         return "";
@@ -735,15 +821,54 @@
     }
 
     function renderThread(query = "") {
-      const visible = entries.filter((entry) => entryMatches(entry, query));
+      const modeEntries = feedMode === "votes"
+        ? entries.filter((entry) => entry.entry_kind === "scrutiny_candidate")
+        : entries;
+      const visible = modeEntries.filter((entry) => entryMatches(entry, query));
       thread.replaceChildren();
 
       if (!visible.length) {
-        setListEmpty(thread, "Aucune peinture Oupeinpo ne correspond à la recherche.");
+        const emptyMessage = feedMode === "votes"
+          ? "Aucune peinture mise au vote ne correspond à cette vue."
+          : "Aucune peinture Oupeinpo ne correspond à la recherche.";
+        setListEmpty(thread, emptyMessage);
         return;
       }
 
       visible.forEach((entry) => {
+        if (entry.entry_kind === "scrutiny_candidate") {
+          const item = document.createElement("li");
+          item.className = "thread-item";
+          const point = createTextElement("div", "SCR", "point");
+          const link = document.createElement("a");
+          link.className = "generation";
+          link.href = pageUrl("vote.html", { scrutiny: entry.scrutiny_id });
+          const preview = createPreviewImage(entry, `${entry.public_label}, ensemble ${entry.round_index}`);
+          if (preview) link.appendChild(preview);
+
+          const details = document.createElement("div");
+          details.appendChild(createTextElement("h3", `${entry.public_label} · ensemble ${entry.round_index}`));
+          appendMeta(details, [
+            formatDate(entry.created_at),
+            `Contribution ${entry.id}`,
+            scrutinyStatusLabels[entry.scrutiny_status] || entry.scrutiny_status
+          ]);
+          appendHashLine(details, `Scrutin : ${entry.scrutiny_id}`);
+          appendHashLine(details, `Clôture : ${formatDate(entry.closes_at)}`);
+          if (Number.isFinite(entry.borda_score)) {
+            appendHashLine(details, `Score de Borda : ${entry.borda_score}`);
+          }
+          details.appendChild(createTextElement(
+            "span",
+            scrutinyStatusLabels[entry.scrutiny_status] || "Statut en attente",
+            "status"
+          ));
+          link.appendChild(details);
+          item.append(point, link);
+          thread.appendChild(item);
+          return;
+        }
+
         const item = document.createElement("li");
         item.className = "thread-item";
         const registryIndex = entry.sequence;
@@ -778,6 +903,7 @@
         appendHashLine(details, `Empreinte image : ${shortHash(entry.image_hash_head)}`);
         appendHashLine(details, `Inscription image : ${shortHash(entry.transaction_hash)}`);
         appendHashLine(details, `Donnée d’ancrage NMNC : ${shortHash(payload)}`);
+        details.appendChild(createTextElement("span", "Admise au registre par l’Assemblée OUPEINPO", "status"));
         details.appendChild(createTextElement("span", `NMNC ${statusLabel}`, "status"));
 
         link.appendChild(details);
@@ -787,16 +913,40 @@
     }
 
     function renderLatestImages() {
-      const latest = [...entries].filter((entry) => entry.preview_image).slice(-6).reverse();
+      const latest = [...scrutinyEntries]
+        .filter((entry) => entry.preview_image)
+        .sort((left, right) => (Date.parse(right.created_at || "") || 0) - (Date.parse(left.created_at || "") || 0))
+        .slice(0, 6);
       latestImages.replaceChildren();
+      if (!latest.length) {
+        latestImages.appendChild(createTextElement("p", "Aucune peinture n’est actuellement publiée dans un scrutin.", "empty"));
+        showAllVotes.disabled = true;
+        return;
+      }
+      showAllVotes.disabled = false;
       latest.forEach((entry) => {
         const link = document.createElement("a");
-        link.href = pageUrl("generation.html", { id: entry.id });
-        link.title = entry.id;
-        const preview = createPreviewImage(entry, `Image générée ${entry.id}`);
+        link.href = pageUrl("vote.html", { scrutiny: entry.scrutiny_id });
+        link.title = `${entry.public_label}, ensemble ${entry.round_index}`;
+        const preview = createPreviewImage(entry, `${entry.public_label}, ensemble ${entry.round_index}`);
         if (preview) link.appendChild(preview);
         latestImages.appendChild(link);
       });
+    }
+
+    function setFeedMode(mode, scrollToFeed = false) {
+      feedMode = mode === "votes" ? "votes" : "all";
+      const votesSelected = feedMode === "votes";
+      tabAll.setAttribute("aria-selected", String(!votesSelected));
+      tabAll.tabIndex = votesSelected ? -1 : 0;
+      tabVotes.setAttribute("aria-selected", String(votesSelected));
+      tabVotes.tabIndex = votesSelected ? 0 : -1;
+      thread.setAttribute("aria-labelledby", votesSelected ? "tab-votes" : "tab-all");
+      renderThread(search.value.trim());
+      if (scrollToFeed) {
+        tabVotes.scrollIntoView({ behavior: "smooth", block: "start" });
+        tabVotes.focus({ preventScroll: true });
+      }
     }
 
     function createSideItem(label, value, options = {}) {
@@ -816,7 +966,7 @@
     }
 
     function renderHead() {
-      const current = entries[entries.length - 1];
+      const current = registryEntries[registryEntries.length - 1];
       if (!current) {
         setListEmpty(head, "Aucune peinture.");
         return;
@@ -845,9 +995,19 @@
 
     async function loadExplorer() {
       try {
-        const response = await fetch(`${API_BASE_URL}/global-blockchain.json`, { cache: "no-store" });
-        const chain = await response.json();
-        entries = (chain.transactions || []).map((tx, position) => {
+        const [chainResult, scrutiniesResult] = await Promise.allSettled([
+          fetch(`${API_BASE_URL}/global-blockchain.json`, { cache: "no-store" }),
+          fetch(`${API_BASE_URL}/scrutinies/feed?limit=100`, {
+            cache: "no-store",
+            credentials: "omit",
+            referrerPolicy: "no-referrer"
+          })
+        ]);
+        if (chainResult.status !== "fulfilled" || !chainResult.value.ok) {
+          throw new Error("Registre public indisponible");
+        }
+        const chain = await chainResult.value.json();
+        registryEntries = (chain.transactions || []).map((tx, position) => {
           const jobId = tx.job_id || tx.id;
           const firstOutput = Array.isArray(tx.outputs) && tx.outputs.length ? tx.outputs[0] : {};
           const imagePath = tx.preview_image || tx.image_path || tx.output_image || tx.generated_image || tx.result_image || firstOutput.path || firstOutput.url || firstOutput.image_path || "";
@@ -857,6 +1017,7 @@
           const createdAt = tx.created_at || tx.timestamp;
           const sortKey = Number.isFinite(registryIndex) && registryIndex > 0 ? registryIndex : Date.parse(createdAt || "") || position;
           return {
+            entry_kind: "registry",
             id: jobId,
             sequence: registryIndex,
             oupeinpo_height: tx.oupeinpo_height || tx.oup2_height || null,
@@ -883,6 +1044,8 @@
             token_id: tx.token_id,
             transaction_hash: tx.transaction_hash,
             github_commit: tx.github_commit,
+            scrutiny_id: tx.scrutiny_id || null,
+            scrutiny_candidate_id: tx.scrutiny_candidate_id || null,
             preview_image: previewCandidates[0] || "",
             preview_image_fallback: previewCandidates[1] || "",
             oup2_payload: tx.oup2_payload || null,
@@ -890,10 +1053,48 @@
           };
         }).sort((a, b) => (a.sort_key || 0) - (b.sort_key || 0));
 
+        scrutinyEntries = [];
+        if (scrutiniesResult.status === "fulfilled" && scrutiniesResult.value.ok) {
+          const feed = await scrutiniesResult.value.json();
+          const admittedCandidateIds = new Set(
+            registryEntries.map((entry) => entry.scrutiny_candidate_id).filter(Boolean)
+          );
+          (feed.scrutinies || []).forEach((scrutinyState) => {
+            (scrutinyState.rounds || []).forEach((roundState) => {
+              (roundState.candidates || []).forEach((candidate) => {
+                if (admittedCandidateIds.has(candidate.candidate_id)) return;
+                const imageUrl = safeApiAssetUrl(candidate.image_url || "");
+                scrutinyEntries.push({
+                  entry_kind: "scrutiny_candidate",
+                  id: scrutinyState.contribution_id,
+                  scrutiny_id: scrutinyState.scrutiny_id,
+                  scrutiny_status: candidate.selection_status,
+                  public_label: candidate.label,
+                  round_index: roundState.round_index,
+                  created_at: scrutinyState.opens_at,
+                  closes_at: scrutinyState.closes_at,
+                  borda_score: Number.isFinite(Number(candidate.borda_score)) ? Number(candidate.borda_score) : null,
+                  preview_image: imageUrl,
+                  preview_image_fallback: "",
+                  sort_key: Date.parse(scrutinyState.opens_at || "") || 0
+                });
+              });
+            });
+          });
+        }
+        entries = [...registryEntries, ...scrutinyEntries].sort((left, right) => {
+          const leftTime = Date.parse(left.created_at || "") || left.sort_key || 0;
+          const rightTime = Date.parse(right.created_at || "") || right.sort_key || 0;
+          return leftTime - rightTime;
+        });
+
         const ouvroirPages = uniqueOuvroirPages();
         const totalNo = ouvroirPages.reduce((sum, entry) => sum + Number(entry.reward_total_no || 0), 0);
         const minedPages = ouvroirPages.filter((entry) => entry.nmnc_anchor && entry.nmnc_anchor.status === "mined").length;
-        document.getElementById("metric-images").textContent = entries.length;
+        document.getElementById("metric-images").textContent = registryEntries.length;
+        document.getElementById("metric-scrutiny-images").textContent = scrutinyEntries.filter(
+          (entry) => entry.scrutiny_status === "mise_au_scrutin"
+        ).length;
         document.getElementById("metric-generations").textContent = ouvroirPages.length;
         document.getElementById("metric-sources").textContent = sourceMetricLabel(ouvroirPages);
         document.getElementById("metric-rewards").textContent = (totalNo / 100000000).toFixed(8);
@@ -908,6 +1109,9 @@
     }
 
     search.addEventListener("input", () => renderThread(search.value.trim()));
+    tabAll.addEventListener("click", () => setFeedMode("all"));
+    tabVotes.addEventListener("click", () => setFeedMode("votes"));
+    showAllVotes.addEventListener("click", () => setFeedMode("votes", true));
     loadExplorer();
   </script>
 </body>

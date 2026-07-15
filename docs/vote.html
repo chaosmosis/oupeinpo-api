@@ -420,7 +420,7 @@
     <header>
       <div>
         <h1 id="scrutiny-title">Scrutin de l’Ouvroir</h1>
-        <p class="tagline">Vote collectif pour choisir les peintures informatiques retenues avant examen de la régularité du scrutin par l’assemblée.</p>
+        <p class="tagline">Vote collectif pour classer les peintures informatiques potentielles avant examen de la régularité du scrutin par l’Assemblée OUPEINPO.</p>
       </div>
       <nav aria-label="Navigation">
         <a href="index.html">Contribuer</a>
@@ -470,8 +470,8 @@
           </div>
 
           <div class="callout">
-            <p>Après la clôture du vote, l’examen de la validité du scrutin sera opéré. L’administration de l’Ouvroir, réunie en assemblée plénière dans un lieu tenu secret, se prononcera le plus diligemment possible sur la régularité du scrutin et vérifiera les pouvoirs des personnes ayant voté.</p>
-            <p>Une fois cet examen achevé, le rapport de contribution sera transmis. Les peintures retenues pourront alors être inscrites dans le registre de l’Ouvroir et, si l’assemblée les valide, être proposées à l’ancrage dans l’ouvroir de monnaie potentielle du No Migration No Coin.</p>
+            <p>Après la clôture du vote, l’examen de sa validité sera opéré. L’Assemblée OUPEINPO, réunie dans un lieu tenu secret, se prononcera le plus diligemment possible sur la régularité du scrutin et vérifiera les pouvoirs des personnes ayant voté.</p>
+            <p>Une fois cet examen achevé, le rapport de contribution sera transmis. Si l’Assemblée OUPEINPO les admet, les peintures retenues pourront alors être inscrites dans le registre de l’Ouvroir et être proposées à l’ancrage dans l’ouvroir de monnaie potentielle du No Migration No Coin.</p>
           </div>
 
           <div class="submit-row">
@@ -688,6 +688,12 @@
         composition.className = "meta";
         composition.textContent = `${roundCount} ensemble${roundCount > 1 ? "s" : ""}, ${candidateCount} propositions.`;
 
+        const state = document.createElement("p");
+        state.className = "meta";
+        const stateLabel = document.createElement("strong");
+        stateLabel.textContent = "État : mise au scrutin";
+        state.appendChild(stateLabel);
+
         const deadline = document.createElement("p");
         deadline.className = "meta";
         deadline.textContent = `Clôture : ${formatDate(openScrutiny.closes_at)}.`;
@@ -696,7 +702,7 @@
         link.href = `vote.html?scrutiny=${encodeURIComponent(scrutinyId)}`;
         link.textContent = "Participer au scrutin";
 
-        card.append(cardTitle, composition, deadline, link);
+        card.append(cardTitle, state, composition, deadline, link);
         list.appendChild(card);
       });
       scrutiny.appendChild(list);
@@ -914,7 +920,7 @@
       scheduleBoundaryRefresh(state);
       if (state.status === "open") {
         beginOpenScrutiny(state);
-        setStatus("Scrutin ouvert. Classez les propositions ensemble par ensemble.");
+        setStatus("État : mise au scrutin. Classez les propositions ensemble par ensemble.");
         return;
       }
 
@@ -927,8 +933,14 @@
         renderNotice("Scrutin programmé", `Les propositions seront accessibles à partir du ${formatDate(state.opens_at)}.`);
         setStatus("Le scrutin n’est pas encore ouvert.");
       } else {
-        renderNotice("Scrutin clos", "Ce scrutin n’accepte plus de bulletin. Son examen se poursuit selon les règles de l’Ouvroir.");
-        setStatus("La période de vote est terminée.");
+        const closedMessages = {
+          closed: "Scrutin clos, dépouillement en cours.",
+          counted: "Scrutin clos, en attente de l’Assemblée OUPEINPO.",
+          approved: "Peintures admises au registre par l’Assemblée OUPEINPO.",
+          rejected: "Scrutin invalidé par l’Assemblée OUPEINPO."
+        };
+        renderNotice("Scrutin clos", closedMessages[state.status] || "Ce scrutin n’accepte plus de bulletin.");
+        setStatus(closedMessages[state.status] || "La période de vote est terminée.");
       }
     }
 
@@ -957,6 +969,13 @@
         const openScrutinies = data.scrutinies.filter((item) => (
           item && item.status === "open" && String(item.scrutiny_id || "").trim()
         ));
+        if (openScrutinies.length === 1) {
+          const scrutinyId = String(openScrutinies[0].scrutiny_id).trim();
+          const directUrl = `vote.html?scrutiny=${encodeURIComponent(scrutinyId)}`;
+          window.history.replaceState({}, "", directUrl);
+          await loadVoteState();
+          return;
+        }
         renderOpenScrutinies(openScrutinies);
         setStatus(openScrutinies.length
           ? `${openScrutinies.length} scrutin${openScrutinies.length > 1 ? "s" : ""} ouvert${openScrutinies.length > 1 ? "s" : ""}.`
@@ -1044,7 +1063,7 @@
         ballotSubmitted = true;
         memberKeyInput.value = "";
         updateVotingControls();
-        setStatus("Bulletin enregistré. L’administration examinera la régularité du scrutin après sa clôture.");
+        setStatus("Bulletin enregistré. L’Assemblée OUPEINPO examinera la régularité du scrutin après sa clôture.");
       } catch (error) {
         setStatus(error.message || "Le bulletin n’a pas pu être enregistré.", true);
         updateVotingControls();

@@ -561,7 +561,7 @@
     <header>
       <div>
         <h1>Ouvroir de peinture informatique potentielle</h1>
-        <p class="tagline">Cet ouvroir de peinture informatique potentielle vise à amplifier la maxime "All refugees are welcome". Pour ce faire, nous vous proposons de déposer des images importantes pour vous et de les annoter à votre guise avec notre petit formulaire. Ces contraintes, imposées pour vous, migrantes et migrants, ont été conçues afin de nourrir nos imaginaires de peintures informatiques. Nous vous invitons également à nous confier une adresse e-mail afin de vous embrigader plus amoureusement. NB : xyzetc@riseup.net pour toute information complémentaire.</p>
+        <p class="tagline">Cet ouvroir de peinture informatique potentielle vise à amplifier la maxime « All refugees are welcome ». Pour ce faire, nous vous proposons de déposer des images importantes pour vous et de les annoter à votre guise avec notre petit formulaire. Ces contraintes, imposées pour vous, migrantes et migrants, ont été conçues afin de nourrir nos imaginaires de peintures informatiques.</p>
         <p class="tagline">
           <a href="explorer.html">Consulter le registre de l’Ouvroir</a>
           ·
@@ -627,7 +627,7 @@
         </li>
         <li>
           <strong>Article 6 — Examen et effet.</strong>
-          Les résultats demeurent provisoires jusqu’à ce que l’administration de l’Ouvroir, réunie en assemblée plénière dans un lieu tenu secret, se prononce sur la régularité du scrutin et la qualité de ses votants. Seules les peintures ainsi validées peuvent rejoindre le registre de l’Ouvroir et faire ensuite l’objet d’une inscription potentielle dans le registre du NMNC.
+          Les résultats demeurent provisoires jusqu’à ce que l’Assemblée OUPEINPO, réunie dans un lieu tenu secret, se prononce sur la régularité du scrutin et la qualité de ses votants. Seules les peintures admises par l’Assemblée OUPEINPO peuvent recevoir leur statut définitif dans le registre de l’Ouvroir et faire ensuite l’objet d’une inscription potentielle dans le registre du NMNC.
         </li>
       </ol>
       <p class="proclamation-conclusion">
@@ -1169,11 +1169,17 @@
           meta.className = "note";
           meta.textContent = `${vote.round_count || 0} ensemble(s), ${vote.candidate_count || 0} proposition(s). Clôture : ${formatVoteDeadline(vote.closes_at)}.`;
 
+          const state = document.createElement("p");
+          state.className = "note";
+          const stateLabel = document.createElement("strong");
+          stateLabel.textContent = "État : mise au scrutin";
+          state.appendChild(stateLabel);
+
           const link = document.createElement("a");
           link.href = pageUrl("vote.html", { scrutiny: vote.scrutiny_id });
           link.textContent = "Participer au scrutin";
 
-          card.append(title, meta, link);
+          card.append(title, state, meta, link);
           recentGrid.appendChild(card);
         });
       } catch (error) {
@@ -1249,22 +1255,20 @@
 
           if (data.status === "done") {
             stopPolling();
-            const blockLink = pageUrl("generation.html", { id: jobId });
-            const explorerLink = pageUrl("explorer.html");
-            const blockAnchor = document.createElement("a");
-            blockAnchor.href = blockLink;
-            blockAnchor.textContent = "Voir la page de génération Oupeinpo";
-            const explorerAnchor = document.createElement("a");
-            explorerAnchor.href = explorerLink;
-            explorerAnchor.textContent = "Consulter le registre de l’Ouvroir";
             statusBox.classList.remove("error");
-            statusBox.replaceChildren(
-              "Traitement terminé. ",
-              blockAnchor,
-              ". ",
-              explorerAnchor,
-              ". Le rapport privé est envoyé par e-mail."
-            );
+            const scrutinyId = String(data.scrutiny_id || "").trim();
+            if (scrutinyId && data.scrutiny_url) {
+              const voteAnchor = document.createElement("a");
+              voteAnchor.href = pageUrl("vote.html", { scrutiny: scrutinyId });
+              voteAnchor.textContent = "Participer au scrutin de cette contribution";
+              statusBox.replaceChildren(
+                "État : mise au scrutin. Les quatorze propositions de chaque groupe sont prêtes. ",
+                voteAnchor,
+                ". Le rapport privé sera envoyé après la clôture et la décision de l’Assemblée OUPEINPO."
+              );
+            } else {
+              statusBox.textContent = "Le calcul est terminé, mais l’ouverture du scrutin doit encore être reprise par l’administration.";
+            }
             submitButton.disabled = false;
             return;
           }
