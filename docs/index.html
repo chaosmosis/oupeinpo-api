@@ -574,11 +574,15 @@
       </div>
       <div class="header-side">
         <aside class="news-feed" aria-labelledby="news-feed-title">
-          <h2 id="news-feed-title">Nouvelles de l’Ouvroir</h2>
+          <h2 id="news-feed-title">Nouvelles de l’OUVROIR</h2>
           <div class="news-list">
             <button class="news-item" type="button" data-news-target="news-proclamation" aria-controls="news-reader" aria-expanded="false">
               <time datetime="2026-07-14">14 juillet 2026</time>
               <strong>Institution du scrutin sur l’éligibilité des peintures informatiques potentielles</strong>
+            </button>
+            <button class="news-item" type="button" data-news-target="news-amendment-20260715" aria-controls="news-reader" aria-expanded="false">
+              <time datetime="2026-07-15">15 juillet 2026</time>
+              <strong>Révision de l’institution du scrutin sur l’éligibilité des peintures informatiques potentielles</strong>
             </button>
           </div>
         </aside>
@@ -635,6 +639,31 @@
       </p>
       <a class="proclamation-action" href="#scrutins">Consulter les scrutins en cours</a>
       </article>
+
+      <article class="news-article" id="news-amendment-20260715" hidden>
+        <h2 class="proclamation-summary-title">Acte portant révision de la proclamation du 14 juillet 2026</h2>
+        <p class="proclamation-preamble">
+          L’Assemblée générale conjointe des Ouvroirs réunis, exerçant le pouvoir constituant qu’elle s’est reconnu et siégeant de nouveau dans un lieu tenu secret,
+        </p>
+        <div class="proclamation-considerations">
+          <p><strong>Considérant</strong> les critiques vives et acerbes élevées en son sein par plusieurs de ses membres quant à la médiocrité de certains groupes de peintures informatiques potentielles soumis au scrutin ;</p>
+          <p><strong>Considérant</strong> qu’un classement intégral désigne nécessairement une première proposition, même lorsqu’aucune ne mérite l’assentiment du corps électoral, et confère ainsi à une simple supériorité relative les apparences d’une valeur picturale positive ;</p>
+          <p><strong>Considérant</strong> que l’obligation de classer la totalité des propositions fabrique une complétude et une transitivité que les membres peuvent ne pas éprouver ;</p>
+          <p><strong>Considérant</strong> que l’abstention sur une proposition doit pouvoir être distinguée de son soutien comme de son rejet, sans interdire l’expression de préférences égales ou incomplètes ;</p>
+          <p><strong>Considérant</strong> que le pouvoir constituant de l’Assemblée OUPEINPO comprend celui de réviser les formes qu’elle a elle-même instituées lorsque l’expérience en révèle les insuffisances ;</p>
+        </div>
+        <p class="proclamation-decision">Après avoir constaté que sa première loi populaire avait acquis, avec une célérité remarquable, le caractère d’une loi impopulaire, arrête :</p>
+        <ol class="proclamation-articles">
+          <li>
+            <strong>Article unique — Nouvelle rédaction de l’article 4.</strong>
+            Pour chacun des ensembles, chaque proposition reçoit indépendamment une note choisie parmi −5, −3, −2, −1, 0, +1, +2, +3 et +5. La note 0 vaut abstention sur la proposition. Les notes positives expriment un soutien et les notes négatives une opposition; plusieurs propositions peuvent recevoir la même note et aucune relation d’ordre complète ne leur est imposée. Après addition des notes, une proposition arrivée seule en tête avec un total positif constitue le résultat provisoire de l’ensemble. Une égalité positive, l’absence de total positif ou un scrutin entièrement noté à zéro est transmis à l’Assemblée OUPEINPO sans tirage automatique. L’Assemblée peut alors retenir une proposition, écarter l’ensemble ou décider expressément d’un tirage dont la trace est conservée. Toute mention contraire du classement intégral, de la méthode de Borda ou d’un tirage automatique dans la proclamation du 14 juillet cesse de produire effet pour les scrutins ouverts après la présente révision.
+          </li>
+        </ol>
+        <p class="proclamation-conclusion">
+          Les scrutins déjà ouverts à la date de cette délibération demeurent régis par la règle sous laquelle leurs bulletins ont commencé à être reçus. Le règlement consolidé expose la règle applicable aux scrutins suivants.
+        </p>
+        <a class="proclamation-action" href="reglement-scrutin.html">Lire le règlement consolidé</a>
+      </article>
     </section>
 
     <div class="workspace-tabs" role="tablist" aria-label="Espaces de l’Ouvroir">
@@ -644,8 +673,9 @@
 
     <form id="oupeinpo-form" role="tabpanel" aria-labelledby="tab-contribuer" tabindex="0">
       <section class="panel">
-        <label for="title">Titre de l’ensemble d’images</label>
-        <input id="title" name="title" type="text" value="No Image No Migration">
+        <label for="title">Nommez votre contribution</label>
+        <input id="title" name="title" type="text" maxlength="120" placeholder="Nom de votre contribution" required>
+        <div class="note">Ce nom sera public et identifiera également le scrutin consacré aux peintures informatiques produites à partir de votre série.</div>
 
         <label for="email">E-mail pour le rapport privé</label>
         <input id="email" name="email" type="email" autocomplete="email" required>
@@ -1163,7 +1193,10 @@
           card.className = "recent-card";
 
           const title = document.createElement("h3");
-          title.textContent = `Scrutin de la contribution n° ${vote.contribution_id || vote.scrutiny_id}`;
+          const displayName = String(vote.display_name || "").trim();
+          title.textContent = displayName
+            ? `Scrutin « ${displayName} »`
+            : `Scrutin de la contribution n° ${vote.contribution_id || vote.scrutiny_id}`;
 
           const meta = document.createElement("p");
           meta.className = "note";
@@ -1267,7 +1300,7 @@
                 ". Le rapport privé sera envoyé après la clôture et la décision de l’Assemblée OUPEINPO."
               );
             } else {
-              statusBox.textContent = "Le calcul est terminé, mais l’ouverture du scrutin doit encore être reprise par l’administration.";
+              statusBox.textContent = "Le calcul est terminé, mais l’ouverture du scrutin doit encore être reprise par l’Ouvroir.";
             }
             submitButton.disabled = false;
             return;
@@ -1328,7 +1361,7 @@
       setStatus("Envoi des images vers l’API Oupeinpo…");
 
       const formData = new FormData();
-      formData.append("title", document.getElementById("title").value || "No Image No Migration");
+      formData.append("title", document.getElementById("title").value.trim());
       formData.append("email", document.getElementById("email").value);
       formData.append("nmnc_address", document.getElementById("nmnc-address").value.trim());
       formData.append("access_code", document.getElementById("access-code").value);

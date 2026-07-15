@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OUPEINPO - règlement des scrutins</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #24211d;
+      --muted: #666058;
+      --line: #d8d2c8;
+      --paper: #f7f4ef;
+      --panel: #ffffff;
+      --accent: #176b63;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: var(--ink); background: var(--paper); }
+    main { width: min(900px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 56px; }
+    header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+    h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.7rem); font-weight: 500; line-height: 1; }
+    h2 { margin: 0 0 12px; font-size: 1.2rem; }
+    p, li { line-height: 1.55; }
+    a { color: var(--accent); text-underline-offset: 3px; }
+    nav { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    nav a { border: 1px solid var(--line); background: var(--panel); padding: 8px 10px; border-radius: 4px; color: var(--ink); text-decoration: none; }
+    .tagline { margin: 10px 0 0; color: var(--muted); max-width: 680px; }
+    .date { color: var(--muted); }
+    .article { padding: 20px 0; border-bottom: 1px solid var(--line); }
+    .article:last-of-type { border-bottom: 0; }
+    .scale { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px; margin: 16px 0; }
+    .scale span { display: grid; place-items: center; min-height: 44px; border: 1px solid var(--line); background: var(--panel); font-weight: 700; }
+    .notice { margin-top: 22px; padding: 16px; border: 1px solid var(--line); background: var(--panel); }
+    @media (max-width: 760px) {
+      main { width: min(100% - 20px, 680px); padding-top: 18px; }
+      header { grid-template-columns: 1fr; }
+      nav { justify-content: flex-start; }
+      .scale { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Règlement des scrutins</h1>
+        <p class="tagline">Texte consolidé relatif à l’éligibilité des peintures informatiques potentielles.</p>
+        <p class="date">Version promulguée le 15 juillet 2026.</p>
+      </div>
+      <nav aria-label="Navigation">
+        <a href="index.html">Contribuer</a>
+        <a href="vote.html">Scrutins</a>
+        <a href="explorer.html">Registre de l’Ouvroir</a>
+      </nav>
+    </header>
+
+    <section class="article">
+      <h2>Article premier - Objet</h2>
+      <p>Le scrutin détermine, pour chaque groupe issu d’une contribution, les peintures informatiques potentielles susceptibles d’être admises au registre de l’Ouvroir puis proposées à une inscription dans le registre du No Migration No Coin.</p>
+    </section>
+
+    <section class="article">
+      <h2>Article 2 - Organisation</h2>
+      <p>La première contribution achevée d’une nouvelle personne contributrice ouvre un scrutin de vingt-quatre heures. Chaque groupe de peinture informatique potentielle forme un ensemble distinct de quatorze propositions anonymisées.</p>
+    </section>
+
+    <section class="article">
+      <h2>Article 3 - Corps électoral</h2>
+      <p>Toute personne reconnue comme membre à la suite d’une première contribution achevée dispose d’un bulletin unique par scrutin. Le nombre de contributions ou de peintures, la détention de NMNC, l’usage d’un portefeuille et la puissance de calcul n’accordent aucun suffrage supplémentaire.</p>
+    </section>
+
+    <section class="article">
+      <h2>Article 4 - Expression du suffrage</h2>
+      <p>Chaque proposition reçoit indépendamment l’une des notes suivantes :</p>
+      <div class="scale" aria-label="Échelle des notes autorisées">
+        <span>−5</span><span>−3</span><span>−2</span><span>−1</span><span>0</span><span>+1</span><span>+2</span><span>+3</span><span>+5</span>
+      </div>
+      <p>Une note positive exprime un soutien; une note négative exprime une opposition. La note 0 constitue une abstention sur la proposition. Plusieurs propositions peuvent recevoir la même note et le bulletin n’impose ni classement complet ni transitivité entre les appréciations.</p>
+    </section>
+
+    <section class="article">
+      <h2>Article 5 - Dépouillement</h2>
+      <p>Les notes sont additionnées séparément pour chaque proposition. Une proposition arrivée seule en tête avec un total strictement positif constitue le résultat provisoire de son ensemble.</p>
+      <p>Une égalité au meilleur total positif, l’absence de total positif ou un scrutin entièrement noté à zéro ne déclenche aucun tirage automatique. Le cas est transmis à l’Assemblée OUPEINPO.</p>
+    </section>
+
+    <section class="article">
+      <h2>Article 6 - Examen par l’Assemblée</h2>
+      <p>Les résultats restent provisoires jusqu’à l’examen de la régularité du scrutin et des pouvoirs des personnes ayant voté. Pour un ensemble resté sans résultat, l’Assemblée OUPEINPO peut retenir une proposition, écarter l’ensemble ou décider expressément d’un tirage au sort dont la trace est conservée.</p>
+      <p>L’admission générale peut porter sur une partie seulement des ensembles. Les groupes écartés ne produisent ni peinture admise, ni rapport public, ni préparation OUP2.</p>
+    </section>
+
+    <section class="article">
+      <h2>Article 7 - Confidentialité du vote</h2>
+      <p>Le registre électoral conserve la participation d’un membre afin d’empêcher un second bulletin. Les notes sont agrégées par proposition sans conserver l’association entre une personne et ses choix individuels. Les paramètres internes de génération et l’œuvre ayant servi à construire un masque ne sont pas rendus publics.</p>
+    </section>
+
+    <section class="article">
+      <h2>Article 8 - Effets</h2>
+      <p>Après admission, seules les peintures retenues sont installées dans le résultat définitif de la contribution. Le rapport privé, le registre de l’Ouvroir et la préparation OUP2 sont construits à partir de cette sélection.</p>
+    </section>
+
+    <aside class="notice">
+      <strong>Disposition transitoire.</strong>
+      Les scrutins ouverts avant la promulgation du 15 juillet 2026 restent dépouillés selon la méthode de classement en vigueur lors de leur ouverture. Les scrutins suivants appliquent le présent règlement.
+    </aside>
+  </main>
+</body>
+</html>

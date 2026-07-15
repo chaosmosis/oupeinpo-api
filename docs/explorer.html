@@ -501,7 +501,7 @@
         <strong id="metric-images">-</strong>
       </div>
       <div class="metric">
-        <span class="metric-label">Peintures mises au scrutin <button class="help" type="button" aria-label="Explication : peintures mises au scrutin" data-help="Nombre de propositions actuellement soumises au classement du corps électoral. Elles ne produisent encore ni inscription NMNC ni droits acquis.">?</button></span>
+        <span class="metric-label">Peintures mises au scrutin <button class="help" type="button" aria-label="Explication : peintures mises au scrutin" data-help="Nombre de propositions actuellement soumises au vote du corps électoral. Elles ne produisent encore ni inscription NMNC ni droits acquis.">?</button></span>
         <strong id="metric-scrutiny-images">-</strong>
       </div>
       <div class="metric">
@@ -611,6 +611,7 @@
       scrutin_clos_en_attente_assemblee_oupeinpo: "Scrutin clos, en attente de l’Assemblée OUPEINPO",
       admise_au_registre_par_assemblee_oupeinpo: "Admise au registre par l’Assemblée OUPEINPO",
       non_retenue_par_le_scrutin: "Non retenue par le scrutin",
+      refusee_par_assemblee_oupeinpo: "Refusée par l’Assemblée OUPEINPO",
       scrutin_invalide_par_assemblee_oupeinpo: "Scrutin invalidé par l’Assemblée OUPEINPO",
       statut_en_attente: "Statut en attente"
     };
@@ -850,7 +851,9 @@
           details.appendChild(createTextElement("h3", `${entry.public_label} · ensemble ${entry.round_index}`));
           appendMeta(details, [
             formatDate(entry.created_at),
-            `Contribution ${entry.id}`,
+            entry.display_name
+              ? `Contribution « ${entry.display_name} »`
+              : `Contribution ${entry.id}`,
             scrutinyStatusLabels[entry.scrutiny_status] || entry.scrutiny_status
           ]);
           appendHashLine(details, `Scrutin : ${entry.scrutiny_id}`);
@@ -1067,6 +1070,7 @@
                 scrutinyEntries.push({
                   entry_kind: "scrutiny_candidate",
                   id: scrutinyState.contribution_id,
+                  display_name: scrutinyState.display_name || "",
                   scrutiny_id: scrutinyState.scrutiny_id,
                   scrutiny_status: candidate.selection_status,
                   public_label: candidate.label,

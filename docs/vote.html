@@ -553,13 +553,14 @@
     <header>
       <div>
         <h1 id="scrutiny-title">Scrutin de l’Ouvroir</h1>
-        <p class="tagline">Vote collectif pour classer les peintures informatiques potentielles avant examen de la régularité du scrutin par l’Assemblée OUPEINPO.</p>
+        <p class="tagline">Vote collectif pour apprécier les peintures informatiques potentielles avant examen de la régularité du scrutin par l’Assemblée OUPEINPO.</p>
       </div>
       <nav aria-label="Navigation">
         <a href="index.html">Contribuer</a>
         <a href="explorer.html">Registre de l’Ouvroir</a>
         <a href="nmnc-explorer.html">Registre NMNC</a>
         <a href="vote.html" aria-current="page">Scrutin</a>
+        <a href="reglement-scrutin.html">Règlement</a>
       </nav>
     </header>
 
@@ -590,15 +591,9 @@
 
           <div class="callout">
             <h3>Règles</h3>
-            <ul class="rules">
+            <ul class="rules" id="vote-rules">
               <li>Le vote dure 24 heures.</li>
-              <li>Le droit de vote vient de la première contribution achevée à l’Ouvroir.</li>
-              <li>Chaque membre dépose un seul bulletin complet par scrutin, quel que soit son nombre de contributions ou de peintures.</li>
-              <li>La même clé permanente permet de participer aux scrutins successifs jusqu’à sa révocation ou son remplacement.</li>
-              <li>Pour chaque ensemble, les quatorze propositions sont intégralement classées par ordre de préférence.</li>
-              <li>Le dépouillement attribue quatorze points à la première préférence et un point à la dernière.</li>
-              <li>Le scrutin avance ensemble par ensemble. Il peut être entièrement recommencé avant le dépôt du bulletin.</li>
-              <li>En cas d’égalité ou d’absence de vote, il est procédé à un tirage au sort traçable.</li>
+              <li>Les règles propres à ce scrutin apparaîtront avec ses propositions.</li>
             </ul>
           </div>
 
@@ -647,6 +642,7 @@
     const scrutinyReference = document.getElementById("scrutiny-reference");
     const scrutinyOpens = document.getElementById("scrutiny-opens");
     const scrutinyCloses = document.getElementById("scrutiny-closes");
+    const voteRules = document.getElementById("vote-rules");
     const currentVoteLink = document.querySelector('a[aria-current="page"]');
     const imageViewer = document.getElementById("image-viewer");
     const viewerTitle = document.getElementById("viewer-title");
@@ -658,12 +654,24 @@
     let voteState = null;
     let currentRoundIndex = 0;
     let rankings = {};
+    let scores = {};
     let finalReviewReady = false;
     let ballotSubmitted = false;
     let boundaryTimer = null;
     let viewerItems = [];
     let viewerIndex = 0;
     let viewerReturnFocus = null;
+    const CARDINAL_SCORE_LABELS = new Map([
+      [-5, "−5 · opposition absolue"],
+      [-3, "−3 · opposition forte"],
+      [-2, "−2 · opposition"],
+      [-1, "−1 · réserve"],
+      [0, "0 · abstention"],
+      [1, "+1 · soutien léger"],
+      [2, "+2 · soutien"],
+      [3, "+3 · soutien fort"],
+      [5, "+5 · soutien décisif"]
+    ]);
 
     function getScrutinyId() {
       return new URLSearchParams(window.location.search).get("scrutiny") || "";
@@ -686,9 +694,12 @@
 
     function updateScrutinyIdentity(state) {
       const contributionId = state && state.contribution_id;
-      const title = contributionId
-        ? `Scrutin de la contribution n° ${contributionId}`
-        : "Scrutin de l’Ouvroir";
+      const displayName = state && String(state.display_name || "").trim();
+      const title = displayName
+        ? `Scrutin « ${displayName} »`
+        : contributionId
+          ? `Scrutin de la contribution n° ${contributionId}`
+          : "Scrutin de l’Ouvroir";
       scrutinyTitle.textContent = title;
       document.title = `Oupeinpo - ${title}`;
       scrutinyReference.textContent = state && state.scrutiny_id ? state.scrutiny_id : "—";
@@ -698,6 +709,52 @@
 
     function currentRounds() {
       return voteState && Array.isArray(voteState.rounds) ? voteState.rounds : [];
+    }
+
+    function votingMethod(state = voteState) {
+      return state && state.voting_method === "independent_score_v2"
+        ? "independent_score_v2"
+        : "borda_v1";
+    }
+
+    function isCardinalVote(state = voteState) {
+      return votingMethod(state) === "independent_score_v2";
+    }
+
+    function cardinalScoreValues(state = voteState) {
+      const values = state && Array.isArray(state.allowed_scores)
+        ? state.allowed_scores.map(Number)
+        : [...CARDINAL_SCORE_LABELS.keys()];
+      return values.filter((value) => CARDINAL_SCORE_LABELS.has(value));
+    }
+
+    function updateVoteRules(state) {
+      const commonRules = [
+        "Le vote dure 24 heures.",
+        "Le droit de vote vient de la première contribution achevée à l’Ouvroir.",
+        "Chaque membre dépose un seul bulletin par scrutin.",
+        "La même clé permanente permet de participer aux scrutins successifs jusqu’à sa révocation ou son remplacement.",
+        "Le scrutin avance ensemble par ensemble et peut être recommencé avant le dépôt du bulletin."
+      ];
+      const methodRules = isCardinalVote(state)
+        ? [
+            "Chaque proposition reçoit indépendamment une note parmi −5, −3, −2, −1, 0, +1, +2, +3 et +5.",
+            "La note 0 vaut abstention sur la proposition; plusieurs propositions peuvent recevoir la même note.",
+            "Une note positive soutient une proposition et une note négative s’y oppose.",
+            "Une première place positive unique produit un résultat provisoire. Une égalité positive ou l’absence de résultat positif est soumise à l’Assemblée OUPEINPO.",
+            "Un scrutin entièrement noté à zéro est transmis à l’Assemblée OUPEINPO sans tirage automatique."
+          ]
+        : [
+            "Pour chaque ensemble, les quatorze propositions sont intégralement classées par ordre de préférence.",
+            "Le dépouillement attribue quatorze points à la première préférence et un point à la dernière.",
+            "Ce scrutin demeure régi par la règle de classement en vigueur lors de son ouverture."
+          ];
+      voteRules.replaceChildren();
+      [...commonRules, ...methodRules].forEach((text) => {
+        const item = document.createElement("li");
+        item.textContent = text;
+        voteRules.appendChild(item);
+      });
     }
 
     function roundKey(round) {
@@ -836,6 +893,19 @@
       if (String(state.scrutiny_id || "") !== requestedId) return "Identifiant du scrutin incohérent.";
       const allowedStatuses = new Set(["scheduled", "open", "closed", "counted", "approved", "rejected"]);
       if (!allowedStatuses.has(state.status)) return "État du scrutin inconnu.";
+      if (state.voting_method && !["borda_v1", "independent_score_v2"].includes(state.voting_method)) {
+        return "Méthode de scrutin inconnue.";
+      }
+      if (isCardinalVote(state)) {
+        const expectedScores = [...CARDINAL_SCORE_LABELS.keys()];
+        const receivedScores = cardinalScoreValues(state);
+        if (
+          receivedScores.length !== expectedScores.length
+          || expectedScores.some((score) => !receivedScores.includes(score))
+        ) {
+          return "Échelle de notes du scrutin invalide.";
+        }
+      }
       if (!Array.isArray(state.rounds) || !state.rounds.length) return "Ce scrutin ne contient aucun ensemble.";
 
       const roundIds = new Set();
@@ -887,7 +957,7 @@
       const title = document.createElement("h2");
       title.textContent = "Scrutins ouverts";
       const body = document.createElement("p");
-      body.textContent = "Choisissez un scrutin pour consulter ses propositions et déposer votre classement complet.";
+      body.textContent = "Choisissez un scrutin pour consulter ses propositions et déposer votre bulletin.";
       introduction.append(title, body);
       scrutiny.appendChild(introduction);
 
@@ -910,15 +980,18 @@
         if (!scrutinyId) return;
 
         const contributionId = String(openScrutiny.contribution_id || "").trim();
+        const displayName = String(openScrutiny.display_name || "").trim();
         const roundCount = Number(openScrutiny.round_count || 0);
         const candidateCount = Number(openScrutiny.candidate_count || 0);
         const card = document.createElement("article");
         card.className = "scrutiny-card";
 
         const cardTitle = document.createElement("h3");
-        cardTitle.textContent = contributionId
-          ? `Scrutin de la contribution n° ${contributionId}`
-          : `Scrutin ${scrutinyId}`;
+        cardTitle.textContent = displayName
+          ? `Scrutin « ${displayName} »`
+          : contributionId
+            ? `Scrutin de la contribution n° ${contributionId}`
+            : `Scrutin ${scrutinyId}`;
 
         const composition = document.createElement("p");
         composition.className = "meta";
@@ -1013,6 +1086,29 @@
       };
     }
 
+    function refreshScoreState(section) {
+      section.querySelectorAll("select[data-score-candidate]").forEach((select) => {
+        const card = select.closest(".candidate");
+        if (card) card.classList.toggle("rank-ok", Number(select.value) !== 0);
+      });
+    }
+
+    function readCurrentScores(section) {
+      const allowedScores = new Set(cardinalScoreValues());
+      const candidateScores = {};
+      for (const select of section.querySelectorAll("select[data-score-candidate]")) {
+        const score = Number(select.value);
+        if (!Number.isInteger(score) || !allowedScores.has(score)) {
+          return { ok: false, message: "Une note proposée par le scrutin est invalide." };
+        }
+        candidateScores[select.dataset.scoreCandidate] = score;
+      }
+      if (Object.keys(candidateScores).length !== 14) {
+        return { ok: false, message: "Chaque proposition doit recevoir une note ou l’abstention 0." };
+      }
+      return { ok: true, scores: candidateScores };
+    }
+
     function renderCurrentRound() {
       const rounds = currentRounds();
       scrutiny.replaceChildren();
@@ -1031,12 +1127,16 @@
       const title = document.createElement("h2");
       title.textContent = roundLabel(round, currentRoundIndex);
       const count = document.createElement("span");
-      count.textContent = `${candidates.length} propositions à classer`;
+      count.textContent = isCardinalVote()
+        ? `${candidates.length} propositions à noter`
+        : `${candidates.length} propositions à classer`;
       head.append(title, count);
 
       const intro = document.createElement("p");
       intro.className = "meta";
-      intro.textContent = "Attribuez une place différente à chaque proposition. La première préférence reçoit quatorze points et la dernière un point.";
+      intro.textContent = isCardinalVote()
+        ? "Appréciez chaque proposition indépendamment. Plusieurs peintures peuvent recevoir la même note; 0 signifie que vous vous abstenez sur cette proposition."
+        : "Attribuez une place différente à chaque proposition. La première préférence reçoit quatorze points et la dernière un point.";
 
       const grid = document.createElement("div");
       grid.className = "candidate-grid";
@@ -1047,24 +1147,38 @@
         strong.textContent = candidateLabel(candidate, index);
         const rankLabel = document.createElement("label");
         rankLabel.className = "meta";
-        rankLabel.textContent = "Place dans votre ordre de préférence";
         const select = document.createElement("select");
-        select.id = `candidate-rank-${currentRoundIndex + 1}-${index + 1}`;
+        select.id = `candidate-choice-${currentRoundIndex + 1}-${index + 1}`;
         rankLabel.htmlFor = select.id;
-        select.dataset.candidate = candidateId(candidate);
-        select.setAttribute("aria-label", `Place de ${candidateLabel(candidate, index)}`);
-        select.required = true;
-        const emptyOption = document.createElement("option");
-        emptyOption.value = "";
-        emptyOption.textContent = "Choisir une place";
-        select.appendChild(emptyOption);
-        for (let rank = 1; rank <= candidates.length; rank += 1) {
-          const option = document.createElement("option");
-          option.value = String(rank);
-          option.textContent = `${rank} sur ${candidates.length}`;
-          select.appendChild(option);
+        if (isCardinalVote()) {
+          rankLabel.textContent = "Votre appréciation indépendante";
+          select.dataset.scoreCandidate = candidateId(candidate);
+          select.setAttribute("aria-label", `Note de ${candidateLabel(candidate, index)}`);
+          cardinalScoreValues().forEach((score) => {
+            const option = document.createElement("option");
+            option.value = String(score);
+            option.textContent = CARDINAL_SCORE_LABELS.get(score) || String(score);
+            if (score === 0) option.selected = true;
+            select.appendChild(option);
+          });
+          select.addEventListener("change", () => refreshScoreState(section));
+        } else {
+          rankLabel.textContent = "Place dans votre ordre de préférence";
+          select.dataset.candidate = candidateId(candidate);
+          select.setAttribute("aria-label", `Place de ${candidateLabel(candidate, index)}`);
+          select.required = true;
+          const emptyOption = document.createElement("option");
+          emptyOption.value = "";
+          emptyOption.textContent = "Choisir une place";
+          select.appendChild(emptyOption);
+          for (let rank = 1; rank <= candidates.length; rank += 1) {
+            const option = document.createElement("option");
+            option.value = String(rank);
+            option.textContent = `${rank} sur ${candidates.length}`;
+            select.appendChild(option);
+          }
+          select.addEventListener("change", () => refreshRankState(section));
         }
-        select.addEventListener("change", () => refreshRankState(section));
         card.append(renderCandidateImage(candidate, index, candidates), strong, rankLabel, select);
         grid.appendChild(card);
       });
@@ -1077,18 +1191,26 @@
         ? "Examiner le bulletin"
         : "Confirmer cet ensemble";
       nextButton.addEventListener("click", () => {
-        const result = readCurrentRanking(section);
+        const result = isCardinalVote()
+          ? readCurrentScores(section)
+          : readCurrentRanking(section);
         if (!result.ok) {
           setStatus(result.message, true);
           return;
         }
-        rankings[roundKey(round)] = result.ordered;
+        if (isCardinalVote()) {
+          scores[roundKey(round)] = result.scores;
+        } else {
+          rankings[roundKey(round)] = result.ordered;
+        }
         currentRoundIndex += 1;
         if (currentRoundIndex >= rounds.length) {
           finalReviewReady = true;
           renderSummary();
           updateVotingControls();
-          setStatus("Tous les classements sont prêts. Vérifiez les premières préférences avant de déposer le bulletin.");
+          setStatus(isCardinalVote()
+            ? "Toutes les notes sont prêtes. Vérifiez-les avant de déposer le bulletin."
+            : "Tous les classements sont prêts. Vérifiez les premières préférences avant de déposer le bulletin.");
           return;
         }
         renderCurrentRound();
@@ -1104,6 +1226,10 @@
       return roundCandidates(round).find((candidate) => candidateId(candidate) === ordered[0]) || null;
     }
 
+    function formatSignedScore(score) {
+      return score > 0 ? `+${score}` : String(score);
+    }
+
     function renderSummary() {
       const rounds = currentRounds();
       scrutiny.replaceChildren();
@@ -1115,26 +1241,58 @@
       const title = document.createElement("h2");
       title.textContent = "Vérification du bulletin";
       const count = document.createElement("span");
-      count.textContent = `${rounds.length} ensemble${rounds.length > 1 ? "s" : ""} classé${rounds.length > 1 ? "s" : ""}`;
+      count.textContent = `${rounds.length} ensemble${rounds.length > 1 ? "s" : ""} ${isCardinalVote() ? "noté" : "classé"}${rounds.length > 1 ? "s" : ""}`;
       head.append(title, count);
       const intro = document.createElement("p");
-      intro.textContent = "Seules vos premières préférences apparaissent ici. Le bulletin transmis contiendra l’ordre complet des quatorze propositions de chaque ensemble.";
+      intro.textContent = isCardinalVote()
+        ? "Les appréciations différentes de 0 apparaissent ci-dessous. Les autres propositions restent enregistrées comme abstentions."
+        : "Seules vos premières préférences apparaissent ici. Le bulletin transmis contiendra l’ordre complet des quatorze propositions de chaque ensemble.";
       const grid = document.createElement("div");
       grid.className = "chosen-grid";
       rounds.forEach((round, index) => {
-        const candidate = selectedCandidateFor(round);
         const card = document.createElement("article");
         card.className = "chosen-card";
-        if (candidate) {
-          const candidateIndex = roundCandidates(round).indexOf(candidate);
+        if (isCardinalVote()) {
           const strong = document.createElement("strong");
-          strong.textContent = `${roundLabel(round, index)} : ${candidateLabel(candidate, candidateIndex)}`;
+          strong.textContent = roundLabel(round, index);
+          const candidateScores = scores[roundKey(round)] || {};
+          const nonzero = roundCandidates(round)
+            .map((candidate, candidateIndex) => ({
+              candidate,
+              candidateIndex,
+              score: Number(candidateScores[candidateId(candidate)] || 0)
+            }))
+            .filter((item) => item.score !== 0)
+            .sort((left, right) => right.score - left.score || left.candidateIndex - right.candidateIndex);
           const meta = document.createElement("p");
           meta.className = "meta";
-          meta.textContent = "Première préférence";
-          card.append(renderCandidateImage(candidate, candidateIndex), strong, meta);
+          meta.textContent = nonzero.length
+            ? `${nonzero.length} appréciation${nonzero.length > 1 ? "s" : ""} exprimée${nonzero.length > 1 ? "s" : ""}; ${14 - nonzero.length} abstention${14 - nonzero.length > 1 ? "s" : ""}.`
+            : "Abstention sur les quatorze propositions de cet ensemble.";
+          card.append(strong, meta);
+          if (nonzero.length) {
+            const list = document.createElement("ul");
+            list.className = "rules";
+            nonzero.forEach((item) => {
+              const row = document.createElement("li");
+              row.textContent = `${formatSignedScore(item.score)} · ${candidateLabel(item.candidate, item.candidateIndex)}`;
+              list.appendChild(row);
+            });
+            card.appendChild(list);
+          }
         } else {
-          card.textContent = `${roundLabel(round, index)} : aucune préférence`;
+          const candidate = selectedCandidateFor(round);
+          if (candidate) {
+            const candidateIndex = roundCandidates(round).indexOf(candidate);
+            const strong = document.createElement("strong");
+            strong.textContent = `${roundLabel(round, index)} : ${candidateLabel(candidate, candidateIndex)}`;
+            const meta = document.createElement("p");
+            meta.className = "meta";
+            meta.textContent = "Première préférence";
+            card.append(renderCandidateImage(candidate, candidateIndex), strong, meta);
+          } else {
+            card.textContent = `${roundLabel(round, index)} : aucune préférence`;
+          }
         }
         grid.appendChild(card);
       });
@@ -1146,8 +1304,10 @@
       voteState = state;
       currentRoundIndex = 0;
       rankings = {};
+      scores = {};
       finalReviewReady = false;
       ballotSubmitted = false;
+      updateVoteRules(state);
       renderCurrentRound();
       updateVotingControls();
     }
@@ -1155,14 +1315,18 @@
     function applyScrutinyState(state) {
       voteState = state;
       updateScrutinyIdentity(state);
+      updateVoteRules(state);
       scheduleBoundaryRefresh(state);
       if (state.status === "open") {
         beginOpenScrutiny(state);
-        setStatus("État : mise au scrutin. Classez les propositions ensemble par ensemble.");
+        setStatus(isCardinalVote(state)
+          ? "État : mise au scrutin. Notez les propositions ensemble par ensemble."
+          : "État : mise au scrutin. Classez les propositions ensemble par ensemble.");
         return;
       }
 
       rankings = {};
+      scores = {};
       finalReviewReady = false;
       ballotSubmitted = false;
       memberKeyInput.value = "";
@@ -1185,6 +1349,7 @@
     async function loadOpenScrutinies() {
       voteState = null;
       rankings = {};
+      scores = {};
       finalReviewReady = false;
       ballotSubmitted = false;
       memberKeyInput.value = "";
@@ -1265,7 +1430,9 @@
         return;
       }
       if (!finalReviewReady) {
-        setStatus("Tous les classements doivent être vérifiés avant le dépôt.", true);
+        setStatus(isCardinalVote()
+          ? "Toutes les notes doivent être vérifiées avant le dépôt."
+          : "Tous les classements doivent être vérifiés avant le dépôt.", true);
         return;
       }
 
@@ -1275,9 +1442,17 @@
         return;
       }
       const expectedRoundIds = currentRounds().map(roundKey);
-      if (expectedRoundIds.some((roundId) => !Array.isArray(rankings[roundId]) || rankings[roundId].length !== 14)) {
-        setStatus("Le bulletin ne contient pas un classement complet pour chaque ensemble.", true);
-        return;
+      if (isCardinalVote()) {
+        if (expectedRoundIds.some((roundId) => {
+          const roundScores = scores[roundId];
+          return !roundScores || Object.keys(roundScores).length !== 14;
+        })) {
+          setStatus("Le bulletin ne contient pas une note ou une abstention pour chaque proposition.", true);
+          return;
+        }
+      } else if (expectedRoundIds.some((roundId) => !Array.isArray(rankings[roundId]) || rankings[roundId].length !== 14)) {
+          setStatus("Le bulletin ne contient pas un classement complet pour chaque ensemble.", true);
+          return;
       }
 
       submitButton.disabled = true;
@@ -1291,7 +1466,7 @@
             "Content-Type": "application/json",
             "X-OUPEINPO-Member-Key": memberKey
           },
-          body: JSON.stringify({ rankings })
+          body: JSON.stringify(isCardinalVote() ? { scores } : { rankings })
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok) {
@@ -1311,7 +1486,9 @@
     restartButton.addEventListener("click", () => {
       if (!voteState || voteState.status !== "open" || ballotSubmitted) return;
       beginOpenScrutiny(voteState);
-      setStatus("Le classement a été recommencé localement. Aucun bulletin n’a été envoyé.");
+      setStatus(isCardinalVote()
+        ? "Les notes ont été recommencées localement. Aucun bulletin n’a été envoyé."
+        : "Le classement a été recommencé localement. Aucun bulletin n’a été envoyé.");
     });
 
     updateVotingControls();
