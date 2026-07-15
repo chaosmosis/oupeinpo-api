@@ -1,0 +1,1064 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oupeinpo - scrutin</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #24211d;
+      --muted: #666058;
+      --line: #d8d2c8;
+      --paper: #f7f4ef;
+      --panel: #ffffff;
+      --accent: #176b63;
+      --accent-dark: #104f49;
+      --soft: #ece6dc;
+      --danger: #8a3b2f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4.2rem);
+      font-weight: 500;
+      line-height: 1;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 1.02rem;
+      font-weight: 600;
+    }
+
+    p,
+    li {
+      line-height: 1.48;
+    }
+
+    a {
+      color: var(--accent-dark);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    nav a {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 8px 10px;
+      border-radius: 4px;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    nav a[aria-current="page"] {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: .94rem;
+    }
+
+    input,
+    button {
+      font: inherit;
+    }
+
+    input[type="password"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      padding: 11px;
+      border-radius: 4px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 4px;
+      padding: 11px 14px;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button:hover { background: var(--accent-dark); }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+
+    button.secondary {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+    }
+
+    button.secondary:hover { background: var(--soft); }
+
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 3px solid rgba(23, 107, 99, .35);
+      outline-offset: 2px;
+    }
+
+    .tagline {
+      margin: 10px 0 0;
+      color: var(--muted);
+      max-width: 780px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 24px;
+      margin-top: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 18px;
+      min-width: 0;
+    }
+
+    .status {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      background: #fbfaf7;
+      padding: 12px;
+      min-height: 48px;
+    }
+
+    .status.error {
+      color: var(--danger);
+      border-color: #c99b93;
+      background: #f8ece9;
+    }
+
+    .identity {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .scrutiny-details {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 7px 12px;
+      margin: 16px 0 0;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      font-size: .9rem;
+    }
+
+    .scrutiny-details dt { color: var(--muted); }
+    .scrutiny-details dd { margin: 0; overflow-wrap: anywhere; }
+
+    .scrutiny {
+      display: grid;
+      gap: 20px;
+    }
+
+    .scrutiny-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .scrutiny-card {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 16px;
+      min-width: 0;
+    }
+
+    .scrutiny-card p { margin: 0; }
+
+    .scrutiny-card a {
+      justify-self: start;
+      border-radius: 4px;
+      background: var(--accent);
+      color: #fff;
+      padding: 9px 11px;
+      text-decoration: none;
+    }
+
+    .scrutiny-card a:hover { background: var(--accent-dark); }
+
+    .cluster {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 16px;
+    }
+
+    .cluster-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+
+    .cluster-head span {
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .progress {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .progress span {
+      border: 1px solid var(--line);
+      background: #fbfaf7;
+      padding: 7px 9px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .progress span.done {
+      border-color: rgba(23, 107, 99, .45);
+      background: rgba(23, 107, 99, .11);
+      color: var(--accent-dark);
+    }
+
+    .progress span.current {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .candidate-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+    }
+
+    .candidate {
+      position: relative;
+      display: grid;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 8px;
+      cursor: pointer;
+      min-width: 0;
+    }
+
+    .candidate img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+      border: 1px solid #e5ded3;
+      background: #eee;
+    }
+
+    .candidate-image {
+      width: 100%;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid #e5ded3;
+      background: #eee;
+      color: var(--muted);
+      text-align: center;
+      padding: 10px;
+    }
+
+    .candidate-image img {
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .candidate strong {
+      font-weight: 500;
+      font-size: .92rem;
+    }
+
+    .candidate select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      padding: 8px;
+      border-radius: 4px;
+    }
+
+    .candidate.rank-ok {
+      border-color: rgba(23, 107, 99, .55);
+      box-shadow: 0 0 0 2px rgba(23, 107, 99, .10);
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: .84rem;
+    }
+
+    .rules {
+      margin: 0;
+      padding-left: 19px;
+    }
+
+    .callout {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      padding: 12px;
+      margin-top: 14px;
+    }
+
+    .submit-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .cluster-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .chosen-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+      gap: 12px;
+    }
+
+    .chosen-card {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 10px;
+    }
+
+    .chosen-card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+      border: 1px solid #e5ded3;
+      margin-bottom: 8px;
+      background: #eee;
+    }
+
+    .chosen-card .candidate-image { margin-bottom: 8px; }
+
+    .empty {
+      border: 1px solid var(--line);
+      background: #fbfaf7;
+      padding: 16px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 880px) {
+      main { width: min(100% - 20px, 760px); padding-top: 18px; }
+      header,
+      .layout { grid-template-columns: 1fr; }
+      nav { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1 id="scrutiny-title">Scrutin de l’Ouvroir</h1>
+        <p class="tagline">Vote collectif pour choisir les peintures informatiques retenues avant examen de la régularité du scrutin par l’assemblée.</p>
+      </div>
+      <nav aria-label="Navigation">
+        <a href="index.html">Contribuer</a>
+        <a href="explorer.html">Registre de l’Ouvroir</a>
+        <a href="nmnc-explorer.html">Registre NMNC</a>
+        <a href="vote.html" aria-current="page">Scrutin</a>
+      </nav>
+    </header>
+
+    <div class="layout">
+      <section class="scrutiny" id="scrutiny" aria-label="Propositions soumises au vote">
+        <div class="empty">Chargement du scrutin.</div>
+      </section>
+
+      <aside class="panel">
+        <h2>Pouvoir de voter</h2>
+        <p>La première contribution achevée donne la qualité de membre de la communauté électorale de l’Ouvroir. La clé permanente reçue par courriel permet d’exercer ce droit.</p>
+        <dl class="scrutiny-details">
+          <dt>Référence</dt>
+          <dd id="scrutiny-reference">—</dd>
+          <dt>Ouverture</dt>
+          <dd id="scrutiny-opens">—</dd>
+          <dt>Clôture</dt>
+          <dd id="scrutiny-closes">—</dd>
+        </dl>
+        <form id="vote-form">
+          <div class="identity">
+            <label for="member-key">
+              Clé permanente de membre
+              <input id="member-key" name="member_key" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="member-key-help" required>
+            </label>
+            <p class="meta" id="member-key-help">Cette page ne conserve pas la clé dans le stockage du navigateur. Elle la transmet à l’API uniquement lors du dépôt du bulletin.</p>
+          </div>
+
+          <div class="callout">
+            <h3>Règles</h3>
+            <ul class="rules">
+              <li>Le vote dure 24 heures.</li>
+              <li>Le droit de vote vient de la première contribution achevée à l’Ouvroir.</li>
+              <li>Chaque membre dépose un seul bulletin complet par scrutin, quel que soit son nombre de contributions ou de peintures.</li>
+              <li>La même clé permanente permet de participer aux scrutins successifs jusqu’à sa révocation ou son remplacement.</li>
+              <li>Pour chaque ensemble, les quatorze propositions sont intégralement classées par ordre de préférence.</li>
+              <li>Le dépouillement attribue quatorze points à la première préférence et un point à la dernière.</li>
+              <li>Le scrutin avance ensemble par ensemble. Il peut être entièrement recommencé avant le dépôt du bulletin.</li>
+              <li>En cas d’égalité ou d’absence de vote, il est procédé à un tirage au sort traçable.</li>
+            </ul>
+          </div>
+
+          <div class="callout">
+            <p>Après la clôture du vote, l’examen de la validité du scrutin sera opéré. L’administration de l’Ouvroir, réunie en assemblée plénière dans un lieu tenu secret, se prononcera le plus diligemment possible sur la régularité du scrutin et vérifiera les pouvoirs des personnes ayant voté.</p>
+            <p>Une fois cet examen achevé, le rapport de contribution sera transmis. Les peintures retenues pourront alors être inscrites dans le registre de l’Ouvroir et, si l’assemblée les valide, être proposées à l’ancrage dans l’ouvroir de monnaie potentielle du No Migration No Coin.</p>
+          </div>
+
+          <div class="submit-row">
+            <button id="submit-vote" type="submit" disabled>Valider ce vote</button>
+            <button class="secondary" id="restart-vote" type="button" disabled>Recommencer le scrutin</button>
+          </div>
+          <div class="status" id="status" role="status" aria-live="polite">Le vote n’est pas encore envoyé.</div>
+        </form>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const DEFAULT_API_BASE_URL = "https://survie.tailc688f6.ts.net";
+    const API_BASE_URL = DEFAULT_API_BASE_URL;
+    const API_ORIGIN = new URL(API_BASE_URL).origin;
+    const MEMBER_KEY_PATTERN = /^oup_member_v1_[A-Za-z0-9_-]{43}$/;
+    const scrutiny = document.getElementById("scrutiny");
+    const form = document.getElementById("vote-form");
+    const memberKeyInput = document.getElementById("member-key");
+    const statusBox = document.getElementById("status");
+    const submitButton = document.getElementById("submit-vote");
+    const restartButton = document.getElementById("restart-vote");
+    const scrutinyTitle = document.getElementById("scrutiny-title");
+    const scrutinyReference = document.getElementById("scrutiny-reference");
+    const scrutinyOpens = document.getElementById("scrutiny-opens");
+    const scrutinyCloses = document.getElementById("scrutiny-closes");
+    const currentVoteLink = document.querySelector('a[aria-current="page"]');
+    let voteState = null;
+    let currentRoundIndex = 0;
+    let rankings = {};
+    let finalReviewReady = false;
+    let ballotSubmitted = false;
+    let boundaryTimer = null;
+
+    function getScrutinyId() {
+      return new URLSearchParams(window.location.search).get("scrutiny") || "";
+    }
+
+    function setStatus(message, isError = false) {
+      statusBox.textContent = message;
+      statusBox.classList.toggle("error", isError);
+    }
+
+    function formatDate(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "—";
+      return new Intl.DateTimeFormat("fr-BE", {
+        dateStyle: "medium",
+        timeStyle: "short"
+      }).format(date);
+    }
+
+    function updateScrutinyIdentity(state) {
+      const contributionId = state && state.contribution_id;
+      const title = contributionId
+        ? `Scrutin de la contribution n° ${contributionId}`
+        : "Scrutin de l’Ouvroir";
+      scrutinyTitle.textContent = title;
+      document.title = `Oupeinpo - ${title}`;
+      scrutinyReference.textContent = state && state.scrutiny_id ? state.scrutiny_id : "—";
+      scrutinyOpens.textContent = state ? formatDate(state.opens_at) : "—";
+      scrutinyCloses.textContent = state ? formatDate(state.closes_at) : "—";
+    }
+
+    function currentRounds() {
+      return voteState && Array.isArray(voteState.rounds) ? voteState.rounds : [];
+    }
+
+    function roundKey(round) {
+      return String(round.round_id || "");
+    }
+
+    function roundLabel(round, index) {
+      return round.label || `Ensemble de propositions ${index + 1}`;
+    }
+
+    function roundCandidates(round) {
+      return Array.isArray(round.candidates) ? round.candidates : [];
+    }
+
+    function candidateId(candidate) {
+      return String(candidate.candidate_id || "");
+    }
+
+    function candidateLabel(candidate, index) {
+      return candidate.label || `Proposition ${index + 1}`;
+    }
+
+    function candidateImageUrl(candidate) {
+      const rawUrl = String(candidate.image_url || "").trim();
+      if (!rawUrl) return "";
+      try {
+        const url = new URL(rawUrl, `${API_BASE_URL}/`);
+        return url.origin === API_ORIGIN ? url.href : "";
+      } catch (error) {
+        return "";
+      }
+    }
+
+    function renderCandidateImage(candidate, index) {
+      const media = document.createElement("div");
+      media.className = "candidate-image";
+      const imageUrl = candidateImageUrl(candidate);
+      if (!imageUrl) {
+        media.textContent = "Aperçu indisponible";
+        return media;
+      }
+
+      const image = document.createElement("img");
+      image.src = imageUrl;
+      image.alt = candidateLabel(candidate, index);
+      image.loading = "eager";
+      image.referrerPolicy = "no-referrer";
+      image.addEventListener("error", () => {
+        media.replaceChildren();
+        media.textContent = "Aperçu indisponible";
+      });
+      media.appendChild(image);
+      return media;
+    }
+
+    function validateScrutinyState(state, requestedId) {
+      if (!state || typeof state !== "object") return "Réponse du scrutin invalide.";
+      if (String(state.scrutiny_id || "") !== requestedId) return "Identifiant du scrutin incohérent.";
+      const allowedStatuses = new Set(["scheduled", "open", "closed", "counted", "approved", "rejected"]);
+      if (!allowedStatuses.has(state.status)) return "État du scrutin inconnu.";
+      if (!Array.isArray(state.rounds) || !state.rounds.length) return "Ce scrutin ne contient aucun ensemble.";
+
+      const roundIds = new Set();
+      for (const round of state.rounds) {
+        const id = roundKey(round);
+        const candidates = roundCandidates(round);
+        if (!id || roundIds.has(id)) return "Les ensembles du scrutin sont invalides.";
+        if (candidates.length !== 14) return "Chaque ensemble doit contenir exactement quatorze propositions.";
+        const candidateIds = candidates.map(candidateId);
+        if (candidateIds.some((candidate) => !candidate) || new Set(candidateIds).size !== 14) {
+          return "Les propositions du scrutin sont invalides.";
+        }
+        roundIds.add(id);
+      }
+      return "";
+    }
+
+    function updateVotingControls() {
+      const canVote = Boolean(voteState && voteState.status === "open" && !ballotSubmitted);
+      memberKeyInput.disabled = !canVote;
+      restartButton.disabled = !canVote;
+      submitButton.disabled = !canVote || !finalReviewReady;
+    }
+
+    function renderNotice(titleText, bodyText, allowRetry = false) {
+      scrutiny.replaceChildren();
+      const panel = document.createElement("section");
+      panel.className = "empty";
+      const title = document.createElement("h2");
+      title.textContent = titleText;
+      const body = document.createElement("p");
+      body.textContent = bodyText;
+      panel.append(title, body);
+      if (allowRetry) {
+        const retryButton = document.createElement("button");
+        retryButton.type = "button";
+        retryButton.textContent = "Réessayer";
+        retryButton.addEventListener("click", loadVoteState);
+        panel.appendChild(retryButton);
+      }
+      scrutiny.appendChild(panel);
+    }
+
+    function renderOpenScrutinies(openScrutinies) {
+      scrutiny.replaceChildren();
+
+      const introduction = document.createElement("section");
+      introduction.className = "cluster";
+      const title = document.createElement("h2");
+      title.textContent = "Scrutins ouverts";
+      const body = document.createElement("p");
+      body.textContent = "Choisissez un scrutin pour consulter ses propositions et déposer votre classement complet.";
+      introduction.append(title, body);
+      scrutiny.appendChild(introduction);
+
+      if (!openScrutinies.length) {
+        const empty = document.createElement("section");
+        empty.className = "empty";
+        const emptyTitle = document.createElement("h2");
+        emptyTitle.textContent = "Aucun scrutin ouvert";
+        const emptyBody = document.createElement("p");
+        emptyBody.textContent = "Les prochains scrutins apparaîtront ici pendant leur période de vote de vingt-quatre heures.";
+        empty.append(emptyTitle, emptyBody);
+        scrutiny.appendChild(empty);
+        return;
+      }
+
+      const list = document.createElement("div");
+      list.className = "scrutiny-list";
+      openScrutinies.forEach((openScrutiny) => {
+        const scrutinyId = String(openScrutiny.scrutiny_id || "").trim();
+        if (!scrutinyId) return;
+
+        const contributionId = String(openScrutiny.contribution_id || "").trim();
+        const roundCount = Number(openScrutiny.round_count || 0);
+        const candidateCount = Number(openScrutiny.candidate_count || 0);
+        const card = document.createElement("article");
+        card.className = "scrutiny-card";
+
+        const cardTitle = document.createElement("h3");
+        cardTitle.textContent = contributionId
+          ? `Scrutin de la contribution n° ${contributionId}`
+          : `Scrutin ${scrutinyId}`;
+
+        const composition = document.createElement("p");
+        composition.className = "meta";
+        composition.textContent = `${roundCount} ensemble${roundCount > 1 ? "s" : ""}, ${candidateCount} propositions.`;
+
+        const deadline = document.createElement("p");
+        deadline.className = "meta";
+        deadline.textContent = `Clôture : ${formatDate(openScrutiny.closes_at)}.`;
+
+        const link = document.createElement("a");
+        link.href = `vote.html?scrutiny=${encodeURIComponent(scrutinyId)}`;
+        link.textContent = "Participer au scrutin";
+
+        card.append(cardTitle, composition, deadline, link);
+        list.appendChild(card);
+      });
+      scrutiny.appendChild(list);
+    }
+
+    function clearBoundaryTimer() {
+      if (boundaryTimer !== null) {
+        window.clearTimeout(boundaryTimer);
+        boundaryTimer = null;
+      }
+    }
+
+    function scheduleBoundaryRefresh(state) {
+      clearBoundaryTimer();
+      const boundary = state.status === "scheduled"
+        ? state.opens_at
+        : state.status === "open" ? state.closes_at : "";
+      const boundaryTime = Date.parse(boundary || "");
+      if (!Number.isFinite(boundaryTime)) return;
+      const delay = Math.max(1000, boundaryTime - Date.now() + 750);
+      boundaryTimer = window.setTimeout(loadVoteState, Math.min(delay, 2147483000));
+    }
+
+    function scheduleOpenListRefresh() {
+      clearBoundaryTimer();
+      boundaryTimer = window.setTimeout(loadVoteState, 60000);
+    }
+
+    function renderProgress() {
+      const progress = document.createElement("div");
+      progress.className = "progress";
+      currentRounds().forEach((round, index) => {
+        const marker = document.createElement("span");
+        marker.textContent = roundLabel(round, index);
+        if (index < currentRoundIndex) marker.className = "done";
+        if (index === currentRoundIndex && !finalReviewReady) marker.className = "current";
+        progress.appendChild(marker);
+      });
+      return progress;
+    }
+
+    function refreshRankState(section) {
+      const selects = [...section.querySelectorAll("select[data-candidate]")];
+      const values = selects
+        .map((select) => Number(select.value))
+        .filter((value) => Number.isFinite(value) && value > 0);
+      const duplicates = values.filter((value, index) => values.indexOf(value) !== index);
+      selects.forEach((select) => {
+        const card = select.closest(".candidate");
+        const value = Number(select.value);
+        if (card) card.classList.toggle("rank-ok", Boolean(select.value) && !duplicates.includes(value));
+      });
+    }
+
+    function readCurrentRanking(section) {
+      const selected = [...section.querySelectorAll("select[data-candidate]")].map((select) => ({
+        candidateId: select.dataset.candidate,
+        rank: Number(select.value)
+      }));
+      if (selected.some((item) => !Number.isFinite(item.rank) || item.rank <= 0)) {
+        return { ok: false, message: "Chaque proposition doit recevoir une place dans l’ordre de préférence." };
+      }
+      const places = selected.map((item) => item.rank);
+      if (new Set(places).size !== selected.length) {
+        return { ok: false, message: "Deux propositions ne peuvent pas recevoir la même place." };
+      }
+      return {
+        ok: true,
+        ordered: [...selected]
+          .sort((left, right) => left.rank - right.rank)
+          .map((item) => item.candidateId)
+      };
+    }
+
+    function renderCurrentRound() {
+      const rounds = currentRounds();
+      scrutiny.replaceChildren();
+      scrutiny.appendChild(renderProgress());
+      const round = rounds[currentRoundIndex];
+      if (!round) {
+        renderSummary();
+        return;
+      }
+
+      const candidates = roundCandidates(round);
+      const section = document.createElement("section");
+      section.className = "cluster";
+      const head = document.createElement("div");
+      head.className = "cluster-head";
+      const title = document.createElement("h2");
+      title.textContent = roundLabel(round, currentRoundIndex);
+      const count = document.createElement("span");
+      count.textContent = `${candidates.length} propositions à classer`;
+      head.append(title, count);
+
+      const intro = document.createElement("p");
+      intro.className = "meta";
+      intro.textContent = "Attribuez une place différente à chaque proposition. La première préférence reçoit quatorze points et la dernière un point.";
+
+      const grid = document.createElement("div");
+      grid.className = "candidate-grid";
+      candidates.forEach((candidate, index) => {
+        const label = document.createElement("label");
+        label.className = "candidate";
+        const strong = document.createElement("strong");
+        strong.textContent = candidateLabel(candidate, index);
+        const rankLabel = document.createElement("span");
+        rankLabel.className = "meta";
+        rankLabel.textContent = "Place dans votre ordre de préférence";
+        const select = document.createElement("select");
+        select.dataset.candidate = candidateId(candidate);
+        select.setAttribute("aria-label", `Place de ${candidateLabel(candidate, index)}`);
+        select.required = true;
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = "Choisir une place";
+        select.appendChild(emptyOption);
+        for (let rank = 1; rank <= candidates.length; rank += 1) {
+          const option = document.createElement("option");
+          option.value = String(rank);
+          option.textContent = `${rank} sur ${candidates.length}`;
+          select.appendChild(option);
+        }
+        select.addEventListener("change", () => refreshRankState(section));
+        label.append(renderCandidateImage(candidate, index), strong, rankLabel, select);
+        grid.appendChild(label);
+      });
+
+      const actions = document.createElement("div");
+      actions.className = "cluster-actions";
+      const nextButton = document.createElement("button");
+      nextButton.type = "button";
+      nextButton.textContent = currentRoundIndex + 1 === rounds.length
+        ? "Examiner le bulletin"
+        : "Confirmer cet ensemble";
+      nextButton.addEventListener("click", () => {
+        const result = readCurrentRanking(section);
+        if (!result.ok) {
+          setStatus(result.message, true);
+          return;
+        }
+        rankings[roundKey(round)] = result.ordered;
+        currentRoundIndex += 1;
+        if (currentRoundIndex >= rounds.length) {
+          finalReviewReady = true;
+          renderSummary();
+          updateVotingControls();
+          setStatus("Tous les classements sont prêts. Vérifiez les premières préférences avant de déposer le bulletin.");
+          return;
+        }
+        renderCurrentRound();
+        setStatus("Ensemble confirmé. Le scrutin avance vers l’ensemble suivant.");
+      });
+      actions.appendChild(nextButton);
+      section.append(head, intro, grid, actions);
+      scrutiny.appendChild(section);
+    }
+
+    function selectedCandidateFor(round) {
+      const ordered = rankings[roundKey(round)] || [];
+      return roundCandidates(round).find((candidate) => candidateId(candidate) === ordered[0]) || null;
+    }
+
+    function renderSummary() {
+      const rounds = currentRounds();
+      scrutiny.replaceChildren();
+      scrutiny.appendChild(renderProgress());
+      const section = document.createElement("section");
+      section.className = "cluster";
+      const head = document.createElement("div");
+      head.className = "cluster-head";
+      const title = document.createElement("h2");
+      title.textContent = "Vérification du bulletin";
+      const count = document.createElement("span");
+      count.textContent = `${rounds.length} ensemble${rounds.length > 1 ? "s" : ""} classé${rounds.length > 1 ? "s" : ""}`;
+      head.append(title, count);
+      const intro = document.createElement("p");
+      intro.textContent = "Seules vos premières préférences apparaissent ici. Le bulletin transmis contiendra l’ordre complet des quatorze propositions de chaque ensemble.";
+      const grid = document.createElement("div");
+      grid.className = "chosen-grid";
+      rounds.forEach((round, index) => {
+        const candidate = selectedCandidateFor(round);
+        const card = document.createElement("article");
+        card.className = "chosen-card";
+        if (candidate) {
+          const candidateIndex = roundCandidates(round).indexOf(candidate);
+          const strong = document.createElement("strong");
+          strong.textContent = `${roundLabel(round, index)} : ${candidateLabel(candidate, candidateIndex)}`;
+          const meta = document.createElement("p");
+          meta.className = "meta";
+          meta.textContent = "Première préférence";
+          card.append(renderCandidateImage(candidate, candidateIndex), strong, meta);
+        } else {
+          card.textContent = `${roundLabel(round, index)} : aucune préférence`;
+        }
+        grid.appendChild(card);
+      });
+      section.append(head, intro, grid);
+      scrutiny.appendChild(section);
+    }
+
+    function beginOpenScrutiny(state) {
+      voteState = state;
+      currentRoundIndex = 0;
+      rankings = {};
+      finalReviewReady = false;
+      ballotSubmitted = false;
+      renderCurrentRound();
+      updateVotingControls();
+    }
+
+    function applyScrutinyState(state) {
+      voteState = state;
+      updateScrutinyIdentity(state);
+      scheduleBoundaryRefresh(state);
+      if (state.status === "open") {
+        beginOpenScrutiny(state);
+        setStatus("Scrutin ouvert. Classez les propositions ensemble par ensemble.");
+        return;
+      }
+
+      rankings = {};
+      finalReviewReady = false;
+      ballotSubmitted = false;
+      memberKeyInput.value = "";
+      updateVotingControls();
+      if (state.status === "scheduled") {
+        renderNotice("Scrutin programmé", `Les propositions seront accessibles à partir du ${formatDate(state.opens_at)}.`);
+        setStatus("Le scrutin n’est pas encore ouvert.");
+      } else {
+        renderNotice("Scrutin clos", "Ce scrutin n’accepte plus de bulletin. Son examen se poursuit selon les règles de l’Ouvroir.");
+        setStatus("La période de vote est terminée.");
+      }
+    }
+
+    async function loadOpenScrutinies() {
+      voteState = null;
+      rankings = {};
+      finalReviewReady = false;
+      ballotSubmitted = false;
+      memberKeyInput.value = "";
+      updateScrutinyIdentity(null);
+      scrutinyTitle.textContent = "Scrutins en cours";
+      document.title = "Oupeinpo - scrutins en cours";
+      if (currentVoteLink) currentVoteLink.href = "vote.html";
+      updateVotingControls();
+      setStatus("Chargement des scrutins en cours.");
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/votes/open`, {
+          cache: "no-store",
+          credentials: "omit",
+          referrerPolicy: "no-referrer"
+        });
+        if (!response.ok) throw new Error("Liste des scrutins indisponible.");
+        const data = await response.json();
+        if (!Array.isArray(data.scrutinies)) throw new Error("Réponse des scrutins invalide.");
+        const openScrutinies = data.scrutinies.filter((item) => (
+          item && item.status === "open" && String(item.scrutiny_id || "").trim()
+        ));
+        renderOpenScrutinies(openScrutinies);
+        setStatus(openScrutinies.length
+          ? `${openScrutinies.length} scrutin${openScrutinies.length > 1 ? "s" : ""} ouvert${openScrutinies.length > 1 ? "s" : ""}.`
+          : "Aucun scrutin n’est ouvert pour le moment.");
+        scheduleOpenListRefresh();
+      } catch (error) {
+        renderNotice("Impossible de charger les scrutins", "La liste publique des scrutins est momentanément indisponible.", true);
+        setStatus(error.message || "Les scrutins n’ont pas pu être chargés.", true);
+      }
+    }
+
+    async function loadVoteState() {
+      clearBoundaryTimer();
+      const scrutinyId = getScrutinyId();
+      if (!scrutinyId) {
+        await loadOpenScrutinies();
+        return;
+      }
+      if (currentVoteLink) currentVoteLink.href = `vote.html?scrutiny=${encodeURIComponent(scrutinyId)}`;
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/vote/${encodeURIComponent(scrutinyId)}/state`, {
+          cache: "no-store",
+          credentials: "omit",
+          referrerPolicy: "no-referrer"
+        });
+        if (!response.ok) {
+          throw new Error(response.status === 404 ? "Scrutin introuvable." : "Scrutin indisponible.");
+        }
+        const state = await response.json();
+        const invalidReason = validateScrutinyState(state, scrutinyId);
+        if (invalidReason) throw new Error(invalidReason);
+        applyScrutinyState(state);
+      } catch (error) {
+        voteState = null;
+        memberKeyInput.value = "";
+        updateScrutinyIdentity(null);
+        updateVotingControls();
+        renderNotice("Impossible de charger le scrutin", "Aucune proposition de démonstration n’est substituée aux données du registre.", true);
+        setStatus(error.message || "Le scrutin n’a pas pu être chargé.", true);
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const scrutinyId = getScrutinyId();
+      if (!voteState || voteState.status !== "open" || !scrutinyId) {
+        setStatus("Ce scrutin n’est pas ouvert.", true);
+        return;
+      }
+      if (!finalReviewReady) {
+        setStatus("Tous les classements doivent être vérifiés avant le dépôt.", true);
+        return;
+      }
+
+      const memberKey = memberKeyInput.value.trim();
+      if (!MEMBER_KEY_PATTERN.test(memberKey)) {
+        setStatus("La clé permanente de membre est absente ou mal formée.", true);
+        return;
+      }
+      const expectedRoundIds = currentRounds().map(roundKey);
+      if (expectedRoundIds.some((roundId) => !Array.isArray(rankings[roundId]) || rankings[roundId].length !== 14)) {
+        setStatus("Le bulletin ne contient pas un classement complet pour chaque ensemble.", true);
+        return;
+      }
+
+      submitButton.disabled = true;
+      setStatus("Dépôt du bulletin en cours.");
+      try {
+        const response = await fetch(`${API_BASE_URL}/vote/${encodeURIComponent(scrutinyId)}`, {
+          method: "POST",
+          credentials: "omit",
+          referrerPolicy: "no-referrer",
+          headers: {
+            "Content-Type": "application/json",
+            "X-OUPEINPO-Member-Key": memberKey
+          },
+          body: JSON.stringify({ rankings })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const detail = typeof result.detail === "string" ? result.detail : "Le bulletin a été refusé.";
+          throw new Error(detail);
+        }
+        ballotSubmitted = true;
+        memberKeyInput.value = "";
+        updateVotingControls();
+        setStatus("Bulletin enregistré. L’administration examinera la régularité du scrutin après sa clôture.");
+      } catch (error) {
+        setStatus(error.message || "Le bulletin n’a pas pu être enregistré.", true);
+        updateVotingControls();
+      }
+    });
+
+    restartButton.addEventListener("click", () => {
+      if (!voteState || voteState.status !== "open" || ballotSubmitted) return;
+      beginOpenScrutiny(voteState);
+      setStatus("Le classement a été recommencé localement. Aucun bulletin n’a été envoyé.");
+    });
+
+    updateVotingControls();
+    loadVoteState();
+  </script>
+</body>
+</html>

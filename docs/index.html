@@ -33,12 +33,63 @@
     }
 
     header {
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
       gap: 24px;
-      align-items: flex-end;
+      align-items: start;
       padding: 0 0 24px;
       border-bottom: 1px solid var(--line);
+    }
+
+    .header-side {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .news-feed {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      min-width: 0;
+    }
+
+    .news-feed h2 {
+      margin: 0;
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      font-size: 1rem;
+    }
+
+    .news-list {
+      max-height: 190px;
+      overflow-y: auto;
+    }
+
+    .news-item {
+      display: grid;
+      gap: 5px;
+      width: 100%;
+      border: 0;
+      border-radius: 0;
+      border-bottom: 1px solid var(--line);
+      padding: 11px 12px;
+      background: #fff;
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .news-item:last-child { border-bottom: 0; }
+    .news-item:hover { background: #ece6dc; }
+    .news-item[aria-expanded="true"] { background: #e4efed; }
+
+    .news-item time {
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .news-item strong {
+      font-size: .92rem;
+      line-height: 1.3;
     }
 
     h1 {
@@ -56,7 +107,7 @@
     }
 
     .api-state {
-      min-width: 220px;
+      width: 100%;
       padding: 10px 12px;
       border: 1px solid var(--line);
       background: var(--panel);
@@ -127,6 +178,17 @@
 
     button:hover { background: var(--accent-dark); }
     button:disabled { opacity: .55; cursor: not-allowed; }
+
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible,
+    summary:focus-visible,
+    [role="tabpanel"]:focus-visible {
+      outline: 3px solid rgba(23, 107, 99, .35);
+      outline-offset: 2px;
+    }
 
     .secondary {
       background: #e9e2d8;
@@ -285,6 +347,158 @@
       margin-top: 2px;
     }
 
+    .proclamation {
+      margin-top: 24px;
+      border-top: 3px double var(--ink);
+      border-bottom: 3px double var(--ink);
+      padding: 24px;
+    }
+
+    .news-reader[hidden] {
+      display: none;
+    }
+
+    .news-reader-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: start;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .news-close {
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      font-size: 1.45rem;
+      line-height: 1;
+    }
+
+    .news-close:hover {
+      background: #ece6dc;
+    }
+
+    .news-article {
+      padding-top: 18px;
+    }
+
+    .proclamation-kicker {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: .78rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .proclamation-summary-title {
+      display: block;
+      max-width: 820px;
+      font-size: 1.45rem;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    .proclamation-preamble,
+    .proclamation-conclusion {
+      max-width: 920px;
+      line-height: 1.55;
+    }
+
+    .proclamation-considerations {
+      max-width: 920px;
+      margin: 20px 0;
+      padding: 16px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .proclamation-considerations p {
+      margin: 0 0 10px;
+      padding-left: 22px;
+      line-height: 1.5;
+      text-indent: -22px;
+    }
+
+    .proclamation-considerations p:last-child {
+      margin-bottom: 0;
+    }
+
+    .proclamation-decision {
+      margin: 18px 0 0;
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    .proclamation-articles {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 24px;
+      margin: 20px 0;
+      padding: 0;
+      list-style: none;
+      border-top: 1px solid var(--line);
+    }
+
+    .proclamation-articles li {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+      line-height: 1.48;
+    }
+
+    .proclamation-articles strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .proclamation-action {
+      display: inline-block;
+      margin-top: 4px;
+      border-radius: 4px;
+      padding: 10px 13px;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .proclamation-action:hover {
+      background: var(--accent-dark);
+    }
+
+    .workspace-tabs {
+      display: flex;
+      gap: 8px;
+      margin-top: 24px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+      overflow-x: auto;
+    }
+
+    .workspace-tab {
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+    }
+
+    .workspace-tab:hover {
+      background: #ece6dc;
+    }
+
+    .workspace-tab[aria-selected="true"] {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    [role="tabpanel"][hidden] {
+      display: none;
+    }
+
     .recent-panel {
       margin-top: 24px;
     }
@@ -333,11 +547,12 @@
 
     @media (max-width: 820px) {
       main { width: min(100% - 20px, 680px); padding-top: 18px; }
-      header { display: block; }
-      .api-state { margin-top: 16px; }
+      header { grid-template-columns: 1fr; }
       form { grid-template-columns: 1fr; }
       .chips { grid-template-columns: 1fr; }
       .recent-head { display: block; }
+      .proclamation { padding: 18px; }
+      .proclamation-articles { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -352,13 +567,82 @@
           ·
           <a href="nmnc-explorer.html">Consulter le registre NMNC</a>
           ·
+          <a href="vote.html">Scrutins</a>
+          ·
           <a href="confidentialite.html">Confidentialité</a>
         </p>
       </div>
-      <div class="api-state" id="api-state" role="status" aria-live="polite">API : vérification…</div>
+      <div class="header-side">
+        <aside class="news-feed" aria-labelledby="news-feed-title">
+          <h2 id="news-feed-title">Nouvelles de l’Ouvroir</h2>
+          <div class="news-list">
+            <button class="news-item" type="button" data-news-target="news-proclamation" aria-controls="news-reader" aria-expanded="false">
+              <time datetime="2026-07-14">14 juillet 2026</time>
+              <strong>Institution du scrutin sur l’éligibilité des peintures informatiques potentielles</strong>
+            </button>
+          </div>
+        </aside>
+        <div class="api-state" id="api-state" role="status" aria-live="polite">API : vérification…</div>
+      </div>
     </header>
 
-    <form id="oupeinpo-form">
+    <section class="panel proclamation news-reader" id="news-reader" tabindex="-1" hidden>
+      <div class="news-reader-head">
+        <p class="proclamation-kicker">Délibération extraordinaire des Ouvroirs réunis</p>
+        <button class="news-close" id="news-close" type="button" aria-label="Fermer la nouvelle" title="Fermer">×</button>
+      </div>
+      <article class="news-article" id="news-proclamation">
+      <h2 class="proclamation-summary-title" id="proclamation-title">Proclamation portant institution d’un scrutin sur l’éligibilité des peintures informatiques potentielles</h2>
+      <p class="proclamation-preamble">
+        L’Assemblée générale conjointe de l’Ouvroir de peinture informatique potentielle et de l’Ouvroir de monnaie potentielle constitué par le protocole <em>No Migration No Coin</em>, réunie en séance extraordinaire dans un lieu tenu secret et statuant dans la plénitude des attributions qu’elle s’est reconnues,
+      </p>
+      <div class="proclamation-considerations">
+        <p><strong>Considérant</strong> que quatorze œuvres candidates peuvent être produites pour chacun des types de peinture informatique potentielle et qu’aucune ne saurait acquérir, par le seul fait de sa production, la qualité de peinture retenue par l’Ouvroir ;</p>
+        <p><strong>Considérant</strong> que l’expression collective des préférences ne saurait être réduite à une approbation binaire, ni conduire à reconnaître une pluralité de suffrages fondée sur le patrimoine monétaire, le nombre de contributions, la détention de NMNC ou la puissance de calcul ;</p>
+        <p><strong>Considérant</strong> qu’un classement intégral permet de prendre en compte l’ordre des préférences exprimées tout en maintenant une stricte égalité de poids entre les membres du corps électoral ;</p>
+        <p><strong>Considérant</strong> que l’autonomie respective des deux Ouvroirs commande de distinguer la sélection picturale, qui relève de la communauté des contributeurs, de l’inscription monétaire potentielle, qui relève du protocole NMNC ;</p>
+        <p><strong>Considérant</strong> enfin que le passage d’une peinture de l’état de proposition à celui de peinture admise au registre exige un dépouillement traçable, un examen de régularité et une décision expresse de l’assemblée compétente ;</p>
+      </div>
+      <p class="proclamation-decision">Après avoir entendu le rapport de ses organes compétents, en avoir délibéré et épuisé toutes les formes utiles de solennité, arrête :</p>
+      <ol class="proclamation-articles">
+        <li>
+          <strong>Article premier — Nature et objet du scrutin.</strong>
+          Il est institué un scrutin préférentiel à classement intégral, dépouillé selon la méthode de Borda, afin de déterminer les peintures informatiques potentielles susceptibles d’être déclarées éligibles à l’établissement d’un lien entre l’Ouvroir de peinture informatique potentielle et l’Ouvroir de monnaie potentielle du No Migration No Coin.
+        </li>
+        <li>
+          <strong>Article 2 — Organisation.</strong>
+          La première contribution achevée d’une nouvelle personne contributrice ouvre, pour une durée de vingt-quatre heures, un scrutin unique. À partir des fichiers confiés, OUPEINPO fait apparaître un ou plusieurs groupes, chacun constituant un type de peinture informatique potentielle. Le scrutin comprend autant de tours que de types ainsi constitués. Pour chacun de ces types, quatorze œuvres candidates anonymisées sont soumises au classement intégral du corps électoral.
+        </li>
+        <li>
+          <strong>Article 3 — Corps électoral.</strong>
+          Toute personne reconnue comme membre en raison d’une contribution antérieurement menée à terme dispose d’un bulletin unique par scrutin. Le nombre de ses contributions ou peintures, la détention de NMNC, l’usage d’un portefeuille et l’activité de minage ne lui confèrent aucun suffrage supplémentaire.
+        </li>
+        <li>
+          <strong>Article 4 — Expression des préférences.</strong>
+          Le bulletin porte sur l’intégralité des tours. Pour chacun d’eux, les quatorze œuvres candidates sont classées par ordre de préférence et reçoivent, selon un décompte décroissant, de quatorze à un point. Tous les membres participent suivant le même barème.
+        </li>
+        <li>
+          <strong>Article 5 — Dépouillement.</strong>
+          À l’expiration du délai, les préférences sont décomptées séparément pour chaque tour. Toute égalité, de même que l’absence de bulletin, est tranchée par un tirage au sort dont la trace est conservée.
+        </li>
+        <li>
+          <strong>Article 6 — Examen et effet.</strong>
+          Les résultats demeurent provisoires jusqu’à ce que l’administration de l’Ouvroir, réunie en assemblée plénière dans un lieu tenu secret, se prononce sur la régularité du scrutin et la qualité de ses votants. Seules les peintures ainsi validées peuvent rejoindre le registre de l’Ouvroir et faire ensuite l’objet d’une inscription potentielle dans le registre du NMNC.
+        </li>
+      </ol>
+      <p class="proclamation-conclusion">
+        Dès lors, les membres appelés à exercer cette charge sont invités à prendre connaissance des consultations ouvertes et à y ordonner leurs préférences dans les formes prescrites.
+      </p>
+      <a class="proclamation-action" href="#scrutins">Consulter les scrutins en cours</a>
+      </article>
+    </section>
+
+    <div class="workspace-tabs" role="tablist" aria-label="Espaces de l’Ouvroir">
+      <button class="workspace-tab" id="tab-contribuer" type="button" role="tab" aria-selected="true" aria-controls="oupeinpo-form" tabindex="0">Contribuer</button>
+      <button class="workspace-tab" id="tab-scrutins" type="button" role="tab" aria-selected="false" aria-controls="scrutins" tabindex="-1">Scrutins en cours</button>
+    </div>
+
+    <form id="oupeinpo-form" role="tabpanel" aria-labelledby="tab-contribuer" tabindex="0">
       <section class="panel">
         <label for="title">Titre de l’ensemble d’images</label>
         <input id="title" name="title" type="text" value="No Image No Migration">
@@ -372,18 +656,6 @@
 
         <label for="access-code">Code d’accès</label>
         <input id="access-code" name="access_code" type="password" autocomplete="off" required>
-
-        <label for="clusters">Combien de peintures souhaitez-vous créer ?</label>
-        <select id="clusters" name="clusters">
-          <option value="auto">Automatique</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-          <option value="6">6</option>
-          <option value="7">7</option>
-        </select>
 
         <label for="images">Images</label>
         <input id="images" name="images" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="images-help" multiple>
@@ -415,13 +687,13 @@
       </section>
     </form>
 
-    <section class="panel recent-panel" aria-labelledby="recent-title">
+    <section class="panel recent-panel" id="scrutins" role="tabpanel" aria-labelledby="tab-scrutins" tabindex="0" hidden>
       <div class="recent-head">
-        <h2 id="recent-title">Dernières peintures informatiques</h2>
-        <a href="explorer.html">Consulter le registre</a>
+        <h2 id="recent-title">Scrutins en cours</h2>
+        <a href="vote.html">Consulter les scrutins</a>
       </div>
-      <div class="note">Miniatures publiques des peintures produites par l’Ouvroir. Les images déposées au départ ne sont pas affichées ici.</div>
-      <div class="note" id="recent-status" role="status" aria-live="polite">Chargement des peintures…</div>
+      <div class="note">Les contributions ouvertes au vote apparaissent ici. Le vote nécessite un justificatif privé de membre contributeur.</div>
+      <div class="note" id="recent-status" role="status" aria-live="polite">Chargement des scrutins…</div>
       <div class="recent-grid" id="recent-grid"></div>
     </section>
   </main>
@@ -497,16 +769,97 @@
     const clearButton = document.getElementById("clear-button");
     const recentGrid = document.getElementById("recent-grid");
     const recentStatus = document.getElementById("recent-status");
+    const workspaceTabs = [...document.querySelectorAll('[role="tab"][aria-controls]')];
+    const workspacePanels = [...document.querySelectorAll('[role="tabpanel"]')];
+    const newsReader = document.getElementById("news-reader");
+    const newsCloseButton = document.getElementById("news-close");
+    const newsButtons = [...document.querySelectorAll("[data-news-target]")];
+    const newsArticles = [...document.querySelectorAll(".news-article")];
 
     let selectedFiles = [];
     const annotationState = new Map();
     const objectUrls = new Map();
     let pollTimer = null;
+    let lastNewsTrigger = null;
 
     function setStatus(message, isError = false) {
       statusBox.textContent = message;
       statusBox.classList.toggle("error", isError);
     }
+
+    function closeNews(restoreFocus = true) {
+      if (!newsReader) return;
+      newsReader.hidden = true;
+      newsButtons.forEach((button) => button.setAttribute("aria-expanded", "false"));
+      if (restoreFocus && lastNewsTrigger) lastNewsTrigger.focus();
+    }
+
+    function openNews(articleId, trigger) {
+      if (!newsReader) return;
+      const selectedArticle = newsArticles.find((article) => article.id === articleId);
+      if (!selectedArticle) return;
+      lastNewsTrigger = trigger;
+      newsArticles.forEach((article) => {
+        article.hidden = article !== selectedArticle;
+      });
+      newsButtons.forEach((button) => {
+        button.setAttribute("aria-expanded", String(button === trigger));
+      });
+      newsReader.hidden = false;
+      newsReader.focus();
+      newsReader.scrollIntoView({ block: "start" });
+    }
+
+    newsButtons.forEach((button) => {
+      button.addEventListener("click", () => openNews(button.dataset.newsTarget, button));
+    });
+
+    if (newsCloseButton) {
+      newsCloseButton.addEventListener("click", () => closeNews());
+    }
+
+    if (newsReader) {
+      newsReader.addEventListener("click", (event) => {
+        const scrutinyLink = event.target.closest('a[href="#scrutins"]');
+        if (scrutinyLink) closeNews(false);
+      });
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && newsReader && !newsReader.hidden) closeNews();
+    });
+
+    function activateWorkspacePanel(panelId, focusTab = false) {
+      if (!workspacePanels.some((panel) => panel.id === panelId)) return;
+      workspaceTabs.forEach((tab) => {
+        const active = tab.getAttribute("aria-controls") === panelId;
+        tab.setAttribute("aria-selected", String(active));
+        tab.tabIndex = active ? 0 : -1;
+        if (active && focusTab) tab.focus();
+      });
+      workspacePanels.forEach((panel) => {
+        panel.hidden = panel.id !== panelId;
+      });
+    }
+
+    workspaceTabs.forEach((tab, index) => {
+      tab.addEventListener("click", () => activateWorkspacePanel(tab.getAttribute("aria-controls")));
+      tab.addEventListener("keydown", (event) => {
+        let nextIndex = index;
+        if (event.key === "ArrowRight") nextIndex = (index + 1) % workspaceTabs.length;
+        else if (event.key === "ArrowLeft") nextIndex = (index - 1 + workspaceTabs.length) % workspaceTabs.length;
+        else if (event.key === "Home") nextIndex = 0;
+        else if (event.key === "End") nextIndex = workspaceTabs.length - 1;
+        else return;
+        event.preventDefault();
+        const nextTab = workspaceTabs[nextIndex];
+        activateWorkspacePanel(nextTab.getAttribute("aria-controls"), true);
+      });
+    });
+
+    window.addEventListener("hashchange", () => {
+      if (window.location.hash === "#scrutins") activateWorkspacePanel("scrutins");
+    });
 
     function setImageGridEmpty(message) {
       const empty = document.createElement("div");
@@ -712,12 +1065,16 @@
 
     async function checkApi() {
       try {
-        const response = await fetch(`${API_BASE_URL}/health`, { cache: "no-store" });
+        const response = await fetch(`${API_BASE_URL}/health`, {
+          cache: "no-store",
+          credentials: "omit",
+          referrerPolicy: "no-referrer"
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
-        apiState.textContent = data.project_exists ? "API : connectée" : "API : projet introuvable";
+        apiState.textContent = data && data.status === "ok" ? "API V6 : connectée" : "API V6 : réponse invalide";
       } catch (error) {
-        apiState.textContent = "API : inaccessible";
+        apiState.textContent = "API V6 : inaccessible";
       }
     }
 
@@ -765,9 +1122,67 @@
       }, { once: true });
     }
 
-    async function loadRecentPaintings() {
+    function formatVoteDeadline(value) {
+      if (!value) return "clôture non renseignée";
+      try {
+        return new Intl.DateTimeFormat("fr-BE", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        }).format(new Date(value));
+      } catch (error) {
+        return value;
+      }
+    }
+
+    async function loadOpenVotes() {
       if (!recentGrid || !recentStatus) return;
 
+      try {
+        const response = await fetch(`${API_BASE_URL}/votes/open`, {
+          cache: "no-store",
+          credentials: "omit",
+          referrerPolicy: "no-referrer"
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        if (!Array.isArray(data.scrutinies)) throw new Error("Réponse des scrutins invalide");
+        const votes = data.scrutinies.filter((vote) => vote && vote.status === "open" && vote.scrutiny_id);
+
+        recentGrid.replaceChildren();
+        if (!votes.length) {
+          recentStatus.textContent = "Aucun scrutin en cours pour le moment.";
+          return;
+        }
+
+        recentStatus.textContent = `${votes.length} scrutin(s) ouvert(s).`;
+        votes.forEach((vote) => {
+          const card = document.createElement("article");
+          card.className = "recent-card";
+
+          const title = document.createElement("h3");
+          title.textContent = `Scrutin de la contribution n° ${vote.contribution_id || vote.scrutiny_id}`;
+
+          const meta = document.createElement("p");
+          meta.className = "note";
+          meta.textContent = `${vote.round_count || 0} ensemble(s), ${vote.candidate_count || 0} proposition(s). Clôture : ${formatVoteDeadline(vote.closes_at)}.`;
+
+          const link = document.createElement("a");
+          link.href = pageUrl("vote.html", { scrutiny: vote.scrutiny_id });
+          link.textContent = "Participer au scrutin";
+
+          card.append(title, meta, link);
+          recentGrid.appendChild(card);
+        });
+      } catch (error) {
+        recentGrid.replaceChildren();
+        recentStatus.textContent = "Les scrutins en cours sont momentanément indisponibles.";
+      }
+    }
+
+    async function loadRecentPaintingsFallback(prefixMessage) {
       try {
         const response = await fetch(`${API_BASE_URL}/global-blockchain.json`, { cache: "no-store" });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -780,11 +1195,11 @@
 
         recentGrid.replaceChildren();
         if (!paintEntries.length) {
-          recentStatus.textContent = "Aucune peinture publique disponible pour le moment.";
+          recentStatus.textContent = `${prefixMessage} Aucune peinture publique récente n’est disponible.`;
           return;
         }
 
-        recentStatus.textContent = `${paintEntries.length} miniature(s) récente(s).`;
+        recentStatus.textContent = `${prefixMessage} Dernières productions affichées ci-dessous.`;
         paintEntries.forEach((entry) => {
           const jobId = entry.job_id || entry.jobId || entry.id;
           const path = entry.image_path || entry.imagePath || entry.path || "";
@@ -809,7 +1224,8 @@
           recentGrid.appendChild(card);
         });
       } catch (error) {
-        recentStatus.textContent = "Les peintures publiques sont momentanément indisponibles.";
+        recentGrid.replaceChildren();
+        recentStatus.textContent = `${prefixMessage} Les dernières productions sont également indisponibles.`;
       }
     }
 
@@ -912,7 +1328,7 @@
       formData.append("email", document.getElementById("email").value);
       formData.append("nmnc_address", document.getElementById("nmnc-address").value.trim());
       formData.append("access_code", document.getElementById("access-code").value);
-      formData.append("clusters", document.getElementById("clusters").value);
+      formData.append("clusters", "auto");
       formData.append("annotations", JSON.stringify(collectAnnotations()));
       formData.append("privacy_consent", "yes");
       selectedFiles.forEach((file) => formData.append("images", file, file.name));
@@ -948,8 +1364,9 @@
     });
 
     imageInput.addEventListener("change", () => addFiles(imageInput.files));
+    activateWorkspacePanel(window.location.hash === "#scrutins" ? "scrutins" : "oupeinpo-form");
     checkApi();
-    loadRecentPaintings();
+    loadOpenVotes();
   </script>
 </body>
 </html>
